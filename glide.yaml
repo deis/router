@@ -1,0 +1,6 @@
+package: github.com/deis/router
+flatten: true
+import:
+- package: k8s.io/kubernetes
+  version: v1.1.1
+  subpackage: pkg

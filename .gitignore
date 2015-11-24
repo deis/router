@@ -1,0 +1,3 @@
+manifests/deis-router-rc.tmp.yaml
+rootfs/bin/router
+vendor/
