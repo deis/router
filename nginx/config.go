@@ -9,6 +9,7 @@ import (
 
 const (
 	confTemplate = `user nginx;
+daemon off;
 
 events {
 	worker_connections 1024;
