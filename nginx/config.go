@@ -8,7 +8,9 @@ import (
 )
 
 const (
-	confTemplate = `events {
+	confTemplate = `user nginx;
+
+events {
 	worker_connections 1024;
 }
 
