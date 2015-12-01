@@ -4,7 +4,7 @@ metadata:
   name: deis-router
   namespace: deis
   labels:
-    app: deis-router
+    heritage: deis
   annotations:
     routerConfig: '{"useProxyProtocol":false}'
 spec:
