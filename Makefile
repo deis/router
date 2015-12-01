@@ -8,7 +8,7 @@ BUILD_TAG := git-${GIT_SHA}
 
 # The following variables describe the containerized development environment
 # and other build options
-DEV_ENV_IMAGE := quay.io/deis/go-dev:0.1.0-alpine
+DEV_ENV_IMAGE := quay.io/deis/go-dev:0.1.0
 DEV_ENV_WORK_DIR := /go/src/github.com/deis/${SHORT_NAME}
 DEV_ENV_CMD := docker run --rm -v ${PWD}:${DEV_ENV_WORK_DIR} -w ${DEV_ENV_WORK_DIR} ${DEV_ENV_IMAGE}
 DEV_ENV_CMD_INT := docker run -it --rm -v ${PWD}:${DEV_ENV_WORK_DIR} -w ${DEV_ENV_WORK_DIR} ${DEV_ENV_IMAGE}
@@ -29,7 +29,7 @@ SVC := manifests/deis-${SHORT_NAME}-service.yaml
 
 # Allow developers to step into the containerized development environment
 dev: check-docker
-	${DEV_ENV_CMD_INT} ash
+	${DEV_ENV_CMD_INT} bash
 
 dev-registry: check-docker
 	@docker inspect registry >/dev/null 2>&1 && docker start registry || docker run --restart="always" -d -p 5000:5000 --name registry registry:0.9.1
