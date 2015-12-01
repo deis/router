@@ -42,7 +42,7 @@ bootstrap: check-docker
 	${DEV_ENV_CMD} glide up
 
 # Containerized build of the binary
-build: check-docker
+build: check-docker check-registry
 	mkdir -p ${BINDIR}
 	${DEV_ENV_CMD} make binary-build
 	docker build --rm -t ${IMAGE} rootfs
