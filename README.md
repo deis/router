@@ -74,6 +74,8 @@ In router's case, this step carries out some extensive dependency management usi
 $ make build
 ```
 
+Make sure to have defined the variable `DEIS_REGISTRY` previous to this step, as your image tags will be prefixed according to this.
+
 Built images will be tagged with the sha of the latest git commit.  __This means that for a new image to have its own unique tag, experimental changes should be committed _before_ building.  Do this in a branch.  Commits can be squashed later when you are done hacking.__
 
 #### To deploy:
