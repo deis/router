@@ -23,6 +23,9 @@ RUN build
 # Re-copy this file because the previous step will have overwritten it
 COPY opt/nginx/conf/nginx.conf /opt/nginx/conf/nginx.conf
 
+RUN ln -sf /dev/stdout /opt/nginx/logs/access.log
+RUN ln -sf /dev/stderr /opt/nginx/logs/error.log
+
 CMD ["/bin/router"]
 EXPOSE 80 2222 9090
 
