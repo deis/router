@@ -1,0 +1,18 @@
+branches:
+  only:
+    - master
+cache:
+  directories:
+    - vendor
+sudo: required
+services:
+  - docker
+install:
+  - make bootstrap
+script:
+  - make test
+deploy:
+  provider: script
+  script: _scripts/deploy.sh
+  on:
+    branch: master
