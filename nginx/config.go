@@ -49,6 +49,8 @@ http {
 `
 )
 
+// WriteConfig dynamically produces valid nginx configuration by combining a Router configuration
+// object with a data-driven template.
 func WriteConfig(routerConfig *model.RouterConfig, filePath string) error {
 	tmpl, err := template.New("nginx").Parse(confTemplate)
 	if err != nil {

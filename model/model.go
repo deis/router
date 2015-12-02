@@ -8,6 +8,7 @@ import (
 	"k8s.io/kubernetes/pkg/labels"
 )
 
+// RouterConfig is the primary type used to encapsulate all router configuration.
 type RouterConfig struct {
 	UseProxyProtocol bool `json:"useProxyProtocol"`
 	AppConfigs       []*AppConfig
@@ -19,6 +20,7 @@ func newRouterConfig() *RouterConfig {
 	}
 }
 
+// AppConfig encapsulates the configuration for all routes to a single back end.
 type AppConfig struct {
 	Domains   []string `json:"domains"`
 	ServiceIP string
@@ -29,6 +31,8 @@ func newAppConfig() *AppConfig {
 	return &AppConfig{}
 }
 
+// Build creates a RouterConfig configuration object by querying the k8s API for
+// relevant metadata concerning itself and all routable services.
 func Build(kubeClient *client.Client) (*RouterConfig, error) {
 	rc, err := getRC(kubeClient)
 	if err != nil {
