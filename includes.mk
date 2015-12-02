@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 check-docker:
 	@if [ -z $$(which docker) ]; then \
 		echo "Missing \`docker\` client which is required for development"; \

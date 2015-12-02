@@ -6,14 +6,21 @@ VERSION := 2.0.0-$(shell date "+%Y%m%d%H%M%S")
 GIT_SHA := $(shell git rev-parse --short HEAD)
 BUILD_TAG := git-${GIT_SHA}
 
+REPO_PATH := github.com/deis/${SHORT_NAME}
+
 # The following variables describe the containerized development environment
 # and other build options
-DEV_ENV_IMAGE := quay.io/deis/go-dev:0.1.0
-DEV_ENV_WORK_DIR := /go/src/github.com/deis/${SHORT_NAME}
+DEV_ENV_IMAGE := quay.io/deis/go-dev:0.2.0
+DEV_ENV_WORK_DIR := /go/src/${REPO_PATH}
 DEV_ENV_CMD := docker run --rm -v ${PWD}:${DEV_ENV_WORK_DIR} -w ${DEV_ENV_WORK_DIR} ${DEV_ENV_IMAGE}
 DEV_ENV_CMD_INT := docker run -it --rm -v ${PWD}:${DEV_ENV_WORK_DIR} -w ${DEV_ENV_WORK_DIR} ${DEV_ENV_IMAGE}
 LDFLAGS := "-s -X main.version=${VERSION}"
 BINDIR := ./rootfs/bin
+
+# The following variables describe the source we build from
+GO_FILES := $(wildcard *.go)
+GO_DIRS := model/ nginx/
+GO_PACKAGES := ${REPO_PATH} $(addprefix ${REPO_PATH}/,${GO_DIRS})
 
 # The following variables describe the Docker image we build and where it
 # is pushed to.
@@ -77,3 +84,22 @@ deploy: check-kubectl dev-release
 
 examples:
 	kubectl create -f manifests/examples.yaml
+
+test: test-style test-unit test-functional
+
+test-functional:
+	@echo no functional tests
+
+test-style: check-docker
+	${DEV_ENV_CMD} make style-check
+
+# This should only be executed within the containerized development environment.
+style-check:
+# display output, then check
+	gofmt -l ${GO_FILES} ${GO_DIRS}
+	@gofmt -l ${GO_FILES} ${GO_DIRS} | read; if [ $$? == 0 ]; then echo "gofmt check failed."; exit 1; fi
+	go vet ${GO_PACKAGES}
+	for package in $$(glide novendor | tr " " "\n"); do golint $$package; done
+
+test-unit:
+	@echo no unit tests
