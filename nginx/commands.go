@@ -10,6 +10,7 @@ const (
 	nginxBinary = "/opt/nginx/sbin/nginx"
 )
 
+// Start nginx.
 func Start() error {
 	log.Println("INFO: Starting nginx...")
 	cmd := exec.Command(nginxBinary)
@@ -22,6 +23,7 @@ func Start() error {
 	return nil
 }
 
+// Reload nginx configuration.
 func Reload() error {
 	log.Println("INFO: Reloading nginx...")
 	cmd := exec.Command(nginxBinary, "-s", "reload")
