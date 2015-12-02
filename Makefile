@@ -10,8 +10,8 @@ REPO_PATH := github.com/deis/${SHORT_NAME}
 # and other build options
 DEV_ENV_IMAGE := quay.io/deis/go-dev:0.2.0
 DEV_ENV_WORK_DIR := /go/src/${REPO_PATH}
-DEV_ENV_CMD := docker run --rm -v ${PWD}:${DEV_ENV_WORK_DIR} -w ${DEV_ENV_WORK_DIR} ${DEV_ENV_IMAGE}
-DEV_ENV_CMD_INT := docker run -it --rm -v ${PWD}:${DEV_ENV_WORK_DIR} -w ${DEV_ENV_WORK_DIR} ${DEV_ENV_IMAGE}
+DEV_ENV_CMD := docker run --rm -v ${CURDIR}:${DEV_ENV_WORK_DIR} -w ${DEV_ENV_WORK_DIR} ${DEV_ENV_IMAGE}
+DEV_ENV_CMD_INT := docker run -it --rm -v ${CURDIR}:${DEV_ENV_WORK_DIR} -w ${DEV_ENV_WORK_DIR} ${DEV_ENV_IMAGE}
 LDFLAGS := "-s -X main.version=${VERSION}"
 BINDIR := ./rootfs/bin
 
