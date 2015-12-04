@@ -17,7 +17,7 @@ BINDIR := ./rootfs/bin
 
 # The following variables describe the source we build from
 GO_FILES := $(wildcard *.go)
-GO_DIRS := model/ nginx/
+GO_DIRS := model/ nginx/ utils/
 GO_PACKAGES := ${REPO_PATH} $(addprefix ${REPO_PATH}/,${GO_DIRS})
 
 # The following variables describe the Docker image we build and where it

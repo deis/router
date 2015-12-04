@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 
+	"github.com/deis/router/utils"
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/errors"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
@@ -47,6 +48,12 @@ func newBuilderConfig() *BuilderConfig {
 	}
 }
 
+var namespace string
+
+func init() {
+	namespace = utils.GetOpt("NAMESPACE", "default")
+}
+
 // Build creates a RouterConfig configuration object by querying the k8s API for
 // relevant metadata concerning itself and all routable services.
 func Build(kubeClient *client.Client) (*RouterConfig, error) {
@@ -77,7 +84,7 @@ func Build(kubeClient *client.Client) (*RouterConfig, error) {
 }
 
 func getRC(kubeClient *client.Client) (*api.ReplicationController, error) {
-	rcClient := kubeClient.ReplicationControllers("deis")
+	rcClient := kubeClient.ReplicationControllers(namespace)
 	rc, err := rcClient.Get("deis-router")
 	if err != nil {
 		return nil, err
@@ -98,10 +105,10 @@ func getAppServices(kubeClient *client.Client) (*api.ServiceList, error) {
 	return services, nil
 }
 
-// getBuilderService will return the service named "deis-builder" from the "deis" namespace, but
-// will return nil (without error) if no such service exists.
+// getBuilderService will return the service named "deis-builder" from the same namespace as
+// the router, but will return nil (without error) if no such service exists.
 func getBuilderService(kubeClient *client.Client) (*api.Service, error) {
-	serviceClient := kubeClient.Services("deis")
+	serviceClient := kubeClient.Services(namespace)
 	service, err := serviceClient.Get("deis-builder")
 	if err != nil {
 		statusErr, ok := err.(*errors.StatusError)
