@@ -20,6 +20,9 @@ spec:
       - name: deis-router
         image: ## Image is dynamically set by `make set-image` as part of dev deployment ##
         imagePullPolicy: Always
+        env:
+        - name: NAMESPACE
+          value: deis
         ports:
         - containerPort: 80
           hostPort: 80
