@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/errors"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
 	"k8s.io/kubernetes/pkg/labels"
 )
@@ -12,6 +13,7 @@ import (
 type RouterConfig struct {
 	UseProxyProtocol bool `json:"useProxyProtocol"`
 	AppConfigs       []*AppConfig
+	BuilderConfig    *BuilderConfig
 }
 
 func newRouterConfig() *RouterConfig {
@@ -31,18 +33,43 @@ func newAppConfig() *AppConfig {
 	return &AppConfig{}
 }
 
+// BuilderConfig encapsulates the configuration of the deis-builder-- if it's in use.
+type BuilderConfig struct {
+	ConnectTimeout int `json:"connectTimeout"`
+	TCPTimeout     int `json:"tcpTimeout"`
+	ServiceIP      string
+}
+
+func newBuilderConfig() *BuilderConfig {
+	return &BuilderConfig{
+		ConnectTimeout: 10000,
+		TCPTimeout:     1200000,
+	}
+}
+
 // Build creates a RouterConfig configuration object by querying the k8s API for
 // relevant metadata concerning itself and all routable services.
 func Build(kubeClient *client.Client) (*RouterConfig, error) {
-	rc, err := getRC(kubeClient)
+	// Get all relevant information from k8s:
+	//   deis-router rc
+	//   All services with label "routable=true"
+	//   deis-builder service, if it exists
+	// These are used to construct a model...
+	routerRC, err := getRC(kubeClient)
 	if err != nil {
 		return nil, err
 	}
-	services, err := getServices(kubeClient)
+	appServices, err := getAppServices(kubeClient)
 	if err != nil {
 		return nil, err
 	}
-	routerConfig, err := build(kubeClient, rc, services)
+	// builderService might be nil if it's not found and that's ok.
+	builderService, err := getBuilderService(kubeClient)
+	if err != nil {
+		return nil, err
+	}
+	// Build the model...
+	routerConfig, err := build(kubeClient, routerRC, appServices, builderService)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +85,7 @@ func getRC(kubeClient *client.Client) (*api.ReplicationController, error) {
 	return rc, nil
 }
 
-func getServices(kubeClient *client.Client) (*api.ServiceList, error) {
+func getAppServices(kubeClient *client.Client) (*api.ServiceList, error) {
 	serviceClient := kubeClient.Services(api.NamespaceAll)
 	servicesSelector, err := labels.Parse("routable==true")
 	if err != nil {
@@ -71,28 +98,57 @@ func getServices(kubeClient *client.Client) (*api.ServiceList, error) {
 	return services, nil
 }
 
-func build(kubeClient *client.Client, rc *api.ReplicationController, services *api.ServiceList) (*RouterConfig, error) {
-	routerConfig, err := buildRouterConfig(rc)
+// getBuilderService will return the service named "deis-builder" from the "deis" namespace, but
+// will return nil (without error) if no such service exists.
+func getBuilderService(kubeClient *client.Client) (*api.Service, error) {
+	serviceClient := kubeClient.Services("deis")
+	service, err := serviceClient.Get("deis-builder")
+	if err != nil {
+		statusErr, ok := err.(*errors.StatusError)
+		// If the issue is just that no deis-builder was found, that's ok.
+		if ok && statusErr.Status().Code == 404 {
+			// We'll just return nil instead of a found *api.Service.
+			return nil, nil
+		}
+		return nil, err
+	}
+	return service, nil
+}
+
+func build(kubeClient *client.Client, routerRC *api.ReplicationController, appServices *api.ServiceList, builderService *api.Service) (*RouterConfig, error) {
+	routerConfig, err := buildRouterConfig(routerRC)
 	if err != nil {
 		return nil, err
 	}
-	for _, service := range services.Items {
-		appConfig, err := buildAppConfig(kubeClient, service)
+	for _, appService := range appServices.Items {
+		appConfig, err := buildAppConfig(kubeClient, appService)
 		if err != nil {
 			return nil, err
 		}
-		routerConfig.AppConfigs = append(routerConfig.AppConfigs, appConfig)
+		if appConfig != nil {
+			routerConfig.AppConfigs = append(routerConfig.AppConfigs, appConfig)
+		}
+	}
+	if builderService != nil {
+		builderConfig, err := buildBuilderConfig(builderService)
+		if err != nil {
+			return nil, err
+		}
+		if builderConfig != nil {
+			routerConfig.BuilderConfig = builderConfig
+		}
 	}
 	return routerConfig, nil
 }
 
 func buildRouterConfig(rc *api.ReplicationController) (*RouterConfig, error) {
 	routerConfig := newRouterConfig()
-	routerConfigStr := rc.Annotations["routerConfig"]
-	if routerConfigStr == "" {
-		routerConfigStr = "{}"
+	annotations, ok := rc.Annotations["routerConfig"]
+	// If no annotations are found, we can still return some default router configuration.
+	if !ok {
+		return routerConfig, nil
 	}
-	err := json.Unmarshal([]byte(routerConfigStr), routerConfig)
+	err := json.Unmarshal([]byte(annotations), routerConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -100,8 +156,14 @@ func buildRouterConfig(rc *api.ReplicationController) (*RouterConfig, error) {
 }
 
 func buildAppConfig(kubeClient *client.Client, service api.Service) (*AppConfig, error) {
+	annotations, ok := service.Annotations["routerConfig"]
+	// If no annotations are found, we don't have the information we need to build routes
+	// to this application.  Abort.
+	if !ok {
+		return nil, nil
+	}
 	appConfig := newAppConfig()
-	err := json.Unmarshal([]byte(service.Annotations["routerConfig"]), appConfig)
+	err := json.Unmarshal([]byte(annotations), appConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -117,4 +179,19 @@ func buildAppConfig(kubeClient *client.Client, service api.Service) (*AppConfig,
 	}
 	appConfig.Available = len(endpoints.Items[0].Subsets) > 0
 	return appConfig, nil
+}
+
+func buildBuilderConfig(service *api.Service) (*BuilderConfig, error) {
+	builderConfig := newBuilderConfig()
+	builderConfig.ServiceIP = service.Spec.ClusterIP
+	annotations, ok := service.Annotations["routerConfig"]
+	// If no annotations are found, we can still return some default builder configuration.
+	if !ok {
+		return builderConfig, nil
+	}
+	err := json.Unmarshal([]byte(annotations), builderConfig)
+	if err != nil {
+		return nil, err
+	}
+	return builderConfig, nil
 }
