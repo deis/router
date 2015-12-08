@@ -27,7 +27,7 @@ metadata:
     routable: "true"
     app: nginx
   annotations:
-    routerConfig: '{"domains":["nginx.example.com"]}'
+    routerConfig: '{"domains":["nginx"]}'
 spec:
   ports:
   - port: 80
@@ -65,7 +65,8 @@ metadata:
     routable: "true"
     app: apache
   annotations:
-    routerConfig: '{"domains":["apache.example.com","httpd.example.com"]}'
+    # Demonstrates a subdomain of the platform's domain as well as a custom domain
+    routerConfig: '{"domains":["apache","httpd.example.com"]}'
 spec:
   ports:
   - port: 80
