@@ -2,6 +2,8 @@ package model
 
 import (
 	"encoding/json"
+	"fmt"
+	"strings"
 
 	"github.com/deis/router/utils"
 	"k8s.io/kubernetes/pkg/api"
@@ -12,7 +14,8 @@ import (
 
 // RouterConfig is the primary type used to encapsulate all router configuration.
 type RouterConfig struct {
-	UseProxyProtocol bool `json:"useProxyProtocol"`
+	Domain           string `json:"domain"`
+	UseProxyProtocol bool   `json:"useProxyProtocol"`
 	AppConfigs       []*AppConfig
 	BuilderConfig    *BuilderConfig
 }
@@ -128,7 +131,7 @@ func build(kubeClient *client.Client, routerRC *api.ReplicationController, appSe
 		return nil, err
 	}
 	for _, appService := range appServices.Items {
-		appConfig, err := buildAppConfig(kubeClient, appService)
+		appConfig, err := buildAppConfig(kubeClient, appService, routerConfig.Domain)
 		if err != nil {
 			return nil, err
 		}
@@ -162,7 +165,7 @@ func buildRouterConfig(rc *api.ReplicationController) (*RouterConfig, error) {
 	return routerConfig, nil
 }
 
-func buildAppConfig(kubeClient *client.Client, service api.Service) (*AppConfig, error) {
+func buildAppConfig(kubeClient *client.Client, service api.Service, platformDomain string) (*AppConfig, error) {
 	annotations, ok := service.Annotations["routerConfig"]
 	// If no annotations are found, we don't have the information we need to build routes
 	// to this application.  Abort.
@@ -173,6 +176,13 @@ func buildAppConfig(kubeClient *client.Client, service api.Service) (*AppConfig,
 	err := json.Unmarshal([]byte(annotations), appConfig)
 	if err != nil {
 		return nil, err
+	}
+	if platformDomain != "" {
+		for i, domain := range appConfig.Domains {
+			if !strings.Contains(domain, ".") {
+				appConfig.Domains[i] = fmt.Sprintf("%s.%s", domain, platformDomain)
+			}
+		}
 	}
 	appConfig.ServiceIP = service.Spec.ClusterIP
 	endpointsClient := kubeClient.Endpoints(service.Namespace)
