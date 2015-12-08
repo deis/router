@@ -153,7 +153,7 @@ func build(kubeClient *client.Client, routerRC *api.ReplicationController, appSe
 
 func buildRouterConfig(rc *api.ReplicationController) (*RouterConfig, error) {
 	routerConfig := newRouterConfig()
-	annotations, ok := rc.Annotations["routerConfig"]
+	annotations, ok := rc.Annotations["deis.io/routerConfig"]
 	// If no annotations are found, we can still return some default router configuration.
 	if !ok {
 		return routerConfig, nil
@@ -166,7 +166,7 @@ func buildRouterConfig(rc *api.ReplicationController) (*RouterConfig, error) {
 }
 
 func buildAppConfig(kubeClient *client.Client, service api.Service, platformDomain string) (*AppConfig, error) {
-	annotations, ok := service.Annotations["routerConfig"]
+	annotations, ok := service.Annotations["deis.io/routerConfig"]
 	// If no annotations are found, we don't have the information we need to build routes
 	// to this application.  Abort.
 	if !ok {
@@ -201,7 +201,7 @@ func buildAppConfig(kubeClient *client.Client, service api.Service, platformDoma
 func buildBuilderConfig(service *api.Service) (*BuilderConfig, error) {
 	builderConfig := newBuilderConfig()
 	builderConfig.ServiceIP = service.Spec.ClusterIP
-	annotations, ok := service.Annotations["routerConfig"]
+	annotations, ok := service.Annotations["deis.io/routerConfig"]
 	// If no annotations are found, we can still return some default builder configuration.
 	if !ok {
 		return builderConfig, nil

@@ -6,7 +6,7 @@ metadata:
   labels:
     heritage: deis
   annotations:
-    routerConfig: |
+    deis.io/routerConfig: |
       {
         "domain": "example.com",
         "useProxyProtocol": false
