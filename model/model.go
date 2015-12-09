@@ -54,7 +54,7 @@ func newBuilderConfig() *BuilderConfig {
 var namespace string
 
 func init() {
-	namespace = utils.GetOpt("NAMESPACE", "default")
+	namespace = utils.GetOpt("POD_NAMESPACE", "default")
 }
 
 // Build creates a RouterConfig configuration object by querying the k8s API for
