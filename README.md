@@ -182,6 +182,8 @@ Note that although the annotation containing router configuration for each of th
 
 | Component            | Name             | Type       | Default Value | Description |
 |----------------------|------------------|------------|---------------|-------------|
+| deis-router          | workerProcesses  | `string`   | `auto` (number of CPU cores) | Number of worker processes to start. |
+| deis-router          | workerConnections | `integer` | `768`         | Maximum number of simultaneous connections that can be opened by a worker process. |
 | deis-router          | defaultTimeout   | `integer`  | 1300          | Default timeout value in seconds.  Should be greater than the front-facing load balancer's timeout value. |
 | deis-router          | domain           | `string`   | N/A           | This defines the router's default domain.  Any domains added to a routable application _not_ containing the `.` character will be assumed to be subdomains of this default domain.  Thus, for example, a default domain of `example.com` coupled with a routable app counting `foo` among its domains will result in router configuration that routes traffic for `foo.example.com` to that application. |
 | deis-router          | useProxyProtocol | `boolean`  | `false`       | PROXY is a simple protocol supported by nginx, HAProxy, Amazon ELB, and others.  It provides a method to obtain information about a request's originating IP address from an external (to Kubernetes) load balancer in front of the router.  Enabling this option allows the router to select the originating IP from the HTTP `X-Forwarded-For` header. |

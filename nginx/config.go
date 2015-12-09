@@ -11,8 +11,11 @@ const (
 	confTemplate = `{{ $routerConfig := . }}user nginx;
 daemon off;
 
+worker_processes {{ $routerConfig.WorkerProcesses }};
+
 events {
-	worker_connections 1024;
+	worker_connections {{ $routerConfig.MaxWorkerConnections }};
+	# multi_accept on;
 }
 
 http {
