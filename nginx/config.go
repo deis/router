@@ -34,6 +34,15 @@ http {
 	server_names_hash_max_size {{ $routerConfig.ServerNameHashMaxSize }};
 	server_names_hash_bucket_size {{ $routerConfig.ServerNameHashBucketSize }};
 
+	{{ if $routerConfig.GzipConfig }}{{ $gzipConfig := $routerConfig.GzipConfig }}gzip on;
+	gzip_comp_level {{ $gzipConfig.CompLevel }};
+	gzip_disable {{ $gzipConfig.Disable }};
+	gzip_http_version {{ $gzipConfig.HTTPVersion }};
+	gzip_min_length {{ $gzipConfig.MinLength }};
+	gzip_types {{ $gzipConfig.Types }};
+	gzip_proxied {{ $gzipConfig.Proxied }};
+	gzip_vary {{ $gzipConfig.Vary }};{{ end }}
+
 	log_format upstreaminfo '[$time_local] - {{ if $routerConfig.UseProxyProtocol }}$proxy_protocol_addr{{ else }}$remote_addr{{ end }} - $remote_user - $status - "$request" - $bytes_sent - "$http_referer" - "$http_user_agent" - "$server_name" - $upstream_addr - $http_host - $upstream_response_time - $request_time';
 
 	access_log /opt/nginx/logs/access.log upstreaminfo;

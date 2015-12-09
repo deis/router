@@ -187,6 +187,14 @@ Note that although the annotation containing router configuration for each of th
 | deis-router          | defaultTimeout   | `integer`  | 1300          | Default timeout value in seconds.  Should be greater than the front-facing load balancer's timeout value. |
 | deis-router          | serverNameHashMaxSize | `integer` | `512`     | nginx `server_names_hash_max_size` setting. |
 | deis-router          | serverNameHashBucketSize | `integer` | 64     | nginx `server_names_hash_bucket_size` setting. |
+| deis-router          | gzipConfig             | `GzipConfig`  | Described by following lines.        | Set to `null` to disable gzip entirely. |
+| deis-router          | gzipConfig.compLevel   | `integer` | `5`        | nginx `gzip_comp_level` setting. |
+| deis-router          | gzipConfig.disable     | `string`  | `msie6`    | nginx `gzip_disable` setting. |
+| deis-router          | gzipConfig.httpVersion | `string`  | `1.1`      | nginx `gzip_http_version` setting. |
+| deis-router          | gzipConfig.minLength   | `integer` | `256`      | nginx `gzip_min_length` setting. |
+| deis-router          | gzipConfig.proxied     | `string`  | `any`      | nginx `gzip_proxied` setting. |
+| deis-router          | gzipConfig.types       | `string`  | `application/atom+xml application/javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component` | nginx `gzip_types` setting. |
+| deis-router          | gzipConfig.vary        | `string`  | `on`       | nginx `gzip_vary` setting. |
 | deis-router          | domain           | `string`   | N/A           | This defines the router's default domain.  Any domains added to a routable application _not_ containing the `.` character will be assumed to be subdomains of this default domain.  Thus, for example, a default domain of `example.com` coupled with a routable app counting `foo` among its domains will result in router configuration that routes traffic for `foo.example.com` to that application. |
 | deis-router          | useProxyProtocol | `boolean`  | `false`       | PROXY is a simple protocol supported by nginx, HAProxy, Amazon ELB, and others.  It provides a method to obtain information about a request's originating IP address from an external (to Kubernetes) load balancer in front of the router.  Enabling this option allows the router to select the originating IP from the HTTP `X-Forwarded-For` header. |
 | deis-builder         | connectTimeout   | `integer`  | `10000`       | `proxy_connect_timeout` (in milliseconds). |
