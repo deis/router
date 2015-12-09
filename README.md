@@ -127,6 +127,124 @@ When generating configuration, the program parses structured data (JSON) found i
 
 Similarly, the router watches its _own_ `deis.io/routerConfig` annotations to dynamically construct global Nginx configuration.
 
+## Configuration Guide
+
+### Environment variables
+
+Router configuration is driven almost entirely by annotations on the router's replication controller and the services of all routable applications-- those labeled with `routable=true`.
+
+One exception to this, however, is that in order for the router to discover its own annotations, the router must be configured via environment variable with some awareness of its own namespace.  (It cannot query the API for information about itself without knowing this.)
+
+The `POD_NAMESPACE` environment variable is required by the router and it should be configured to match the Kubernetes namespace that the router is deployed into.  If no value is provided, the router will assume a value of `default`.
+
+For example, consider the following Kubernetes manifest.  Given a manifest containing the following metadata:
+
+```
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: deis-router
+  namespace: deis
+# ...
+```
+
+The corresponding template must inject a `POD_NAMESPACE=deis` environment variable into router containers.  The most elegant way to achieve this is by means of the Kubernetes "downward API," as in this snippet from the same manifest:
+
+```
+# ...
+spec:
+  # ...
+  template:
+    # ...
+    spec:
+      containers:
+      - name: deis-router
+        # ...
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+# ...
+```
+
+Altering the value of the `POD_NAMESPACE` environment variable requires the router to be restarted for changes to take effect.
+
+### Annotations
+
+All remaining configuration options are configured through annotations.  Any of the following three Kubernetes resources can be configured through a JSON object provided as a value of the `deis.io/routerConfig` annotation:
+
+* deis-router replication controller
+* deis-builder service (if in use)
+* routable applications (labeled with `routable=true`)
+
+Note that although the annotation containing router configuration for each of the above is consistently named `deis.io/routerConfig`, the structure of the JSON object used for each of those differs by use case.  The table below summarizes the configuration options that are currently available for each:
+
+| Component            | Name             | Type       | Default Value | Description |
+|----------------------|------------------|------------|---------------|-------------|
+| deis-router          | domain           | `string`   | N/A           | This defines the router's default domain.  Any domains added to a routable application _not_ containing the `.` character will be assumed to be subdomains of this default domain.  Thus, for example, a default domain of `example.com` coupled with a routable app counting `foo` among its domains will result in router configuration that routes traffic for `foo.example.com` to that application. |
+| deis-router          | useProxyProtocol | `boolean`  | `false`       | PROXY is a simple protocol supported by nginx, HAProxy, Amazon ELB, and others.  It provides a method to obtain information about a request's originating IP address from an external (to Kubernetes) load balancer in front of the router.  Enabling this option allows the router to select the originating IP from the HTTP `X-Forwarded-For` header. |
+| deis-builder         | connectTimeout   | `integer`  | `10000`       | `proxy_connect_timeout` (in milliseconds). |
+| deis-builder         | tcpTimeout       | `integer`  | `1200000`     | `proxy_timeout` (in milliseconds). |
+| routable application | domains          | `[]string` | N/A           | List of domains for which traffic should be routed to the application.  These may be fully qualified (e.g. `foo.example.com`) or, if not containing any `.` character, may be relative to the router's default domain. |
+
+#### Annotations by example
+
+##### router replication controller:
+
+```
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: deis-router
+  namespace: deis
+  # ...
+  annotations:
+    deis.io/routerConfig: |
+      {
+        "domain": "example.com",
+        "useProxyProtocol": true
+      }
+# ...
+```
+
+##### builder service:
+
+```
+apiVersion: v1
+kind: Service
+metadata:
+  name: deis-builder
+  namespace: deis
+  # ...
+  annotations:
+    deis.io/routerConfig: |
+      {
+        "connectTimeout": 20000,
+        "tcpTimeout": 2400000
+      }
+# ...
+```
+
+##### routable service:
+
+```
+apiVersion: v1
+kind: Service
+metadata:
+  name: foo
+  labels:
+  	routable: "true"
+  namespace: examples
+  # ...
+  annotations:
+    deis.io/routerConfig: |
+      {
+        "domains": ["foo", "bar", "www.foobar.com"]
+      }
+# ...
+```
+
 ## License
 
 Copyright 2013, 2014, 2015 Engine Yard, Inc.
