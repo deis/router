@@ -16,6 +16,13 @@ events {
 }
 
 http {
+	# basic settings
+	vhost_traffic_status_zone;
+
+	sendfile on;
+	tcp_nopush on;
+	tcp_nodelay on;
+
 	# The timeout value must be greater than the front facing load balancers timeout value.
 	# Default is the deis recommended timeout value for ELB - 1200 seconds + 100s extra.
 	keepalive_timeout {{ $routerConfig.DefaultTimeout }}s;
