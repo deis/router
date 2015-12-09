@@ -14,21 +14,25 @@ import (
 
 // RouterConfig is the primary type used to encapsulate all router configuration.
 type RouterConfig struct {
-	WorkerProcesses      string `json:"workerProcesses"`
-	MaxWorkerConnections int    `json:"maxWorkerConnections"`
-	DefaultTimeout       int    `json:"defaultTimeout"`
-	Domain               string `json:"domain"`
-	UseProxyProtocol     bool   `json:"useProxyProtocol"`
-	AppConfigs           []*AppConfig
-	BuilderConfig        *BuilderConfig
+	WorkerProcesses          string `json:"workerProcesses"`
+	MaxWorkerConnections     int    `json:"maxWorkerConnections"`
+	DefaultTimeout           int    `json:"defaultTimeout"`
+	ServerNameHashMaxSize    int    `json:"serverNameHashMaxSize"`
+	ServerNameHashBucketSize int    `json:"serverNameHashBucketSize"`
+	Domain                   string `json:"domain"`
+	UseProxyProtocol         bool   `json:"useProxyProtocol"`
+	AppConfigs               []*AppConfig
+	BuilderConfig            *BuilderConfig
 }
 
 func newRouterConfig() *RouterConfig {
 	return &RouterConfig{
-		WorkerProcesses:      "auto",
-		MaxWorkerConnections: 768,
-		DefaultTimeout:       1300,
-		UseProxyProtocol:     false,
+		WorkerProcesses:          "auto",
+		MaxWorkerConnections:     768,
+		DefaultTimeout:           1300,
+		ServerNameHashMaxSize:    512,
+		ServerNameHashBucketSize: 64,
+		UseProxyProtocol:         false,
 	}
 }
 

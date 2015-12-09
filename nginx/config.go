@@ -31,8 +31,8 @@ http {
 	keepalive_timeout {{ $routerConfig.DefaultTimeout }}s;
 
 	types_hash_max_size 2048;
-	server_names_hash_max_size 512;
-	server_names_hash_bucket_size 64;
+	server_names_hash_max_size {{ $routerConfig.ServerNameHashMaxSize }};
+	server_names_hash_bucket_size {{ $routerConfig.ServerNameHashBucketSize }};
 
 	log_format upstreaminfo '[$time_local] - {{ if $routerConfig.UseProxyProtocol }}$proxy_protocol_addr{{ else }}$remote_addr{{ end }} - $remote_user - $status - "$request" - $bytes_sent - "$http_referer" - "$http_user_agent" - "$server_name" - $upstream_addr - $http_host - $upstream_response_time - $request_time';
 
