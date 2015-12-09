@@ -20,10 +20,10 @@ http {
 	server_names_hash_max_size 512;
 	server_names_hash_bucket_size 64;
 
-  log_format upstreaminfo '[$time_local] - {{ if $routerConfig.UseProxyProtocol }}$proxy_protocol_addr{{ else }}$remote_addr{{ end }} - $remote_user - $status - "$request" - $bytes_sent - "$http_referer" - "$http_user_agent" - "$server_name" - $upstream_addr - $http_host - $upstream_response_time - $request_time';
+	log_format upstreaminfo '[$time_local] - {{ if $routerConfig.UseProxyProtocol }}$proxy_protocol_addr{{ else }}$remote_addr{{ end }} - $remote_user - $status - "$request" - $bytes_sent - "$http_referer" - "$http_user_agent" - "$server_name" - $upstream_addr - $http_host - $upstream_response_time - $request_time';
 
-  access_log /opt/nginx/logs/access.log upstreaminfo;
-  error_log  /opt/nginx/logs/error.log error;
+	access_log /opt/nginx/logs/access.log upstreaminfo;
+	error_log  /opt/nginx/logs/error.log error;
 
 	# Default server handles requests for unmapped hostnames
 	server {
