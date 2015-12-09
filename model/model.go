@@ -14,6 +14,7 @@ import (
 
 // RouterConfig is the primary type used to encapsulate all router configuration.
 type RouterConfig struct {
+	DefaultTimeout   int    `json:"defaultTimeout"`
 	Domain           string `json:"domain"`
 	UseProxyProtocol bool   `json:"useProxyProtocol"`
 	AppConfigs       []*AppConfig
@@ -22,6 +23,7 @@ type RouterConfig struct {
 
 func newRouterConfig() *RouterConfig {
 	return &RouterConfig{
+		DefaultTimeout:   1300,
 		UseProxyProtocol: false,
 	}
 }

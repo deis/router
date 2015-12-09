@@ -16,6 +16,10 @@ events {
 }
 
 http {
+	# The timeout value must be greater than the front facing load balancers timeout value.
+	# Default is the deis recommended timeout value for ELB - 1200 seconds + 100s extra.
+	keepalive_timeout {{ $routerConfig.DefaultTimeout }}s;
+
 	types_hash_max_size 2048;
 	server_names_hash_max_size 512;
 	server_names_hash_bucket_size 64;
@@ -38,6 +42,8 @@ http {
 		listen 80{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
 		server_name {{$domain}};
 		{{ if $appConfig.Available }}location / {
+			proxy_send_timeout {{ $routerConfig.DefaultTimeout }}s;
+			proxy_read_timeout {{ $routerConfig.DefaultTimeout }}s;
 			proxy_pass http://{{$appConfig.ServiceIP}}:80;
 		}{{ else }}location / {
 			return 503;
