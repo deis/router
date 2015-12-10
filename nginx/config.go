@@ -54,6 +54,11 @@ http {
 	access_log /opt/nginx/logs/access.log upstreaminfo;
 	error_log  /opt/nginx/logs/error.log error;
 
+	map $http_upgrade $connection_upgrade {
+		default upgrade;
+		'' close;
+	}
+
 	# Default server handles requests for unmapped hostnames
 	server {
 		listen 80{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
@@ -67,8 +72,16 @@ http {
 		listen 80{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
 		server_name {{$domain}};
 		{{ if $appConfig.Available }}location / {
+			proxy_buffering off;
+			proxy_set_header Host $host;
+			proxy_set_header X-Forwarded-For {{ if $routerConfig.UseProxyProtocol }}$proxy_protocol_addr{{ else }}$proxy_add_x_forwarded_for{{ end }};
+			proxy_redirect off;
+			proxy_connect_timeout 30s;
 			proxy_send_timeout {{ $routerConfig.DefaultTimeout }}s;
 			proxy_read_timeout {{ $routerConfig.DefaultTimeout }}s;
+			proxy_http_version 1.1;
+			proxy_set_header Upgrade $http_upgrade;
+			proxy_set_header Connection $connection_upgrade;
 			proxy_pass http://{{$appConfig.ServiceIP}}:80;
 		}{{ else }}location / {
 			return 503;
