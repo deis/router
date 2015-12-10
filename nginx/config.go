@@ -60,6 +60,8 @@ http {
 	{{range $appConfig := $routerConfig.AppConfigs}}{{range $domain := $appConfig.Domains}}server {
 		listen 80{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
 		server_name {{$domain}};
+		server_name_in_redirect off;
+		port_in_redirect off;
 		{{ if $appConfig.Available }}location / {
 			proxy_send_timeout {{ $routerConfig.DefaultTimeout }}s;
 			proxy_read_timeout {{ $routerConfig.DefaultTimeout }}s;
