@@ -59,10 +59,29 @@ http {
 		'' close;
 	}
 
-	# Default server handles requests for unmapped hostnames
+	# Default server handles requests for unmapped hostnames, including healthchecks
 	server {
-		listen 80{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
+		listen 80 default_server reuseport{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
 		server_name _;
+		location ~ ^/healthz/?$ {
+			access_log off;
+			default_type 'text/plain';
+			return 200;
+		}
+		location / {
+			return 404;
+		}
+	}
+
+	# Healthcheck on 9090 -- never uses proxy_protocol
+	server {
+		listen 9090 default_server;
+		server_name _;
+		location ~ ^/healthz/?$ {
+			access_log off;
+			default_type 'text/plain';
+			return 200;
+		}
 		location / {
 			return 404;
 		}
