@@ -14,13 +14,14 @@ import (
 
 // RouterConfig is the primary type used to encapsulate all router configuration.
 type RouterConfig struct {
-	WorkerProcesses          string `json:"workerProcesses"`
-	MaxWorkerConnections     int    `json:"maxWorkerConnections"`
-	DefaultTimeout           int    `json:"defaultTimeout"`
-	ServerNameHashMaxSize    int    `json:"serverNameHashMaxSize"`
-	ServerNameHashBucketSize int    `json:"serverNameHashBucketSize"`
-	Domain                   string `json:"domain"`
-	UseProxyProtocol         bool   `json:"useProxyProtocol"`
+	WorkerProcesses          string      `json:"workerProcesses"`
+	MaxWorkerConnections     int         `json:"maxWorkerConnections"`
+	DefaultTimeout           int         `json:"defaultTimeout"`
+	ServerNameHashMaxSize    int         `json:"serverNameHashMaxSize"`
+	ServerNameHashBucketSize int         `json:"serverNameHashBucketSize"`
+	GzipConfig               *GzipConfig `json:"gzipConfig"`
+	Domain                   string      `json:"domain"`
+	UseProxyProtocol         bool        `json:"useProxyProtocol"`
 	AppConfigs               []*AppConfig
 	BuilderConfig            *BuilderConfig
 }
@@ -32,7 +33,31 @@ func newRouterConfig() *RouterConfig {
 		DefaultTimeout:           1300,
 		ServerNameHashMaxSize:    512,
 		ServerNameHashBucketSize: 64,
+		GzipConfig:               newGzipConfig(),
 		UseProxyProtocol:         false,
+	}
+}
+
+// GzipConfig encapsulates gzip configuration.
+type GzipConfig struct {
+	CompLevel   int    `json:"compLevel"`
+	Disable     string `json:"disable"`
+	HTTPVersion string `json:"httpVersion"`
+	MinLength   int    `json:"minLength"`
+	Proxied     string `json:"proxied"`
+	Types       string `json:"types"`
+	Vary        string `json:"vary"`
+}
+
+func newGzipConfig() *GzipConfig {
+	return &GzipConfig{
+		CompLevel:   5,
+		Disable:     "msie6",
+		HTTPVersion: "1.1",
+		MinLength:   256,
+		Proxied:     "any",
+		Types:       "application/atom+xml application/javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component",
+		Vary:        "on",
 	}
 }
 
