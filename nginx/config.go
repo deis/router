@@ -43,6 +43,8 @@ http {
 	gzip_proxied {{ $gzipConfig.Proxied }};
 	gzip_vary {{ $gzipConfig.Vary }};{{ end }}
 
+	client_max_body_size {{ $routerConfig.BodySize }}m;
+
 	{{ if $routerConfig.UseProxyProtocol }}set_real_ip_from {{ $routerConfig.ProxyRealIPCIDR }};
 	real_ip_header proxy_protocol;
 	{{ end }}
