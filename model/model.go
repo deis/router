@@ -20,6 +20,7 @@ type RouterConfig struct {
 	ServerNameHashMaxSize    int         `json:"serverNameHashMaxSize"`
 	ServerNameHashBucketSize int         `json:"serverNameHashBucketSize"`
 	GzipConfig               *GzipConfig `json:"gzipConfig"`
+	ProxyRealIPCIDR          string      `json:"proxyRealIpCidr"`
 	Domain                   string      `json:"domain"`
 	UseProxyProtocol         bool        `json:"useProxyProtocol"`
 	AppConfigs               []*AppConfig
@@ -34,6 +35,7 @@ func newRouterConfig() *RouterConfig {
 		ServerNameHashMaxSize:    512,
 		ServerNameHashBucketSize: 64,
 		GzipConfig:               newGzipConfig(),
+		ProxyRealIPCIDR:          "10.0.0.0/8",
 		UseProxyProtocol:         false,
 	}
 }

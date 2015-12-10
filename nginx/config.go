@@ -43,6 +43,10 @@ http {
 	gzip_proxied {{ $gzipConfig.Proxied }};
 	gzip_vary {{ $gzipConfig.Vary }};{{ end }}
 
+	{{ if $routerConfig.UseProxyProtocol }}set_real_ip_from {{ $routerConfig.ProxyRealIPCIDR }};
+	real_ip_header proxy_protocol;
+	{{ end }}
+
 	log_format upstreaminfo '[$time_local] - {{ if $routerConfig.UseProxyProtocol }}$proxy_protocol_addr{{ else }}$remote_addr{{ end }} - $remote_user - $status - "$request" - $bytes_sent - "$http_referer" - "$http_user_agent" - "$server_name" - $upstream_addr - $http_host - $upstream_response_time - $request_time';
 
 	access_log /opt/nginx/logs/access.log upstreaminfo;
