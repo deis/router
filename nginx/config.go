@@ -10,7 +10,7 @@ import (
 const (
 	confTemplate = `{{ $routerConfig := . }}user nginx;
 daemon off;
-
+pid /run/nginx.pid;
 worker_processes {{ $routerConfig.WorkerProcesses }};
 
 events {
