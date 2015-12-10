@@ -36,3 +36,5 @@ spec:
           hostPort: 443
         - containerPort: 2222
           hostPort: 2222
+        - containerPort: 9090
+          hostPort: 9090
