@@ -71,6 +71,8 @@ http {
 	{{range $appConfig := $routerConfig.AppConfigs}}{{range $domain := $appConfig.Domains}}server {
 		listen 80{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
 		server_name {{$domain}};
+		server_name_in_redirect off;
+		port_in_redirect off;
 		{{ if $appConfig.Available }}location / {
 			proxy_buffering off;
 			proxy_set_header Host $host;
