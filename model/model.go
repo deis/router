@@ -69,7 +69,6 @@ func newGzipConfig() *GzipConfig {
 type AppConfig struct {
 	Domains   []string `json:"domains"`
 	ServiceIP string
-	Available bool
 }
 
 func newAppConfig() *AppConfig {
@@ -224,16 +223,6 @@ func buildAppConfig(kubeClient *client.Client, service api.Service, platformDoma
 		}
 	}
 	appConfig.ServiceIP = service.Spec.ClusterIP
-	endpointsClient := kubeClient.Endpoints(service.Namespace)
-	endpointsSelector, err := labels.Parse(labels.FormatLabels(service.Spec.Selector))
-	if err != nil {
-		return nil, err
-	}
-	endpoints, err := endpointsClient.List(endpointsSelector)
-	if err != nil {
-		return nil, err
-	}
-	appConfig.Available = len(endpoints.Items[0].Subsets) > 0
 	return appConfig, nil
 }
 

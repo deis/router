@@ -92,7 +92,7 @@ http {
 		server_name {{$domain}};
 		server_name_in_redirect off;
 		port_in_redirect off;
-		{{ if $appConfig.Available }}location / {
+		location / {
 			proxy_buffering off;
 			proxy_set_header Host $host;
 			proxy_set_header X-Forwarded-For {{ if $routerConfig.UseProxyProtocol }}$proxy_protocol_addr{{ else }}$proxy_add_x_forwarded_for{{ end }};
@@ -104,9 +104,7 @@ http {
 			proxy_set_header Upgrade $http_upgrade;
 			proxy_set_header Connection $connection_upgrade;
 			proxy_pass http://{{$appConfig.ServiceIP}}:80;
-		}{{ else }}location / {
-			return 503;
-		}{{ end }}
+		}
 	}
 
 	{{end}}{{end}}
