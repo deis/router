@@ -199,9 +199,11 @@ Note that although the annotation containing router configuration for each of th
 | deis-router          | proxyRealIpCidr  | `string`   | `10.0.0.0/8`  | nginx `set_real_ip_from` setting.  Defines trusted addresses that are known to send correct replacement addresses. |
 | deis-router          | domain           | `string`   | N/A           | This defines the router's default domain.  Any domains added to a routable application _not_ containing the `.` character will be assumed to be subdomains of this default domain.  Thus, for example, a default domain of `example.com` coupled with a routable app counting `foo` among its domains will result in router configuration that routes traffic for `foo.example.com` to that application. |
 | deis-router          | useProxyProtocol | `boolean`  | `false`       | PROXY is a simple protocol supported by nginx, HAProxy, Amazon ELB, and others.  It provides a method to obtain information about a request's originating IP address from an external (to Kubernetes) load balancer in front of the router.  Enabling this option allows the router to select the originating IP from the HTTP `X-Forwarded-For` header. |
-| deis-builder         | connectTimeout   | `integer`  | `10000`       | `proxy_connect_timeout` (in milliseconds). |
-| deis-builder         | tcpTimeout       | `integer`  | `1200000`     | `proxy_timeout` (in milliseconds). |
+| deis-builder         | connectTimeout   | `integer`  | `10`       | nginx `proxy_connect_timeout` setting (in seconds). |
+| deis-builder         | tcpTimeout       | `integer`  | `1200`     | nginx `proxy_timeout` setting (in seconds). |
 | routable application | domains          | `[]string` | N/A           | List of domains for which traffic should be routed to the application.  These may be fully qualified (e.g. `foo.example.com`) or, if not containing any `.` character, may be relative to the router's default domain. |
+| routable application | connectTimeout   | `integer`  | `30`       | nginx `proxy_connect_timeout` setting (in seconds). |
+| routable application | tcpTimeout       | `integer`  | router's `defaultTimeout` | nginx `proxy_send_timeout` and `proxy_read_timeout` settings (in seconds). |
 
 #### Annotations by example
 
