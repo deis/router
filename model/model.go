@@ -67,12 +67,17 @@ func newGzipConfig() *GzipConfig {
 
 // AppConfig encapsulates the configuration for all routes to a single back end.
 type AppConfig struct {
-	Domains   []string `json:"domains"`
-	ServiceIP string
+	Domains        []string `json:"domains"`
+	ConnectTimeout int      `json:"connectTimeout"`
+	TCPTimeout     int      `json:"tcpTimeout"`
+	ServiceIP      string
 }
 
-func newAppConfig() *AppConfig {
-	return &AppConfig{}
+func newAppConfig(routerConfig *RouterConfig) *AppConfig {
+	return &AppConfig{
+		ConnectTimeout: 30,
+		TCPTimeout:     routerConfig.DefaultTimeout,
+	}
 }
 
 // BuilderConfig encapsulates the configuration of the deis-builder-- if it's in use.
@@ -84,8 +89,8 @@ type BuilderConfig struct {
 
 func newBuilderConfig() *BuilderConfig {
 	return &BuilderConfig{
-		ConnectTimeout: 10000,
-		TCPTimeout:     1200000,
+		ConnectTimeout: 10,
+		TCPTimeout:     1200,
 	}
 }
 
@@ -169,7 +174,7 @@ func build(kubeClient *client.Client, routerRC *api.ReplicationController, appSe
 		return nil, err
 	}
 	for _, appService := range appServices.Items {
-		appConfig, err := buildAppConfig(kubeClient, appService, routerConfig.Domain)
+		appConfig, err := buildAppConfig(kubeClient, appService, routerConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -203,22 +208,22 @@ func buildRouterConfig(rc *api.ReplicationController) (*RouterConfig, error) {
 	return routerConfig, nil
 }
 
-func buildAppConfig(kubeClient *client.Client, service api.Service, platformDomain string) (*AppConfig, error) {
+func buildAppConfig(kubeClient *client.Client, service api.Service, routerConfig *RouterConfig) (*AppConfig, error) {
 	annotations, ok := service.Annotations["deis.io/routerConfig"]
 	// If no annotations are found, we don't have the information we need to build routes
 	// to this application.  Abort.
 	if !ok {
 		return nil, nil
 	}
-	appConfig := newAppConfig()
+	appConfig := newAppConfig(routerConfig)
 	err := json.Unmarshal([]byte(annotations), appConfig)
 	if err != nil {
 		return nil, err
 	}
-	if platformDomain != "" {
+	if routerConfig.Domain != "" {
 		for i, domain := range appConfig.Domains {
 			if !strings.Contains(domain, ".") {
-				appConfig.Domains[i] = fmt.Sprintf("%s.%s", domain, platformDomain)
+				appConfig.Domains[i] = fmt.Sprintf("%s.%s", domain, routerConfig.Domain)
 			}
 		}
 	}

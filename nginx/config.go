@@ -97,9 +97,9 @@ http {
 			proxy_set_header Host $host;
 			proxy_set_header X-Forwarded-For {{ if $routerConfig.UseProxyProtocol }}$proxy_protocol_addr{{ else }}$proxy_add_x_forwarded_for{{ end }};
 			proxy_redirect off;
-			proxy_connect_timeout 30s;
-			proxy_send_timeout {{ $routerConfig.DefaultTimeout }}s;
-			proxy_read_timeout {{ $routerConfig.DefaultTimeout }}s;
+			proxy_connect_timeout {{ $appConfig.ConnectTimeout }}s;
+			proxy_send_timeout {{ $appConfig.TCPTimeout }}s;
+			proxy_read_timeout {{ $appConfig.TCPTimeout }}s;
 			proxy_http_version 1.1;
 			proxy_set_header Upgrade $http_upgrade;
 			proxy_set_header Connection $connection_upgrade;
@@ -113,8 +113,8 @@ http {
 {{ if $routerConfig.BuilderConfig }}{{ $builderConfig := $routerConfig.BuilderConfig }}stream {
 	server {
 		listen 2222;
-		proxy_connect_timeout {{ $builderConfig.ConnectTimeout }};
-		proxy_timeout {{ $builderConfig.TCPTimeout }};
+		proxy_connect_timeout {{ $builderConfig.ConnectTimeout }}s;
+		proxy_timeout {{ $builderConfig.TCPTimeout }}s;
 		proxy_pass {{$builderConfig.ServiceIP}}:2222;
 	}
 }{{ end }}
