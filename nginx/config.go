@@ -52,7 +52,7 @@ http {
 	log_format upstreaminfo '[$time_local] - {{ if $routerConfig.UseProxyProtocol }}$proxy_protocol_addr{{ else }}$remote_addr{{ end }} - $remote_user - $status - "$request" - $bytes_sent - "$http_referer" - "$http_user_agent" - "$server_name" - $upstream_addr - $http_host - $upstream_response_time - $request_time';
 
 	access_log /opt/nginx/logs/access.log upstreaminfo;
-	error_log  /opt/nginx/logs/error.log error;
+	error_log  /opt/nginx/logs/error.log {{ $routerConfig.ErrorLogLevel }};
 
 	map $http_upgrade $connection_upgrade {
 		default upgrade;

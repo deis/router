@@ -22,6 +22,7 @@ type RouterConfig struct {
 	GzipConfig               *GzipConfig `json:"gzipConfig"`
 	BodySize                 int         `json:"bodySize"`
 	ProxyRealIPCIDR          string      `json:"proxyRealIpCidr"`
+	ErrorLogLevel            string      `json:"errorLogLevel"`
 	Domain                   string      `json:"domain"`
 	UseProxyProtocol         bool        `json:"useProxyProtocol"`
 	AppConfigs               []*AppConfig
@@ -38,6 +39,7 @@ func newRouterConfig() *RouterConfig {
 		GzipConfig:               newGzipConfig(),
 		BodySize:                 1,
 		ProxyRealIPCIDR:          "10.0.0.0/8",
+		ErrorLogLevel:            "error",
 		UseProxyProtocol:         false,
 	}
 }
