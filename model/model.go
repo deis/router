@@ -25,6 +25,7 @@ type RouterConfig struct {
 	ErrorLogLevel            string      `json:"errorLogLevel"`
 	Domain                   string      `json:"domain"`
 	UseProxyProtocol         bool        `json:"useProxyProtocol"`
+	EnforceWhitelists        bool        `json:"enforceWhitelists"`
 	AppConfigs               []*AppConfig
 	BuilderConfig            *BuilderConfig
 }
@@ -41,6 +42,7 @@ func newRouterConfig() *RouterConfig {
 		ProxyRealIPCIDR:          "10.0.0.0/8",
 		ErrorLogLevel:            "error",
 		UseProxyProtocol:         false,
+		EnforceWhitelists:        false,
 	}
 }
 
@@ -70,6 +72,7 @@ func newGzipConfig() *GzipConfig {
 // AppConfig encapsulates the configuration for all routes to a single back end.
 type AppConfig struct {
 	Domains        []string `json:"domains"`
+	Whitelist      []string `json:"whitelist"`
 	ConnectTimeout int      `json:"connectTimeout"`
 	TCPTimeout     int      `json:"tcpTimeout"`
 	ServiceIP      string

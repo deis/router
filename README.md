@@ -200,9 +200,11 @@ Note that although the annotation containing router configuration for each of th
 | deis-router          | errorLogLevel    | `string`   | `error`       | Log level used in the nginx `error_log` setting (valid values are: `debug`, `info`, `notice`, `warn`, `error`, `crit`, `alert`, and `emerg`). |
 | deis-router          | domain           | `string`   | N/A           | This defines the router's default domain.  Any domains added to a routable application _not_ containing the `.` character will be assumed to be subdomains of this default domain.  Thus, for example, a default domain of `example.com` coupled with a routable app counting `foo` among its domains will result in router configuration that routes traffic for `foo.example.com` to that application. |
 | deis-router          | useProxyProtocol | `boolean`  | `false`       | PROXY is a simple protocol supported by nginx, HAProxy, Amazon ELB, and others.  It provides a method to obtain information about a request's originating IP address from an external (to Kubernetes) load balancer in front of the router.  Enabling this option allows the router to select the originating IP from the HTTP `X-Forwarded-For` header. |
+| deis-router          | enforceWhitelists | `boolean` | `false`    | Whether to honor application-level IP / CIDR whitelists. |
 | deis-builder         | connectTimeout   | `integer`  | `10`       | nginx `proxy_connect_timeout` setting (in seconds). |
 | deis-builder         | tcpTimeout       | `integer`  | `1200`     | nginx `proxy_timeout` setting (in seconds). |
 | routable application | domains          | `[]string` | N/A           | List of domains for which traffic should be routed to the application.  These may be fully qualified (e.g. `foo.example.com`) or, if not containing any `.` character, may be relative to the router's default domain. |
+| routable application | whitelist        | `[]string` | N/A        | List of addresses permitted to access the application (using IP or CIDR notation).  Requests from all other addresses are denied. |
 | routable application | connectTimeout   | `integer`  | `30`       | nginx `proxy_connect_timeout` setting (in seconds). |
 | routable application | tcpTimeout       | `integer`  | router's `defaultTimeout` | nginx `proxy_send_timeout` and `proxy_read_timeout` settings (in seconds). |
 

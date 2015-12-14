@@ -92,6 +92,11 @@ http {
 		server_name {{$domain}};
 		server_name_in_redirect off;
 		port_in_redirect off;
+
+		{{ if and $routerConfig.EnforceWhitelists (ne (len $appConfig.Whitelist) 0) }}{{ range $whitelistEntry := $appConfig.Whitelist }}
+		allow {{ $whitelistEntry }};{{ end }}
+		deny all;{{ end }}
+
 		location / {
 			proxy_buffering off;
 			proxy_set_header Host $host;
