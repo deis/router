@@ -24,8 +24,8 @@ GO_PACKAGES := ${REPO_PATH} $(addprefix ${REPO_PATH}/,${GO_DIRS})
 # is pushed to.
 # If DEIS_REGISTRY is not set, try to populate it from legacy DEV_REGISTRY.
 DEIS_REGISTRY ?= ${DEV_REGISTRY}/
-IMAGE_PREFIX ?= deis/
-IMAGE := ${DEIS_REGISTRY}${IMAGE_PREFIX}${SHORT_NAME}:${VERSION}
+IMAGE_PREFIX ?= deis
+IMAGE := ${DEIS_REGISTRY}${IMAGE_PREFIX}/${SHORT_NAME}:${VERSION}
 
 # The following variables describe k8s manifests we may wish to deploy
 # to a running k8s cluster in the course of development.
@@ -61,7 +61,7 @@ clean: check-docker
 	docker rmi ${IMAGE}
 
 full-clean: check-docker
-	docker images -q ${DEIS_REGISTRY}/${IMAGE_PREFIX}${SHORT_NAME} | xargs docker rmi -f
+	docker images -q ${DEIS_REGISTRY}/${IMAGE_PREFIX}/${SHORT_NAME} | xargs docker rmi -f
 
 dev-release: push set-image
 
