@@ -225,10 +225,12 @@ func buildAppConfig(kubeClient *client.Client, service api.Service, routerConfig
 	if err != nil {
 		return nil, err
 	}
-	if routerConfig.Domain != "" {
-		for i, domain := range appConfig.Domains {
-			if !strings.Contains(domain, ".") {
+	for i, domain := range appConfig.Domains {
+		if !strings.Contains(domain, ".") {
+			if routerConfig.Domain != "" {
 				appConfig.Domains[i] = fmt.Sprintf("%s.%s", domain, routerConfig.Domain)
+			} else {
+				appConfig.Domains[i] = fmt.Sprintf("~^%s\\.(?<domain>.+)$", domain)
 			}
 		}
 	}
