@@ -4,6 +4,7 @@ import (
 	"os"
 	"text/template"
 
+	"github.com/Masterminds/sprig"
 	"github.com/deis/router/model"
 )
 
@@ -89,7 +90,7 @@ http {
 
 	{{range $appConfig := $routerConfig.AppConfigs}}{{range $domain := $appConfig.Domains}}server {
 		listen 80{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
-		server_name {{$domain}};
+		server_name {{ if contains "." $domain }}{{ $domain }}{{ else }}~^{{ $domain }}\\.(?<domain>.+)${{ end }};
 		server_name_in_redirect off;
 		port_in_redirect off;
 
@@ -129,7 +130,7 @@ http {
 // WriteConfig dynamically produces valid nginx configuration by combining a Router configuration
 // object with a data-driven template.
 func WriteConfig(routerConfig *model.RouterConfig, filePath string) error {
-	tmpl, err := template.New("nginx").Parse(confTemplate)
+	tmpl, err := template.New("nginx").Funcs(sprig.TxtFuncMap()).Parse(confTemplate)
 	if err != nil {
 		return err
 	}
