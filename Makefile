@@ -17,7 +17,7 @@ BINDIR := ./rootfs/bin
 
 # The following variables describe the source we build from
 GO_FILES := $(wildcard *.go)
-GO_DIRS := model/ nginx/ utils/
+GO_DIRS := model/ nginx/ utils/ utils/modeler
 GO_PACKAGES := ${REPO_PATH} $(addprefix ${REPO_PATH}/,${GO_DIRS})
 
 # The following variables describe the Docker image we build and where it
@@ -100,4 +100,4 @@ style-check:
 	for package in $$(glide novendor | tr " " "\n"); do golint $$package; done
 
 test-unit:
-	@echo no unit tests
+	${DEV_ENV_CMD} go test --cover --race -v ${GO_PACKAGES}
