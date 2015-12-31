@@ -93,6 +93,9 @@ func (m *Modeler) mapToModel(data map[string]string, context string, rv reflect.
 					elem.Field(i).Set(reflect.ValueOf(boolVal))
 				} else if rf.Type.Kind() == reflect.Slice {
 					sliceVal := strings.Split(stringVal, ",")
+					for j, token := range sliceVal {
+						sliceVal[j] = strings.TrimSpace(token)
+					}
 					elem.Field(i).Set(reflect.ValueOf(sliceVal))
 				} else {
 					return fmt.Errorf("Unsupported type %s.", rf.Type.Kind())

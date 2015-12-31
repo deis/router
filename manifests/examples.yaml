@@ -27,10 +27,7 @@ metadata:
     routable: "true"
     app: nginx
   annotations:
-    deis.io/routerConfig: |
-      {
-        "domains": [ "nginx" ]
-      }
+    router.deis.io/domains: nginx
 spec:
   ports:
   - port: 80
@@ -69,10 +66,7 @@ metadata:
     app: apache
   annotations:
     # Demonstrates a subdomain of the platform's domain as well as a custom domain
-    deis.io/routerConfig: |
-      {
-        "domains": [ "apache", "httpd.example.com" ]
-      }
+    router.deis.io/domains: apache,httpd.example.com
 spec:
   ports:
   - port: 80

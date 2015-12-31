@@ -1,11 +1,11 @@
 package model
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/deis/router/utils"
+	modelerUtility "github.com/deis/router/utils/modeler"
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/errors"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
@@ -14,18 +14,18 @@ import (
 
 // RouterConfig is the primary type used to encapsulate all router configuration.
 type RouterConfig struct {
-	WorkerProcesses          string      `json:"workerProcesses"`
-	MaxWorkerConnections     int         `json:"maxWorkerConnections"`
-	DefaultTimeout           int         `json:"defaultTimeout"`
-	ServerNameHashMaxSize    int         `json:"serverNameHashMaxSize"`
-	ServerNameHashBucketSize int         `json:"serverNameHashBucketSize"`
-	GzipConfig               *GzipConfig `json:"gzipConfig"`
-	BodySize                 int         `json:"bodySize"`
-	ProxyRealIPCIDR          string      `json:"proxyRealIpCidr"`
-	ErrorLogLevel            string      `json:"errorLogLevel"`
-	Domain                   string      `json:"domain"`
-	UseProxyProtocol         bool        `json:"useProxyProtocol"`
-	EnforceWhitelists        bool        `json:"enforceWhitelists"`
+	WorkerProcesses          string      `router:"workerProcesses"`
+	MaxWorkerConnections     int         `router:"maxWorkerConnections"`
+	DefaultTimeout           int         `router:"defaultTimeout"`
+	ServerNameHashMaxSize    int         `router:"serverNameHashMaxSize"`
+	ServerNameHashBucketSize int         `router:"serverNameHashBucketSize"`
+	GzipConfig               *GzipConfig `router:"gzipConfig"`
+	BodySize                 int         `router:"bodySize"`
+	ProxyRealIPCIDR          string      `router:"proxyRealIpCidr"`
+	ErrorLogLevel            string      `router:"errorLogLevel"`
+	Domain                   string      `router:"domain"`
+	UseProxyProtocol         bool        `router:"useProxyProtocol"`
+	EnforceWhitelists        bool        `router:"enforceWhitelists"`
 	AppConfigs               []*AppConfig
 	BuilderConfig            *BuilderConfig
 }
@@ -48,13 +48,13 @@ func newRouterConfig() *RouterConfig {
 
 // GzipConfig encapsulates gzip configuration.
 type GzipConfig struct {
-	CompLevel   int    `json:"compLevel"`
-	Disable     string `json:"disable"`
-	HTTPVersion string `json:"httpVersion"`
-	MinLength   int    `json:"minLength"`
-	Proxied     string `json:"proxied"`
-	Types       string `json:"types"`
-	Vary        string `json:"vary"`
+	CompLevel   int    `router:"compLevel"`
+	Disable     string `router:"disable"`
+	HTTPVersion string `router:"httpVersion"`
+	MinLength   int    `router:"minLength"`
+	Proxied     string `router:"proxied"`
+	Types       string `router:"types"`
+	Vary        string `router:"vary"`
 }
 
 func newGzipConfig() *GzipConfig {
@@ -71,10 +71,10 @@ func newGzipConfig() *GzipConfig {
 
 // AppConfig encapsulates the configuration for all routes to a single back end.
 type AppConfig struct {
-	Domains        []string `json:"domains"`
-	Whitelist      []string `json:"whitelist"`
-	ConnectTimeout int      `json:"connectTimeout"`
-	TCPTimeout     int      `json:"tcpTimeout"`
+	Domains        []string `router:"domains"`
+	Whitelist      []string `router:"whitelist"`
+	ConnectTimeout int      `router:"connectTimeout"`
+	TCPTimeout     int      `router:"tcpTimeout"`
 	ServiceIP      string
 }
 
@@ -87,8 +87,8 @@ func newAppConfig(routerConfig *RouterConfig) *AppConfig {
 
 // BuilderConfig encapsulates the configuration of the deis-builder-- if it's in use.
 type BuilderConfig struct {
-	ConnectTimeout int `json:"connectTimeout"`
-	TCPTimeout     int `json:"tcpTimeout"`
+	ConnectTimeout int `router:"connectTimeout"`
+	TCPTimeout     int `router:"tcpTimeout"`
 	ServiceIP      string
 }
 
@@ -99,11 +99,10 @@ func newBuilderConfig() *BuilderConfig {
 	}
 }
 
-var namespace string
-
-func init() {
+var (
 	namespace = utils.GetOpt("POD_NAMESPACE", "default")
-}
+	modeler   = modelerUtility.NewModeler("router.deis.io", "router")
+)
 
 // Build creates a RouterConfig configuration object by querying the k8s API for
 // relevant metadata concerning itself and all routable services.
@@ -201,12 +200,7 @@ func build(kubeClient *client.Client, routerRC *api.ReplicationController, appSe
 
 func buildRouterConfig(rc *api.ReplicationController) (*RouterConfig, error) {
 	routerConfig := newRouterConfig()
-	annotations, ok := rc.Annotations["deis.io/routerConfig"]
-	// If no annotations are found, we can still return some default router configuration.
-	if !ok {
-		return routerConfig, nil
-	}
-	err := json.Unmarshal([]byte(annotations), routerConfig)
+	err := modeler.MapToModel(rc.Annotations, routerConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -214,16 +208,15 @@ func buildRouterConfig(rc *api.ReplicationController) (*RouterConfig, error) {
 }
 
 func buildAppConfig(kubeClient *client.Client, service api.Service, routerConfig *RouterConfig) (*AppConfig, error) {
-	annotations, ok := service.Annotations["deis.io/routerConfig"]
-	// If no annotations are found, we don't have the information we need to build routes
-	// to this application.  Abort.
-	if !ok {
-		return nil, nil
-	}
 	appConfig := newAppConfig(routerConfig)
-	err := json.Unmarshal([]byte(annotations), appConfig)
+	err := modeler.MapToModel(service.Annotations, appConfig)
 	if err != nil {
 		return nil, err
+	}
+	// If no domains are found, we don't have the information we need to build routes
+	// to this application.  Abort.
+	if len(appConfig.Domains) == 0 {
+		return nil, nil
 	}
 	if routerConfig.Domain != "" {
 		for i, domain := range appConfig.Domains {
@@ -239,12 +232,7 @@ func buildAppConfig(kubeClient *client.Client, service api.Service, routerConfig
 func buildBuilderConfig(service *api.Service) (*BuilderConfig, error) {
 	builderConfig := newBuilderConfig()
 	builderConfig.ServiceIP = service.Spec.ClusterIP
-	annotations, ok := service.Annotations["deis.io/routerConfig"]
-	// If no annotations are found, we can still return some default builder configuration.
-	if !ok {
-		return builderConfig, nil
-	}
-	err := json.Unmarshal([]byte(annotations), builderConfig)
+	err := modeler.MapToModel(service.Annotations, builderConfig)
 	if err != nil {
 		return nil, err
 	}
