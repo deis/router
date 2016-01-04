@@ -40,7 +40,7 @@ This will produce output containing further instructions such as:
 59ba57a3628fe04016634760e039a3202036d5db984f6de96ea8876a7ba8a945
 
 To use a local registry for Deis development:
-    export DEIS_REGISTRY=192.168.99.102:5000
+    export DEIS_REGISTRY=192.168.99.102:5000/
 ```
 
 Following those instructions will make your local registry usable by the various `make` targets mentioned in following sections.
@@ -48,12 +48,9 @@ Following those instructions will make your local registry usable by the various
 If you do not want to run your own local registry or if the Kubernetes cluster you will be deploying to is remote, then you can easily make use of a public registry such as [hub.docker.com](http://hub.docker.com), provided you have an account.  To do so:
 
 ```
-$ export DEIS_REGISTRY=registry.hub.docker.com
-$ export IMAGE_PREFIX=your-username/
+$ export DEIS_REGISTRY=registry.hub.docker.com/
+$ export IMAGE_PREFIX=your-username
 ```
-
-__Do not miss the trailing slash in the `IMAGE_PREFIX`!__
-
 
 ### If I can `make` it there, I'll `make` it anywhere...
 
