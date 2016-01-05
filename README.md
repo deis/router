@@ -120,9 +120,9 @@ Requesting http://unknown.example.com should result in a 404 from the router sin
 
 The router is implemented as a simple Go program that manages Nginx and Nginx configuration.  It regularly queries the Kubernetes API for services labeled with `routable=true`.  Such services are compared to known services resident in memory.  If there are differences, new Nginx configuration is generated and Nginx is reloaded.
 
-When generating configuration, the program parses structured data (JSON) found in each service's `deis.io/routerConfig` annotation.  This data describes all the configuration options that allow the program to dynamically construct Nginx configuration, including virtual hosts for all the domain names associated with each routable application.
+When generating configuration, the program reads all annotations of each service prefixed with `router.deis.io`.  These annotations describe all the configuration options that allow the program to dynamically construct Nginx configuration, including virtual hosts for all the domain names associated with each routable application.
 
-Similarly, the router watches its _own_ `deis.io/routerConfig` annotations to dynamically construct global Nginx configuration.
+Similarly, the router watches the annotations on its _own_ replication controller to dynamically construct global Nginx configuration.
 
 ## Configuration Guide
 
@@ -169,41 +169,43 @@ Altering the value of the `POD_NAMESPACE` environment variable requires the rout
 
 ### Annotations
 
-All remaining configuration options are configured through annotations.  Any of the following three Kubernetes resources can be configured through a JSON object provided as a value of the `deis.io/routerConfig` annotation:
+All remaining configuration options are configured through annotations.  Any of the following three Kubernetes resources can be configured:
 
 * deis-router replication controller
 * deis-builder service (if in use)
 * routable applications (labeled with `routable=true`)
 
-Note that although the annotation containing router configuration for each of the above is consistently named `deis.io/routerConfig`, the structure of the JSON object used for each of those differs by use case.  The table below summarizes the configuration options that are currently available for each:
+The table below summarizes the configuration options that are currently available for each.
 
-| Component            | Name             | Type       | Default Value | Description |
-|----------------------|------------------|------------|---------------|-------------|
-| deis-router          | workerProcesses  | `string`   | `auto` (number of CPU cores) | Number of worker processes to start. |
-| deis-router          | workerConnections | `integer` | `768`         | Maximum number of simultaneous connections that can be opened by a worker process. |
-| deis-router          | defaultTimeout   | `integer`  | 1300          | Default timeout value in seconds.  Should be greater than the front-facing load balancer's timeout value. |
-| deis-router          | serverNameHashMaxSize | `integer` | `512`     | nginx `server_names_hash_max_size` setting. |
-| deis-router          | serverNameHashBucketSize | `integer` | 64     | nginx `server_names_hash_bucket_size` setting. |
-| deis-router          | gzipConfig             | `GzipConfig`  | Described by following lines.        | Set to `null` to disable gzip entirely. |
-| deis-router          | gzipConfig.compLevel   | `integer` | `5`        | nginx `gzip_comp_level` setting. |
-| deis-router          | gzipConfig.disable     | `string`  | `msie6`    | nginx `gzip_disable` setting. |
-| deis-router          | gzipConfig.httpVersion | `string`  | `1.1`      | nginx `gzip_http_version` setting. |
-| deis-router          | gzipConfig.minLength   | `integer` | `256`      | nginx `gzip_min_length` setting. |
-| deis-router          | gzipConfig.proxied     | `string`  | `any`      | nginx `gzip_proxied` setting. |
-| deis-router          | gzipConfig.types       | `string`  | `application/atom+xml application/javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component` | nginx `gzip_types` setting. |
-| deis-router          | gzipConfig.vary        | `string`  | `on`       | nginx `gzip_vary` setting. |
-| deis-router          | bodySize         | `integer` | `1`            | nginx `client_max_body_size` setting (in megabytes). |
-| deis-router          | proxyRealIpCidr  | `string`   | `10.0.0.0/8`  | nginx `set_real_ip_from` setting.  Defines trusted addresses that are known to send correct replacement addresses. |
-| deis-router          | errorLogLevel    | `string`   | `error`       | Log level used in the nginx `error_log` setting (valid values are: `debug`, `info`, `notice`, `warn`, `error`, `crit`, `alert`, and `emerg`). |
-| deis-router          | domain           | `string`   | N/A           | This defines the router's default domain.  Any domains added to a routable application _not_ containing the `.` character will be assumed to be subdomains of this default domain.  Thus, for example, a default domain of `example.com` coupled with a routable app counting `foo` among its domains will result in router configuration that routes traffic for `foo.example.com` to that application. |
-| deis-router          | useProxyProtocol | `boolean`  | `false`       | PROXY is a simple protocol supported by nginx, HAProxy, Amazon ELB, and others.  It provides a method to obtain information about a request's originating IP address from an external (to Kubernetes) load balancer in front of the router.  Enabling this option allows the router to select the originating IP from the HTTP `X-Forwarded-For` header. |
-| deis-router          | enforceWhitelists | `boolean` | `false`    | Whether to honor application-level IP / CIDR whitelists. |
-| deis-builder         | connectTimeout   | `integer`  | `10`       | nginx `proxy_connect_timeout` setting (in seconds). |
-| deis-builder         | tcpTimeout       | `integer`  | `1200`     | nginx `proxy_timeout` setting (in seconds). |
-| routable application | domains          | `[]string` | N/A           | List of domains for which traffic should be routed to the application.  These may be fully qualified (e.g. `foo.example.com`) or, if not containing any `.` character, may be relative to the router's default domain. |
-| routable application | whitelist        | `[]string` | N/A        | List of addresses permitted to access the application (using IP or CIDR notation).  Requests from all other addresses are denied. |
-| routable application | connectTimeout   | `integer`  | `30`       | nginx `proxy_connect_timeout` setting (in seconds). |
-| routable application | tcpTimeout       | `integer`  | router's `defaultTimeout` | nginx `proxy_send_timeout` and `proxy_read_timeout` settings (in seconds). |
+_Note that Kubernetes annotation maps are all of Go type `map[string]string`.  As such, all configuration values must also be strings.  To avoid Kubernetes attempting to populate the `map[string]string` with non-string values, all numeric and boolean configuration values should be enclosed in double quotes to help avoid confusion._
+
+
+| Component | Annotation | Default Value | Description |
+|-----------|------------|---------------|-------------|
+| deis-router | router.deis.io/workerProcesses | `"auto"` (number of CPU cores) | Number of worker processes to start. |
+| deis-router | router.deis.io/workerConnections| `"768"` | Maximum number of simultaneous connections that can be opened by a worker process. |
+| deis-router | router.deis.io/defaultTimeout | `"1300"` | Default timeout value in seconds.  Should be greater than the front-facing load balancer's timeout value. |
+| deis-router | router.deis.io/serverNameHashMaxSize | `"512"` | nginx `server_names_hash_max_size` setting. |
+| deis-router | router.deis.io/serverNameHashBucketSize | `"64"` | nginx `server_names_hash_bucket_size` setting. |
+| deis-router | router.deis.io/gzipConfig.compLevel | `"5"` | nginx `gzip_comp_level` setting. |
+| deis-router | router.deis.io/gzipConfig.disable | `"msie6"` | nginx `gzip_disable` setting. |
+| deis-router | router.deis.io/gzipConfig.httpVersion | `"1.1"` | nginx `gzip_http_version` setting. |
+| deis-router | router.deis.io/gzipConfig.minLength | `"256"` | nginx `gzip_min_length` setting. |
+| deis-router | router.deis.io/gzipConfig.proxied | `"any"` | nginx `gzip_proxied` setting. |
+| deis-router | router.deis.io/gzipConfig.types | `"application/atom+xml application/javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"` | nginx `gzip_types` setting. |
+| deis-router | router.deis.io/gzipConfig.vary | `"on"` | nginx `gzip_vary` setting. |
+| deis-router | router.deis.io/bodySize | `"1"`| nginx `client_max_body_size` setting (in megabytes). |
+| deis-router | router.deis.io/proxyRealIpCidr | `"10.0.0.0/8"` | nginx `set_real_ip_from` setting.  Defines trusted addresses that are known to send correct replacement addresses. |
+| deis-router | router.deis.io/errorLogLevel | `"error"` | Log level used in the nginx `error_log` setting (valid values are: `debug`, `info`, `notice`, `warn`, `error`, `crit`, `alert`, and `emerg`). |
+| deis-router | router.deis.io/domain | N/A | This defines the router's default domain.  Any domains added to a routable application _not_ containing the `.` character will be assumed to be subdomains of this default domain.  Thus, for example, a default domain of `example.com` coupled with a routable app counting `foo` among its domains will result in router configuration that routes traffic for `foo.example.com` to that application. |
+| deis-router | router.deis.io/useProxyProtocol | `"false"` | PROXY is a simple protocol supported by nginx, HAProxy, Amazon ELB, and others.  It provides a method to obtain information about a request's originating IP address from an external (to Kubernetes) load balancer in front of the router.  Enabling this option allows the router to select the originating IP from the HTTP `X-Forwarded-For` header. |
+| deis-router | router.deis.io/enforceWhitelists | `"false"` | Whether to honor application-level IP / CIDR whitelists. |
+| deis-builder | router.deis.io/connectTimeout | `"10"` | nginx `proxy_connect_timeout` setting (in seconds). |
+| deis-builder | router.deis.io/tcpTimeout | `"1200"` | nginx `proxy_timeout` setting (in seconds). |
+| routable application | router.deis.io/domains | N/A | Comma-delimited list of domains for which traffic should be routed to the application.  These may be fully qualified (e.g. `foo.example.com`) or, if not containing any `.` character, will be considered subdomains of the router's domain, if that is defined. |
+| routable application | router.deis.io/whitelist | N/A | Comma-delimited list of addresses permitted to access the application (using IP or CIDR notation).  Requests from all other addresses are denied. |
+| routable application | router.deis.io/connectTimeout | `"30"` | nginx `proxy_connect_timeout` setting (in seconds). |
+| routable application | router.deis.io/tcpTimeout | router's `defaultTimeout` | nginx `proxy_send_timeout` and `proxy_read_timeout` settings (in seconds). |
 
 #### Annotations by example
 
@@ -217,11 +219,8 @@ metadata:
   namespace: deis
   # ...
   annotations:
-    deis.io/routerConfig: |
-      {
-        "domain": "example.com",
-        "useProxyProtocol": true
-      }
+    router.deis.io/domain: example.com
+    router.deis.io/useProxyProtocol: "true"
 # ...
 ```
 
@@ -235,11 +234,8 @@ metadata:
   namespace: deis
   # ...
   annotations:
-    deis.io/routerConfig: |
-      {
-        "connectTimeout": 20000,
-        "tcpTimeout": 2400000
-      }
+    router.deis.io/connectTimeout: "20000"
+    router.deis.io/tcpTimeout: "2400000"
 # ...
 ```
 
@@ -255,10 +251,7 @@ metadata:
   namespace: examples
   # ...
   annotations:
-    deis.io/routerConfig: |
-      {
-        "domains": ["foo", "bar", "www.foobar.com"]
-      }
+    router.deis.io/domains: foo,bar,www.foobar.com
 # ...
 ```
 
