@@ -21,8 +21,6 @@ events {
 
 http {
 	# basic settings
-	vhost_traffic_status_zone;
-
 	sendfile on;
 	tcp_nopush on;
 	tcp_nodelay on;
