@@ -1,8 +1,7 @@
 package model
 
 import (
-	"fmt"
-	"strings"
+	"log"
 
 	"github.com/deis/router/utils"
 	modelerUtility "github.com/deis/router/utils/modeler"
@@ -28,6 +27,7 @@ type RouterConfig struct {
 	EnforceWhitelists        bool        `router:"enforceWhitelists"`
 	AppConfigs               []*AppConfig
 	BuilderConfig            *BuilderConfig
+	PlatformCertificate      *Certificate
 }
 
 func newRouterConfig() *RouterConfig {
@@ -99,6 +99,19 @@ func newBuilderConfig() *BuilderConfig {
 	}
 }
 
+// Certificate represents an SSL certificate for use in securing routable applications.
+type Certificate struct {
+	Cert string
+	Key  string
+}
+
+func newCertificate(cert string, key string) *Certificate {
+	return &Certificate{
+		Cert: cert,
+		Key:  key,
+	}
+}
+
 var (
 	namespace = utils.GetOpt("POD_NAMESPACE", "default")
 	modeler   = modelerUtility.NewModeler("router.deis.io", "router")
@@ -125,8 +138,12 @@ func Build(kubeClient *client.Client) (*RouterConfig, error) {
 	if err != nil {
 		return nil, err
 	}
+	certSecret, err := getPlatformCertSecret(kubeClient)
+	if err != nil {
+		return nil, err
+	}
 	// Build the model...
-	routerConfig, err := build(kubeClient, routerRC, appServices, builderService)
+	routerConfig, err := build(kubeClient, routerRC, appServices, builderService, certSecret)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +189,22 @@ func getBuilderService(kubeClient *client.Client) (*api.Service, error) {
 	return service, nil
 }
 
-func build(kubeClient *client.Client, routerRC *api.ReplicationController, appServices *api.ServiceList, builderService *api.Service) (*RouterConfig, error) {
+func getPlatformCertSecret(kubeClient *client.Client) (*api.Secret, error) {
+	secretClient := kubeClient.Secrets(namespace)
+	secret, err := secretClient.Get("deis-router-cert")
+	if err != nil {
+		statusErr, ok := err.(*errors.StatusError)
+		// If the issue is just that no deis-router-cert was found, that's ok.
+		if ok && statusErr.Status().Code == 404 {
+			// We'll just return nil instead of a found *api.Secret
+			return nil, nil
+		}
+		return nil, err
+	}
+	return secret, nil
+}
+
+func build(kubeClient *client.Client, routerRC *api.ReplicationController, appServices *api.ServiceList, builderService *api.Service, certSecret *api.Secret) (*RouterConfig, error) {
 	routerConfig, err := buildRouterConfig(routerRC)
 	if err != nil {
 		return nil, err
@@ -194,6 +226,13 @@ func build(kubeClient *client.Client, routerRC *api.ReplicationController, appSe
 		if builderConfig != nil {
 			routerConfig.BuilderConfig = builderConfig
 		}
+	}
+	if certSecret != nil {
+		platformCertificate, err := buildPlatformCertificate(certSecret)
+		if err != nil {
+			return nil, err
+		}
+		routerConfig.PlatformCertificate = platformCertificate
 	}
 	return routerConfig, nil
 }
@@ -218,13 +257,6 @@ func buildAppConfig(kubeClient *client.Client, service api.Service, routerConfig
 	if len(appConfig.Domains) == 0 {
 		return nil, nil
 	}
-	if routerConfig.Domain != "" {
-		for i, domain := range appConfig.Domains {
-			if !strings.Contains(domain, ".") {
-				appConfig.Domains[i] = fmt.Sprintf("%s.%s", domain, routerConfig.Domain)
-			}
-		}
-	}
 	appConfig.ServiceIP = service.Spec.ClusterIP
 	return appConfig, nil
 }
@@ -237,4 +269,22 @@ func buildBuilderConfig(service *api.Service) (*BuilderConfig, error) {
 		return nil, err
 	}
 	return builderConfig, nil
+}
+
+func buildPlatformCertificate(certSecret *api.Secret) (*Certificate, error) {
+	cert, ok := certSecret.Data["cert"]
+	// If no cert is found in the secret, warn and return nil
+	if !ok {
+		log.Println("WARN: The k8s secret intended to convey the platform certificate contained no entry \"cert\".")
+		return nil, nil
+	}
+	key, ok := certSecret.Data["key"]
+	// If no key is found in the secret, warn and return nil
+	if !ok {
+		log.Println("WARN: The k8s secret intended to convey the platform certificate key contained no entry \"key\".")
+		return nil, nil
+	}
+	certStr := string(cert[:])
+	keyStr := string(key[:])
+	return newCertificate(certStr, keyStr), nil
 }

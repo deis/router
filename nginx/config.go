@@ -1,7 +1,9 @@
 package nginx
 
 import (
+	"io/ioutil"
 	"os"
+	"path"
 	"text/template"
 
 	"github.com/Masterminds/sprig"
@@ -61,6 +63,12 @@ http {
 	# Default server handles requests for unmapped hostnames, including healthchecks
 	server {
 		listen 80 default_server reuseport{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
+		{{ if $routerConfig.PlatformCertificate }}
+		listen 443 default_server ssl{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
+		ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+		ssl_certificate /opt/nginx/ssl/server.crt;
+		ssl_certificate_key /opt/nginx/ssl/server.key;
+		{{ end }}
 		server_name _;
 		location ~ ^/healthz/?$ {
 			access_log off;
@@ -88,9 +96,16 @@ http {
 
 	{{range $appConfig := $routerConfig.AppConfigs}}{{range $domain := $appConfig.Domains}}server {
 		listen 80{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
-		server_name {{ if contains "." $domain }}{{ $domain }}{{ else }}~^{{ $domain }}\\.(?<domain>.+)${{ end }};
+		server_name {{ if contains "." $domain }}{{ $domain }}{{ else if ne $routerConfig.Domain "" }}{{ $domain }}.{{ $routerConfig.Domain }}{{ else }}~^{{ $domain }}\.(?<domain>.+)${{ end }};
 		server_name_in_redirect off;
 		port_in_redirect off;
+
+		{{ if and $routerConfig.PlatformCertificate (not (contains "." $domain)) }}
+		listen 443 ssl{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
+		ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+		ssl_certificate /opt/nginx/ssl/server.crt;
+		ssl_certificate_key /opt/nginx/ssl/server.key;
+		{{ end }}
 
 		{{ if and $routerConfig.EnforceWhitelists (ne (len $appConfig.Whitelist) 0) }}{{ range $whitelistEntry := $appConfig.Whitelist }}
 		allow {{ $whitelistEntry }};{{ end }}
@@ -124,6 +139,27 @@ http {
 }{{ end }}
 `
 )
+
+func WriteCerts(routerConfig *model.RouterConfig, sslPath string) error {
+	platformCertPath := path.Join(sslPath, "server.crt")
+	platformKeyPath := path.Join(sslPath, "server.key")
+	if routerConfig.PlatformCertificate != nil {
+		// Write the cert and key
+		err := ioutil.WriteFile(platformCertPath, []byte(routerConfig.PlatformCertificate.Cert), 0644)
+		if err != nil {
+			return err
+		}
+		err = ioutil.WriteFile(platformKeyPath, []byte(routerConfig.PlatformCertificate.Key), 0600)
+		if err != nil {
+			return err
+		}
+	} else {
+		// Delete the cert and key
+		os.Remove(platformCertPath)
+		os.Remove(platformKeyPath)
+	}
+	return nil
+}
 
 // WriteConfig dynamically produces valid nginx configuration by combining a Router configuration
 // object with a data-driven template.
