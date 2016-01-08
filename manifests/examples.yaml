@@ -65,7 +65,7 @@ metadata:
     routable: "true"
     app: apache
   annotations:
-    # Demonstrates a subdomain of the platform's domain as well as a custom domain
+    # Demonstrates a subdomain of the router's default domain as well as a fully-qualified domain name
     router.deis.io/domains: apache,httpd.example.com
 spec:
   ports:

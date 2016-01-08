@@ -24,12 +24,12 @@ type RouterConfig struct {
 	BodySize                 int         `router:"bodySize"`
 	ProxyRealIPCIDR          string      `router:"proxyRealIpCidr"`
 	ErrorLogLevel            string      `router:"errorLogLevel"`
-	Domain                   string      `router:"domain"`
+	DefaultDomain            string      `router:"defaultDomain"`
 	UseProxyProtocol         bool        `router:"useProxyProtocol"`
 	EnforceWhitelists        bool        `router:"enforceWhitelists"`
 	AppConfigs               []*AppConfig
 	BuilderConfig            *BuilderConfig
-	PlatformCertificate      *Certificate
+	DefaultCertificate       *Certificate
 }
 
 func newRouterConfig() *RouterConfig {
@@ -142,12 +142,12 @@ func Build(kubeClient *client.Client) (*RouterConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	certSecret, err := getCertSecret(kubeClient, "deis-router-cert", namespace)
+	defaultCertSecret, err := getCertSecret(kubeClient, "deis-router-default-cert", namespace)
 	if err != nil {
 		return nil, err
 	}
 	// Build the model...
-	routerConfig, err := build(kubeClient, routerRC, appServices, builderService, certSecret)
+	routerConfig, err := build(kubeClient, routerRC, defaultCertSecret, appServices, builderService)
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +198,7 @@ func getCertSecret(kubeClient *client.Client, name string, ns string) (*api.Secr
 	secret, err := secretClient.Get(name)
 	if err != nil {
 		statusErr, ok := err.(*errors.StatusError)
-		// If the issue is just that no deis-router-cert was found, that's ok.
+		// If the issue is just that no such secret was found, that's ok.
 		if ok && statusErr.Status().Code == 404 {
 			// We'll just return nil instead of a found *api.Secret
 			return nil, nil
@@ -208,8 +208,8 @@ func getCertSecret(kubeClient *client.Client, name string, ns string) (*api.Secr
 	return secret, nil
 }
 
-func build(kubeClient *client.Client, routerRC *api.ReplicationController, appServices *api.ServiceList, builderService *api.Service, certSecret *api.Secret) (*RouterConfig, error) {
-	routerConfig, err := buildRouterConfig(routerRC, certSecret)
+func build(kubeClient *client.Client, routerRC *api.ReplicationController, defaultCertSecret *api.Secret, appServices *api.ServiceList, builderService *api.Service) (*RouterConfig, error) {
+	routerConfig, err := buildRouterConfig(routerRC, defaultCertSecret)
 	if err != nil {
 		return nil, err
 	}
@@ -234,18 +234,18 @@ func build(kubeClient *client.Client, routerRC *api.ReplicationController, appSe
 	return routerConfig, nil
 }
 
-func buildRouterConfig(rc *api.ReplicationController, platformCertSecret *api.Secret) (*RouterConfig, error) {
+func buildRouterConfig(rc *api.ReplicationController, defaultCertSecret *api.Secret) (*RouterConfig, error) {
 	routerConfig := newRouterConfig()
 	err := modeler.MapToModel(rc.Annotations, routerConfig)
 	if err != nil {
 		return nil, err
 	}
-	if platformCertSecret != nil {
-		platformCertificate, err := buildCertificate(platformCertSecret, "platform")
+	if defaultCertSecret != nil {
+		defaultCertificate, err := buildCertificate(defaultCertSecret, "default")
 		if err != nil {
 			return nil, err
 		}
-		routerConfig.PlatformCertificate = platformCertificate
+		routerConfig.DefaultCertificate = defaultCertificate
 	}
 	return routerConfig, nil
 }
@@ -264,7 +264,7 @@ func buildAppConfig(kubeClient *client.Client, service api.Service, routerConfig
 	// Step through the domains, and decide which cert, if any, will be used for securing each.
 	// For each that is a FQDN, we'll look to see if a corresponding cert-bearing secret also
 	// exists.  If so, that will be used.  If a domain isn't an FQDN OR a it is, but a corresponding
-	// cert-bearing secret does not exist, we will use the platform's cert-- even if that is nil.
+	// cert-bearing secret does not exist, we will use the default cert-- even if that is nil.
 	for _, domain := range appConfig.Domains {
 		if strings.Contains(domain, ".") {
 			// Look for a cert-bearing secret for this domain.
@@ -279,7 +279,7 @@ func buildAppConfig(kubeClient *client.Client, service api.Service, routerConfig
 				return nil, err
 			}
 			if certSecret == nil {
-				appConfig.Certificates[domain] = routerConfig.PlatformCertificate
+				appConfig.Certificates[domain] = routerConfig.DefaultCertificate
 			} else {
 				certificate, err := buildCertificate(certSecret, domain)
 				if err != nil {
@@ -288,7 +288,7 @@ func buildAppConfig(kubeClient *client.Client, service api.Service, routerConfig
 				appConfig.Certificates[domain] = certificate
 			}
 		} else {
-			appConfig.Certificates[domain] = routerConfig.PlatformCertificate
+			appConfig.Certificates[domain] = routerConfig.DefaultCertificate
 		}
 	}
 	appConfig.ServiceIP = service.Spec.ClusterIP
