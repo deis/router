@@ -32,3 +32,15 @@ spec:
           hostPort: 2222
         - containerPort: 9090
           hostPort: 9090
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 9090
+          initialDelaySeconds: 1
+          timeoutSeconds: 1
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 9090
+          initialDelaySeconds: 1
+          timeoutSeconds: 1
