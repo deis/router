@@ -1,6 +1,7 @@
 package nginx
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -66,8 +67,8 @@ http {
 		{{ if $routerConfig.PlatformCertificate }}
 		listen 443 default_server ssl{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
 		ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
-		ssl_certificate /opt/nginx/ssl/server.crt;
-		ssl_certificate_key /opt/nginx/ssl/server.key;
+		ssl_certificate /opt/nginx/ssl/platform.crt;
+		ssl_certificate_key /opt/nginx/ssl/platform.key;
 		{{ end }}
 		server_name _;
 		location ~ ^/healthz/?$ {
@@ -100,11 +101,11 @@ http {
 		server_name_in_redirect off;
 		port_in_redirect off;
 
-		{{ if and $routerConfig.PlatformCertificate (not (contains "." $domain)) }}
+		{{ if index $appConfig.Certificates $domain }}
 		listen 443 ssl{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
 		ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
-		ssl_certificate /opt/nginx/ssl/server.crt;
-		ssl_certificate_key /opt/nginx/ssl/server.key;
+		ssl_certificate /opt/nginx/ssl/{{ $domain }}.crt;
+		ssl_certificate_key /opt/nginx/ssl/{{ $domain }}.key;
 		{{ end }}
 
 		{{ if and $routerConfig.EnforceWhitelists (ne (len $appConfig.Whitelist) 0) }}{{ range $whitelistEntry := $appConfig.Whitelist }}
@@ -141,22 +142,35 @@ http {
 )
 
 func WriteCerts(routerConfig *model.RouterConfig, sslPath string) error {
-	platformCertPath := path.Join(sslPath, "server.crt")
-	platformKeyPath := path.Join(sslPath, "server.key")
 	if routerConfig.PlatformCertificate != nil {
-		// Write the cert and key
-		err := ioutil.WriteFile(platformCertPath, []byte(routerConfig.PlatformCertificate.Cert), 0644)
+		err := writeCert("platform", routerConfig.PlatformCertificate, sslPath)
 		if err != nil {
 			return err
 		}
-		err = ioutil.WriteFile(platformKeyPath, []byte(routerConfig.PlatformCertificate.Key), 0600)
-		if err != nil {
-			return err
+	}
+	for _, appConfig := range routerConfig.AppConfigs {
+		for domain, certificate := range appConfig.Certificates {
+			if certificate != nil {
+				err := writeCert(domain, certificate, sslPath)
+				if err != nil {
+					return err
+				}
+			}
 		}
-	} else {
-		// Delete the cert and key
-		os.Remove(platformCertPath)
-		os.Remove(platformKeyPath)
+	}
+	return nil
+}
+
+func writeCert(context string, certificate *model.Certificate, sslPath string) error {
+	certPath := path.Join(sslPath, fmt.Sprintf("%s.crt", context))
+	keyPath := path.Join(sslPath, fmt.Sprintf("%s.key", context))
+	err := ioutil.WriteFile(certPath, []byte(certificate.Cert), 0644)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(keyPath, []byte(certificate.Key), 0600)
+	if err != nil {
+		return err
 	}
 	return nil
 }

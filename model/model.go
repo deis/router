@@ -1,7 +1,9 @@
 package model
 
 import (
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/deis/router/utils"
 	modelerUtility "github.com/deis/router/utils/modeler"
@@ -76,12 +78,14 @@ type AppConfig struct {
 	ConnectTimeout int      `router:"connectTimeout"`
 	TCPTimeout     int      `router:"tcpTimeout"`
 	ServiceIP      string
+	Certificates   map[string]*Certificate
 }
 
 func newAppConfig(routerConfig *RouterConfig) *AppConfig {
 	return &AppConfig{
 		ConnectTimeout: 30,
 		TCPTimeout:     routerConfig.DefaultTimeout,
+		Certificates:   make(map[string]*Certificate, 0),
 	}
 }
 
@@ -138,7 +142,7 @@ func Build(kubeClient *client.Client) (*RouterConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	certSecret, err := getPlatformCertSecret(kubeClient)
+	certSecret, err := getCertSecret(kubeClient, "deis-router-cert", namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -189,9 +193,9 @@ func getBuilderService(kubeClient *client.Client) (*api.Service, error) {
 	return service, nil
 }
 
-func getPlatformCertSecret(kubeClient *client.Client) (*api.Secret, error) {
-	secretClient := kubeClient.Secrets(namespace)
-	secret, err := secretClient.Get("deis-router-cert")
+func getCertSecret(kubeClient *client.Client, name string, ns string) (*api.Secret, error) {
+	secretClient := kubeClient.Secrets(ns)
+	secret, err := secretClient.Get(name)
 	if err != nil {
 		statusErr, ok := err.(*errors.StatusError)
 		// If the issue is just that no deis-router-cert was found, that's ok.
@@ -205,7 +209,7 @@ func getPlatformCertSecret(kubeClient *client.Client) (*api.Secret, error) {
 }
 
 func build(kubeClient *client.Client, routerRC *api.ReplicationController, appServices *api.ServiceList, builderService *api.Service, certSecret *api.Secret) (*RouterConfig, error) {
-	routerConfig, err := buildRouterConfig(routerRC)
+	routerConfig, err := buildRouterConfig(routerRC, certSecret)
 	if err != nil {
 		return nil, err
 	}
@@ -227,21 +231,21 @@ func build(kubeClient *client.Client, routerRC *api.ReplicationController, appSe
 			routerConfig.BuilderConfig = builderConfig
 		}
 	}
-	if certSecret != nil {
-		platformCertificate, err := buildPlatformCertificate(certSecret)
-		if err != nil {
-			return nil, err
-		}
-		routerConfig.PlatformCertificate = platformCertificate
-	}
 	return routerConfig, nil
 }
 
-func buildRouterConfig(rc *api.ReplicationController) (*RouterConfig, error) {
+func buildRouterConfig(rc *api.ReplicationController, platformCertSecret *api.Secret) (*RouterConfig, error) {
 	routerConfig := newRouterConfig()
 	err := modeler.MapToModel(rc.Annotations, routerConfig)
 	if err != nil {
 		return nil, err
+	}
+	if platformCertSecret != nil {
+		platformCertificate, err := buildCertificate(platformCertSecret, "platform")
+		if err != nil {
+			return nil, err
+		}
+		routerConfig.PlatformCertificate = platformCertificate
 	}
 	return routerConfig, nil
 }
@@ -257,6 +261,36 @@ func buildAppConfig(kubeClient *client.Client, service api.Service, routerConfig
 	if len(appConfig.Domains) == 0 {
 		return nil, nil
 	}
+	// Step through the domains, and decide which cert, if any, will be used for securing each.
+	// For each that is a FQDN, we'll look to see if a corresponding cert-bearing secret also
+	// exists.  If so, that will be used.  If a domain isn't an FQDN OR a it is, but a corresponding
+	// cert-bearing secret does not exist, we will use the platform's cert-- even if that is nil.
+	for _, domain := range appConfig.Domains {
+		if strings.Contains(domain, ".") {
+			// Look for a cert-bearing secret for this domain.
+			var secretName string
+			if strings.HasPrefix(domain, "*.") {
+				secretName = fmt.Sprintf("%s-wildcard-cert", strings.TrimPrefix(domain, "*."))
+			} else {
+				secretName = fmt.Sprintf("%s-cert", domain)
+			}
+			certSecret, err := getCertSecret(kubeClient, secretName, service.Namespace)
+			if err != nil {
+				return nil, err
+			}
+			if certSecret == nil {
+				appConfig.Certificates[domain] = routerConfig.PlatformCertificate
+			} else {
+				certificate, err := buildCertificate(certSecret, domain)
+				if err != nil {
+					return nil, err
+				}
+				appConfig.Certificates[domain] = certificate
+			}
+		} else {
+			appConfig.Certificates[domain] = routerConfig.PlatformCertificate
+		}
+	}
 	appConfig.ServiceIP = service.Spec.ClusterIP
 	return appConfig, nil
 }
@@ -271,17 +305,17 @@ func buildBuilderConfig(service *api.Service) (*BuilderConfig, error) {
 	return builderConfig, nil
 }
 
-func buildPlatformCertificate(certSecret *api.Secret) (*Certificate, error) {
+func buildCertificate(certSecret *api.Secret, context string) (*Certificate, error) {
 	cert, ok := certSecret.Data["cert"]
 	// If no cert is found in the secret, warn and return nil
 	if !ok {
-		log.Println("WARN: The k8s secret intended to convey the platform certificate contained no entry \"cert\".")
+		log.Printf("WARN: The k8s secret intended to convey the %s certificate contained no entry \"cert\".\n", context)
 		return nil, nil
 	}
 	key, ok := certSecret.Data["key"]
 	// If no key is found in the secret, warn and return nil
 	if !ok {
-		log.Println("WARN: The k8s secret intended to convey the platform certificate key contained no entry \"key\".")
+		log.Printf("WARN: The k8s secret intended to convey the %s certificate key contained no entry \"key\".\n", context)
 		return nil, nil
 	}
 	certStr := string(cert[:])
