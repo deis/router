@@ -23,13 +23,18 @@ func main() {
 		rateLimiter.Accept()
 		routerConfig, err := model.Build(kubeClient)
 		if err != nil {
-			log.Printf("Error building model; not modifying configuration: %v.", err)
+			log.Printf("Error building model; not modifying certs or configuration: %v.", err)
 			continue
 		}
 		if reflect.DeepEqual(routerConfig, known) {
 			continue
 		}
 		log.Println("INFO: Router configuration has changed in k8s.")
+		err = nginx.WriteCerts(routerConfig, "/opt/nginx/ssl")
+		if err != nil {
+			log.Printf("Failed to write certs; continuing with existing certs and configuration: %v", err)
+			continue
+		}
 		err = nginx.WriteConfig(routerConfig, "/opt/nginx/conf/nginx.conf")
 		if err != nil {
 			log.Printf("Failed to write new nginx configuration; continuing with existing configuration: %v", err)

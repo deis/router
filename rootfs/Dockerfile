@@ -23,6 +23,8 @@ RUN build
 # Re-copy this file because the previous step will have overwritten it
 COPY opt/nginx/conf/nginx.conf /opt/nginx/conf/nginx.conf
 
+RUN mkdir /opt/nginx/ssl
+
 RUN ln -sf /dev/stdout /opt/nginx/logs/access.log
 RUN ln -sf /dev/stderr /opt/nginx/logs/error.log
 
