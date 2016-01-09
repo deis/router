@@ -118,7 +118,7 @@ Requesting http://unknown.example.com should result in a 404 from the router sin
 
 ## How it Works
 
-The router is implemented as a simple Go program that manages Nginx and Nginx configuration.  It regularly queries the Kubernetes API for services labeled with `routable=true`.  Such services are compared to known services resident in memory.  If there are differences, new Nginx configuration is generated and Nginx is reloaded.
+The router is implemented as a simple Go program that manages Nginx and Nginx configuration.  It regularly queries the Kubernetes API for services labeled with `routable: "true"`.  Such services are compared to known services resident in memory.  If there are differences, new Nginx configuration is generated and Nginx is reloaded.
 
 When generating configuration, the program reads all annotations of each service prefixed with `router.deis.io`.  These annotations describe all the configuration options that allow the program to dynamically construct Nginx configuration, including virtual hosts for all the domain names associated with each routable application.
 
@@ -128,7 +128,7 @@ Similarly, the router watches the annotations on its _own_ replication controlle
 
 ### Environment variables
 
-Router configuration is driven almost entirely by annotations on the router's replication controller and the services of all routable applications-- those labeled with `routable=true`.
+Router configuration is driven almost entirely by annotations on the router's replication controller and the services of all routable applications-- those labeled with `routable: "true"`.
 
 One exception to this, however, is that in order for the router to discover its own annotations, the router must be configured via environment variable with some awareness of its own namespace.  (It cannot query the API for information about itself without knowing this.)
 
@@ -173,7 +173,7 @@ All remaining configuration options are configured through annotations.  Any of 
 
 * deis-router replication controller
 * deis-builder service (if in use)
-* routable applications (labeled with `routable=true`)
+* routable applications (labeled with `routable: "true"`)
 
 The table below summarizes the configuration options that are currently available for each.
 
