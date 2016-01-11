@@ -287,15 +287,43 @@ metadata:
 
 ### SSL
 
-Router currently has limited support for HTTPS with the ability to perform SSL termination using a wildcard certificate supplied as a Kubernetes secret.  Just as router utilizes the Kubernetes API to discover routable services, router is also able to discover the secret bearing its own certificate.  This allows the router to dynamically refresh and reload configuration whenever such a certificate is added, updated, or removed.  There is never a need to explicitly restart the router.
+Router currently has limited support for HTTPS with the ability to perform SSL termination using certificates supplied via Kubernetes secrets.  Just as router utilizes the Kubernetes API to discover routable services, router also uses the API to discover cert-bearing secrets.  This allows the router to dynamically refresh and reload configuration whenever such a certificate is added, updated, or removed.  There is never a need to explicitly restart the router.
 
-A wildcard certificate supplied in the manner described above will be used to provide a secure virtual host (in addition to the insecure virtual host) for every "domain" of a routable service _not_ containing the `.` character.
+A certificate may be supplied in the manner described above and can be used to provide a secure virtual host (in addition to the insecure virtual host) for any _fully-qualified domain name_ associated with a routable service.
+
+#### SSL example
+
+Here is an example of a Kubernetes secret bearing a certificate for use with a specific fully-qualified domain name.  The following criteria must be met:
+
+* Must be named `<domain>-cert`
+* Must be in the same namespace as the routable service
+* Certificate must be supplied as the value of the key `cert`
+* Certificate private key must be supplied as the value of the key `key`
+* Both the certificate and private key must be base64 encoded
+
+For example, assuming a routable service exists in the namespace `cheery-yardbird` and lists `www.example.com` among its associated domains, the `www.example.com` certificate (or a wildcard `*.example.com` certificate) could be supplied as follows:
+
+```
+apiVersion: v1
+kind: Secret
+metadata:
+  name: www.example.com-cert
+  namespace: cheery-yardbird
+type: Opaque
+data:
+  cert: MT1...uDh==
+  key: MT1...MRp=
+```
+
+#### Wildcard platform certificate
+
+A wildcard certificate may be supplied in the manner described above and can be used to provide a secure virtual host (in addition to the insecure virtual host) for _every_ "domain" of a routable service that is not a fully-qualified domain name.
 
 For instance, if a routable service exists having a "domain" `frozen-wookie` and the platform domain is `example.com`, a supplied wildcard certificate for `*.example.com` will be used to secure a `frozen-wookie.example.com` virtual host.  Similarly, if no platform domain is defined, the supplied wildcard certificate will be used to secure a virtual host matching the expression `~^frozen-wookie\.(?<domain>.+)$`.  (The latter is almost certainly guaranteed to result in certificate warnings in an end user's browser, so it is advisable to always define the platform domain.)
 
-If the same routable service also had a domain `www.frozen-wookie.com`, the `*.example.com` wildcard certificate plays no role in securing a `www.frozen-wookie.com` virtual host.
+If the same routable service also had a domain `www.frozen-wookie.com`, the `*.example.com` wildcard certificate plays no role in securing the `www.frozen-wookie.com` virtual host.
 
-#### SSL example
+##### Wildcard platform certificate example
 
 Here is an example of a Kubernetes secret bearing a wildcard certificate for use by the router.  The following criteria must be met:
 
@@ -313,12 +341,10 @@ kind: Secret
 metadata:
   name: deis-router-cert
   namespace: deis
-  labels:
-    heritage: deis
 type: Opaque
 data:
-  cert: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURsakNDQW40Q0NRREQrYlVXY2dzT05UQU5CZ2txaGtpRzl3MEJBUVVGQURDQmpERUxNQWtHQTFVRUJoTUMKVlZNeEN6QUpCZ05WQkFnVEFrTlVNUk13RVFZRFZRUUhFd3BOYVdSa2JHVjBiM2R1TVEwd0N3WURWUVFLRXdSRQpaV2x6TVJRd0VnWURWUVFMRXd0RmJtZHBibVZsY21sdVp6RVlNQllHQTFVRUF4UVBLaTV0YVdOeWJ5MXJkV0psCkxtbHZNUnd3R2dZSktvWklodmNOQVFrQkZnMXJaVzUwUUdSbGFYTXVZMjl0TUI0WERURTJNREV3TlRFNE1ESXcKT0ZvWERURTNNREV3TkRFNE1ESXdPRm93Z1l3eEN6QUpCZ05WQkFZVEFsVlRNUXN3Q1FZRFZRUUlFd0pEVkRFVApNQkVHQTFVRUJ4TUtUV2xrWkd4bGRHOTNiakVOTUFzR0ExVUVDaE1FUkdWcGN6RVVNQklHQTFVRUN4TUxSVzVuCmFXNWxaWEpwYm1jeEdEQVdCZ05WQkFNVUR5b3ViV2xqY204dGEzVmlaUzVwYnpFY01Cb0dDU3FHU0liM0RRRUoKQVJZTmEyVnVkRUJrWldsekxtTnZiVENDQVNJd0RRWUpLb1pJaHZjTkFRRUJCUUFEZ2dFUEFEQ0NBUW9DZ2dFQgpBT2RKWTFVeC9KRzRuWlJMT3prOHZXSUhpNEN6aURWUWV1cjNJdnFBV0RjRTRIRmRKSkZnNXZxTDN6eHFwTTArCkZQRmFHU2VTbmYvK00xdXN6YTNjRmUrblBTNXdQM1JJSTlSaEpEb21wWlc4Y3VFSDl0b3lLSVM0OEZwS1VmNGEKTWY4RzFQZmV3RXhjOCtJYVZGTlJzb3RVRmxmRXc3MkJwQmF0WGllL2M2Q294QVRMQ1BuSksvemNqMFhzOVJqRgoxeHA5aFNXWDJoZEROVGxEdmt3OEJkVHhVZXlSNWR5bUVmVWRxUlc5YVdBNDZRN2NxdC9xZU9la29hS3lsUVF4ClBQWml3TXZqUjFzcWpyc1RYZ0dMM1ZuU1ZzZC84MWtEdUNtckUvMjRFY0ZjSVhRdC9DTHhnN0tCbUVNSU5wOTkKQWhwWWxzTm0vWlJzUGJJbVNGaWdZQTBDQXdFQUFUQU5CZ2txaGtpRzl3MEJBUVVGQUFPQ0FRRUFYUHgvOGsxZgpMUWVCeFN5SE9QdUJtN3lOSFhIdnBKelQwNFhlQUlMd3YwZ3MreUc2RGUrWFREemkwa2xHbkdsajJIK0xlN3NvClYyTkdUZ3Z1MVZKbEgrelBjUkhYNjE2cHdNK1diNnlKZzUxMmE5L2FYZUM2MUZQcjRuemRRNFJicDduUldEdU8KM1ZqS0ppUStTUnJTS2o2cytyVWRRZjR6SjAzTk05ajYwV1hqVm53RWtlM1BqL1ZKdHNoUWlsMEVwUjZsZVdJUwpQckpKV3lLZmIvbTZYR3AxTTVWc05vSkpaNHNuakkwSlNvcTlNUU5SSEVTaWUrc2pBZU4zR3NFcGlidWhVWE1FCm44M3ZUbkppTW8ycVlLWkJEa252Nkw2aGJTcUJEcG1oS25sNWlLWWV6RDk2d1ZJRTR1QlhGcWdhS3NGZ0tmNlMKOHJwVXg2dmNHOVpraUE9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
-  key: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcEFJQkFBS0NBUUVBNTBsalZUSDhrYmlkbEVzN09UeTlZZ2VMZ0xPSU5WQjY2dmNpK29CWU53VGdjVjBrCmtXRG0rb3ZmUEdxa3pUNFU4Vm9aSjVLZC8vNHpXNnpOcmR3Vjc2YzlMbkEvZEVnajFHRWtPaWFsbGJ4eTRRZjIKMmpJb2hMandXa3BSL2hveC93YlU5OTdBVEZ6ejRocFVVMUd5aTFRV1Y4VER2WUdrRnExZUo3OXpvS2pFQk1zSQorY2tyL055UFJlejFHTVhYR24yRkpaZmFGME0xT1VPK1REd0YxUEZSN0pIbDNLWVI5UjJwRmIxcFlEanBEdHlxCjMrcDQ1NlNob3JLVkJERTg5bUxBeStOSFd5cU91eE5lQVl2ZFdkSld4My96V1FPNEthc1QvYmdSd1Z3aGRDMzgKSXZHRHNvR1lRd2cybjMwQ0dsaVd3MmI5bEd3OXNpWklXS0JnRFFJREFRQUJBb0lCQVFDN0hPZzcySURZODE2bwp4bVJYWGdobzhtbXQ2WkRjY1F2QVk4ZnNtVURFNGpFaUJaUzcrSVZsVlJ0NUtWM0NuZU1ianlTaW16OHdCMXROClkzUFNvQ2N2QjBHNy9CdVoyM01CTXNXNE5lUG9TOWswck5qTWxaK3FJR1J5NTRXRjZYTmhPd200cm9Fc1JsY1kKS096bnEwU2k2NWhYMFZ2NlNKT1R0UlpqV2NRVnlHa24vdU5TZWxOWUFCMWdpeGVVWU05QkNkTTVVcFhLbTVudgpqTStUUGhoL3YzbVdZR1MwRWxkeEsxcU43TW56Y21MQTN2ZVVUUzVEQUlENlh2ZEtudEpxNGg3cFhOMHgwVkd0Ck1ETmNLNWxuMHViTm54WkRQQmNNZDIvQU5RZTFkU3N0K09SZjc3OHZZd3RkalUzMDlOU2ZXbzdoYllHaGhMMG8KaGpSWVIySUJBb0dCQVAwSnl6OUR5WUlMU29XZ0F5WnBycUpLZHpQM3gxWnZIYW9pcUVQTTRBOExNUzFZTW5HNgpZQ1NPTU9rNWxtNWxnanFBeFR1V2dic0hEYUdmenBnWFFnanBZbVAxOGFic2JPem0rSy90UjhOVjBHZzZVdEFrCkIxbG44elpFOHdoTHphZ21IM3JYZTk2WFUxZE9hbFhaZkpuSU13RkYvS2ZPY00wdjhHNVFHQmZ0QW9HQkFPbisKYXQxMlJvNEdRZjc3NEJLaG02UDQxQzJXbnJXSnFjeWZmT2pWeDJmMHd3T2ZNcnBrM3Q5L3E5R2tPVUJrREREMgprYS9SQzBDTkpHN0NtS2hPT2JXc3JydzZPRy9Uc3cwQmxBLy9KR0dkQzhUZTJBWU5QeVVrVnhEaWhZamdvRXdPCnZ5eGVsRXkyYmsyZlRrOFV2NXByVEFISDFBck5ubTZtQUZSekRDU2hBb0dBWmc3S05FVWlCRnFMZnlQUHdYR0UKcHg2RHY2a2pkRUF5NWNrK3RzSHVhUUxwbmRGaDN5NzkwaUNycDVXN2orRlBTa3Rmd2EzdHUwS1lBK1ZSelZRcwpKUzRFcWk2cmZka0VBZlVTdnRwa1JHdmJOLzYySWc4MkM2QjZueHZtTGlWczJISXY1anI5VWdVVTd6VElmTUhRCm1MSC9xSGJTOWRlMDlYMXRhd0RSQnUwQ2dZQUNJcFlyQ3ljOXFJVDFwS3E0d016QXhFWjdYQUo2dVpUWkR5TisKcEdTN2FCcFhjQjV3WVBjL3B0U1VoeUVXbTFNWkowYlJDZUZHWjROTGwyNzVLaTJRb05DL1d2Q2s1Sk9mck1JRApHMXJqb1NFNFhLZ3Y5Zkw3amNkVm1odUowakxrUHNZenkzRWkrZzhybWlhR3hqT3hYd1ZFaHVSQ2JQbmpISlNvCk1KeU53UUtCZ1FDWUY4VDQxVWw1bW96b1l5MitUQlYrMnRtb255RTNZWndxVHFRRkI5NkliM0owRWM5a2VwRWMKaGt4RDZXcFJ0TENjdnFDTEc0L3JTS2ZSWDJGY2VGMWJ4aUEwMi9wNmxUVk5iM3hnK0VNZE1hblNXQnFsT05UTwpuWjdrRDZLQ2d0TVdWelBDZnNtd2MxZHFaTlczRGxxT21PS0pDbk5xeTU1L25PUjd5WUtFd0E9PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
+  cert: LS0...tCg==
+  key: LS0...LQo=
 ```
 
 ## License
