@@ -12,7 +12,37 @@ The router component, specifically, handles ingress and routing of HTTP/S traffi
 
 Deis Router v2 is changing quickly. Your feedback and participation are more than welcome, but be aware that this project is considered a work in progress.
 
-## Hacking Router
+## Installation
+
+This section documents simple procedures for installing the Deis Router for evaluation or use.  Those wishing to contribute to Deis Router development might consider the more developer-oriented instructions in the [Hacking Router](#hacking) section.
+
+Deis Router can be installed with or without the rest of the Deis platform.  In either case, begin with a healthy Kubernetes cluster.  Kubernetes getting started documentation is available [here](http://kubernetes.io/gettingstarted/).
+
+Next, install the [helm](http://helm.sh) package manager, then use the commands below to initialize that tool and load the [deis/charts](https://github.com/deis/charts) repository.
+
+```
+$ helm update
+$ helm repo add deis https://github.com/deis/charts
+```
+
+To install the router:
+
+```
+$ helm install deis/<chart>
+```
+Where `<chart>` is selected from the options below:
+
+| Chart | Description |
+|-------|-------------|
+| deis | Install the latest router release along with the rest of the latest Deis platform release. |
+| deis-dev | Install the edge router (from master) with the rest of the edge Deis platform. |
+| router | Install the latest router release with its minimal set of dependencies. |
+| router-dev | Install the edge router (from master) with its minimal set of dependencies. |
+
+
+For next steps, skip ahead to the [How it Works](#how-it-works) and [Configuration Guide](#configuration) sections.
+
+## <a name="hacking"></a>Hacking Router
 
 The only dependencies for hacking on / contributing to this component are:
 
@@ -116,7 +146,7 @@ By requesting the following three URLs from your browser, you should find that o
 
 Requesting http://unknown.example.com should result in a 404 from the router since no route exists for that domain name.
 
-## How it Works
+## <a name="how-it-works"></a>How it Works
 
 The router is implemented as a simple Go program that manages Nginx and Nginx configuration.  It regularly queries the Kubernetes API for services labeled with `routable=true`.  Such services are compared to known services resident in memory.  If there are differences, new Nginx configuration is generated and Nginx is reloaded.
 
@@ -124,7 +154,7 @@ When generating configuration, the program reads all annotations of each service
 
 Similarly, the router watches the annotations on its _own_ replication controller to dynamically construct global Nginx configuration.
 
-## Configuration Guide
+## <a name="configuration"></a>Configuration Guide
 
 ### Environment variables
 
