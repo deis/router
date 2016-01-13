@@ -227,7 +227,7 @@ _Note that Kubernetes annotation maps are all of Go type `map[string]string`.  A
 | deis-router | router.deis.io/bodySize | `"1"`| nginx `client_max_body_size` setting (in megabytes). |
 | deis-router | router.deis.io/proxyRealIpCidr | `"10.0.0.0/8"` | nginx `set_real_ip_from` setting.  Defines trusted addresses that are known to send correct replacement addresses. |
 | deis-router | router.deis.io/errorLogLevel | `"error"` | Log level used in the nginx `error_log` setting (valid values are: `debug`, `info`, `notice`, `warn`, `error`, `crit`, `alert`, and `emerg`). |
-| deis-router | router.deis.io/domain | N/A | This defines the router's default domain.  Any domains added to a routable application _not_ containing the `.` character will be assumed to be subdomains of this default domain.  Thus, for example, a default domain of `example.com` coupled with a routable app counting `foo` among its domains will result in router configuration that routes traffic for `foo.example.com` to that application. |
+| deis-router | router.deis.io/defaultDomain | N/A | This defines the router's default domain.  Any domains added to a routable application _not_ containing the `.` character will be assumed to be subdomains of this default domain.  Thus, for example, a default domain of `example.com` coupled with a routable app counting `foo` among its domains will result in router configuration that routes traffic for `foo.example.com` to that application. |
 | deis-router | router.deis.io/useProxyProtocol | `"false"` | PROXY is a simple protocol supported by nginx, HAProxy, Amazon ELB, and others.  It provides a method to obtain information about a request's originating IP address from an external (to Kubernetes) load balancer in front of the router.  Enabling this option allows the router to select the originating IP from the HTTP `X-Forwarded-For` header. |
 | deis-router | router.deis.io/enforceWhitelists | `"false"` | Whether to honor application-level IP / CIDR whitelists. |
 | deis-builder | router.deis.io/connectTimeout | `"10"` | nginx `proxy_connect_timeout` setting (in seconds). |
@@ -315,20 +315,20 @@ data:
   key: MT1...MRp=
 ```
 
-#### Wildcard platform certificate
+#### Default certificate
 
-A wildcard certificate may be supplied in the manner described above and can be used to provide a secure virtual host (in addition to the insecure virtual host) for _every_ "domain" of a routable service that is not a fully-qualified domain name.
+A wildcard certificate may be supplied in the manner described above and can be used as a default certificate to provide a secure virtual host (in addition to the insecure virtual host) for _every_ "domain" of a routable service that is not a fully-qualified domain name.
 
-For instance, if a routable service exists having a "domain" `frozen-wookie` and the platform domain is `example.com`, a supplied wildcard certificate for `*.example.com` will be used to secure a `frozen-wookie.example.com` virtual host.  Similarly, if no platform domain is defined, the supplied wildcard certificate will be used to secure a virtual host matching the expression `~^frozen-wookie\.(?<domain>.+)$`.  (The latter is almost certainly guaranteed to result in certificate warnings in an end user's browser, so it is advisable to always define the platform domain.)
+For instance, if a routable service exists having a "domain" `frozen-wookie` and the router's default domain is `example.com`, a supplied wildcard certificate for `*.example.com` will be used to secure a `frozen-wookie.example.com` virtual host.  Similarly, if no default domain is defined, the supplied wildcard certificate will be used to secure a virtual host matching the expression `~^frozen-wookie\.(?<domain>.+)$`.  (The latter is almost certainly guaranteed to result in certificate warnings in an end user's browser, so it is advisable to always define the router's default domain.)
 
 If the same routable service also had a domain `www.frozen-wookie.com`, the `*.example.com` wildcard certificate plays no role in securing the `www.frozen-wookie.com` virtual host.
 
-##### Wildcard platform certificate example
+##### Default certificate example
 
 Here is an example of a Kubernetes secret bearing a wildcard certificate for use by the router.  The following criteria must be met:
 
 * Namespace must be the same namespace as the router
-* Name must be `deis-router-cert`
+* Name must be `deis-router-default-cert`
 * Certificate must be supplied as the value of the key `cert`
 * Certificate private key must be supplied as the value of the key `key`
 * Both the certificate and private key must be base64 encoded
@@ -339,7 +339,7 @@ For example:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: deis-router-cert
+  name: deis-router-default-cert
   namespace: deis
 type: Opaque
 data:

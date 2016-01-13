@@ -64,11 +64,11 @@ http {
 	# Default server handles requests for unmapped hostnames, including healthchecks
 	server {
 		listen 80 default_server reuseport{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
-		{{ if $routerConfig.PlatformCertificate }}
+		{{ if $routerConfig.DefaultCertificate }}
 		listen 443 default_server ssl{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
 		ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
-		ssl_certificate /opt/nginx/ssl/platform.crt;
-		ssl_certificate_key /opt/nginx/ssl/platform.key;
+		ssl_certificate /opt/nginx/ssl/default.crt;
+		ssl_certificate_key /opt/nginx/ssl/default.key;
 		{{ end }}
 		server_name _;
 		location ~ ^/healthz/?$ {
@@ -97,7 +97,7 @@ http {
 
 	{{range $appConfig := $routerConfig.AppConfigs}}{{range $domain := $appConfig.Domains}}server {
 		listen 80{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
-		server_name {{ if contains "." $domain }}{{ $domain }}{{ else if ne $routerConfig.Domain "" }}{{ $domain }}.{{ $routerConfig.Domain }}{{ else }}~^{{ $domain }}\.(?<domain>.+)${{ end }};
+		server_name {{ if contains "." $domain }}{{ $domain }}{{ else if ne $routerConfig.DefaultDomain "" }}{{ $domain }}.{{ $routerConfig.DefaultDomain }}{{ else }}~^{{ $domain }}\.(?<domain>.+)${{ end }};
 		server_name_in_redirect off;
 		port_in_redirect off;
 
@@ -142,8 +142,8 @@ http {
 )
 
 func WriteCerts(routerConfig *model.RouterConfig, sslPath string) error {
-	if routerConfig.PlatformCertificate != nil {
-		err := writeCert("platform", routerConfig.PlatformCertificate, sslPath)
+	if routerConfig.DefaultCertificate != nil {
+		err := writeCert("default", routerConfig.DefaultCertificate, sslPath)
 		if err != nil {
 			return err
 		}
