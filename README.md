@@ -217,13 +217,13 @@ _Note that Kubernetes annotation maps are all of Go type `map[string]string`.  A
 | deis-router | router.deis.io/defaultTimeout | `"1300"` | Default timeout value in seconds.  Should be greater than the front-facing load balancer's timeout value. |
 | deis-router | router.deis.io/serverNameHashMaxSize | `"512"` | nginx `server_names_hash_max_size` setting. |
 | deis-router | router.deis.io/serverNameHashBucketSize | `"64"` | nginx `server_names_hash_bucket_size` setting. |
-| deis-router | router.deis.io/gzipConfig.compLevel | `"5"` | nginx `gzip_comp_level` setting. |
-| deis-router | router.deis.io/gzipConfig.disable | `"msie6"` | nginx `gzip_disable` setting. |
-| deis-router | router.deis.io/gzipConfig.httpVersion | `"1.1"` | nginx `gzip_http_version` setting. |
-| deis-router | router.deis.io/gzipConfig.minLength | `"256"` | nginx `gzip_min_length` setting. |
-| deis-router | router.deis.io/gzipConfig.proxied | `"any"` | nginx `gzip_proxied` setting. |
-| deis-router | router.deis.io/gzipConfig.types | `"application/atom+xml application/javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"` | nginx `gzip_types` setting. |
-| deis-router | router.deis.io/gzipConfig.vary | `"on"` | nginx `gzip_vary` setting. |
+| deis-router | router.deis.io/gzip.compLevel | `"5"` | nginx `gzip_comp_level` setting. |
+| deis-router | router.deis.io/gzip.disable | `"msie6"` | nginx `gzip_disable` setting. |
+| deis-router | router.deis.io/gzip.httpVersion | `"1.1"` | nginx `gzip_http_version` setting. |
+| deis-router | router.deis.io/gzip.minLength | `"256"` | nginx `gzip_min_length` setting. |
+| deis-router | router.deis.io/gzip.proxied | `"any"` | nginx `gzip_proxied` setting. |
+| deis-router | router.deis.io/gzip.types | `"application/atom+xml application/javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"` | nginx `gzip_types` setting. |
+| deis-router | router.deis.io/gzip.vary | `"on"` | nginx `gzip_vary` setting. |
 | deis-router | router.deis.io/bodySize | `"1"`| nginx `client_max_body_size` setting (in megabytes). |
 | deis-router | router.deis.io/proxyRealIpCidr | `"10.0.0.0/8"` | nginx `set_real_ip_from` setting.  Defines trusted addresses that are known to send correct replacement addresses. |
 | deis-router | router.deis.io/errorLogLevel | `"error"` | Log level used in the nginx `error_log` setting (valid values are: `debug`, `info`, `notice`, `warn`, `error`, `crit`, `alert`, and `emerg`). |

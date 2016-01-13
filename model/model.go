@@ -20,7 +20,7 @@ type RouterConfig struct {
 	DefaultTimeout           int         `router:"defaultTimeout"`
 	ServerNameHashMaxSize    int         `router:"serverNameHashMaxSize"`
 	ServerNameHashBucketSize int         `router:"serverNameHashBucketSize"`
-	GzipConfig               *GzipConfig `router:"gzipConfig"`
+	GzipConfig               *GzipConfig `router:"gzip"`
 	BodySize                 int         `router:"bodySize"`
 	ProxyRealIPCIDR          string      `router:"proxyRealIpCidr"`
 	ErrorLogLevel            string      `router:"errorLogLevel"`
