@@ -230,6 +230,11 @@ _Note that Kubernetes annotation maps are all of Go type `map[string]string`.  A
 | deis-router | router.deis.io/defaultDomain | N/A | This defines the router's default domain.  Any domains added to a routable application _not_ containing the `.` character will be assumed to be subdomains of this default domain.  Thus, for example, a default domain of `example.com` coupled with a routable app counting `foo` among its domains will result in router configuration that routes traffic for `foo.example.com` to that application. |
 | deis-router | router.deis.io/useProxyProtocol | `"false"` | PROXY is a simple protocol supported by nginx, HAProxy, Amazon ELB, and others.  It provides a method to obtain information about a request's originating IP address from an external (to Kubernetes) load balancer in front of the router.  Enabling this option allows the router to select the originating IP from the HTTP `X-Forwarded-For` header. |
 | deis-router | router.deis.io/enforceWhitelists | `"false"` | Whether to honor application-level IP / CIDR whitelists. |
+| deis-router | router.deis.io/enforceHttps | `"false"` | Whether to send a redirect for all HTTP requests to prompt the user-agent to re-request using HTTPS. |
+| deis-router | router.deis.io/hsts.enabled | `"false"` | Whether to use HTTP Strict Transport Security. |
+| deis-router | router.deis.io/hsts.maxAge | `"10886400"` | Maximum number of seconds user agents should observe HSTS rewrites. |
+| deis-router | router.deis.io/hsts.includeSubDomains | `"false"` | Whether to enforce HSTS for subsequent requests to all subdomains of the original request. |
+| deis-router | router.deis.io/hsts.preload | `"false"` | Whether to allow the domain to be included in the HSTS preload list. |
 | deis-builder | router.deis.io/connectTimeout | `"10"` | nginx `proxy_connect_timeout` setting (in seconds). |
 | deis-builder | router.deis.io/tcpTimeout | `"1200"` | nginx `proxy_timeout` setting (in seconds). |
 | routable application | router.deis.io/domains | N/A | Comma-delimited list of domains for which traffic should be routed to the application.  These may be fully qualified (e.g. `foo.example.com`) or, if not containing any `.` character, will be considered subdomains of the router's domain, if that is defined. |

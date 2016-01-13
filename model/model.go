@@ -27,6 +27,8 @@ type RouterConfig struct {
 	DefaultDomain            string      `router:"defaultDomain"`
 	UseProxyProtocol         bool        `router:"useProxyProtocol"`
 	EnforceWhitelists        bool        `router:"enforceWhitelists"`
+	EnforceHTTPS             bool        `router:"enforceHttps"`
+	HSTSConfig               *HSTSConfig `router:"hsts"`
 	AppConfigs               []*AppConfig
 	BuilderConfig            *BuilderConfig
 	DefaultCertificate       *Certificate
@@ -45,6 +47,8 @@ func newRouterConfig() *RouterConfig {
 		ErrorLogLevel:            "error",
 		UseProxyProtocol:         false,
 		EnforceWhitelists:        false,
+		EnforceHTTPS:             false,
+		HSTSConfig:               newHSTSConfig(),
 	}
 }
 
@@ -113,6 +117,23 @@ func newCertificate(cert string, key string) *Certificate {
 	return &Certificate{
 		Cert: cert,
 		Key:  key,
+	}
+}
+
+// HSTSConfig represents configuration options having to do with HTTP Strict Transport Security.
+type HSTSConfig struct {
+	Enabled           bool `router:"enabled"`
+	MaxAge            int  `router:"maxAge"`
+	IncludeSubDomains bool `router:"includeSubDomains"`
+	Preload           bool `router:"preload"`
+}
+
+func newHSTSConfig() *HSTSConfig {
+	return &HSTSConfig{
+		Enabled:           false,
+		MaxAge:            10886400,
+		IncludeSubDomains: false,
+		Preload:           false,
 	}
 }
 
