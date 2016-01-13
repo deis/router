@@ -36,7 +36,7 @@ http {
 	server_names_hash_max_size {{ $routerConfig.ServerNameHashMaxSize }};
 	server_names_hash_bucket_size {{ $routerConfig.ServerNameHashBucketSize }};
 
-	{{ if $routerConfig.GzipConfig }}{{ $gzipConfig := $routerConfig.GzipConfig }}gzip on;
+	{{ $gzipConfig := $routerConfig.GzipConfig }}{{ if $gzipConfig.Enabled }}gzip on;
 	gzip_comp_level {{ $gzipConfig.CompLevel }};
 	gzip_disable {{ $gzipConfig.Disable }};
 	gzip_http_version {{ $gzipConfig.HTTPVersion }};

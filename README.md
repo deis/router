@@ -217,6 +217,7 @@ _Note that Kubernetes annotation maps are all of Go type `map[string]string`.  A
 | deis-router | router.deis.io/defaultTimeout | `"1300"` | Default timeout value in seconds.  Should be greater than the front-facing load balancer's timeout value. |
 | deis-router | router.deis.io/serverNameHashMaxSize | `"512"` | nginx `server_names_hash_max_size` setting. |
 | deis-router | router.deis.io/serverNameHashBucketSize | `"64"` | nginx `server_names_hash_bucket_size` setting. |
+| deis-router | router.deis.io/gzip.enabled | `"true"` | Whether to enable gzip compression. |
 | deis-router | router.deis.io/gzip.compLevel | `"5"` | nginx `gzip_comp_level` setting. |
 | deis-router | router.deis.io/gzip.disable | `"msie6"` | nginx `gzip_disable` setting. |
 | deis-router | router.deis.io/gzip.httpVersion | `"1.1"` | nginx `gzip_http_version` setting. |

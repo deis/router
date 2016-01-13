@@ -50,6 +50,7 @@ func newRouterConfig() *RouterConfig {
 
 // GzipConfig encapsulates gzip configuration.
 type GzipConfig struct {
+	Enabled     bool   `router:"enabled"`
 	CompLevel   int    `router:"compLevel"`
 	Disable     string `router:"disable"`
 	HTTPVersion string `router:"httpVersion"`
@@ -61,6 +62,7 @@ type GzipConfig struct {
 
 func newGzipConfig() *GzipConfig {
 	return &GzipConfig{
+		Enabled:     true,
 		CompLevel:   5,
 		Disable:     "msie6",
 		HTTPVersion: "1.1",
