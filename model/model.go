@@ -27,8 +27,7 @@ type RouterConfig struct {
 	DefaultDomain            string      `router:"defaultDomain"`
 	UseProxyProtocol         bool        `router:"useProxyProtocol"`
 	EnforceWhitelists        bool        `router:"enforceWhitelists"`
-	EnforceHTTPS             bool        `router:"enforceHttps"`
-	HSTSConfig               *HSTSConfig `router:"hsts"`
+	SSLConfig                *SSLConfig  `router:"ssl"`
 	AppConfigs               []*AppConfig
 	BuilderConfig            *BuilderConfig
 	DefaultCertificate       *Certificate
@@ -47,8 +46,7 @@ func newRouterConfig() *RouterConfig {
 		ErrorLogLevel:            "error",
 		UseProxyProtocol:         false,
 		EnforceWhitelists:        false,
-		EnforceHTTPS:             false,
-		HSTSConfig:               newHSTSConfig(),
+		SSLConfig:                newSSLConfig(),
 	}
 }
 
@@ -122,6 +120,30 @@ func newCertificate(cert string, key string) *Certificate {
 	}
 }
 
+// SSLConfig represents SSL-related configuration options.
+type SSLConfig struct {
+	Enforce        bool        `router:"enforce"`
+	Protocols      string      `router:"protocols"`
+	Ciphers        string      `router:"ciphers"`
+	SessionCache   string      `router:"sessionCache"`
+	SessionTimeout int         `router:"sessionTimeout"`
+	SessionTickets string      `router:"sessionTickets"`
+	BufferSize     int         `router:"bufferSize"`
+	HSTSConfig     *HSTSConfig `router:"hsts"`
+	DHParam        string
+}
+
+func newSSLConfig() *SSLConfig {
+	return &SSLConfig{
+		Enforce:        false,
+		Protocols:      "TLSv1 TLSv1.1 TLSv1.2",
+		SessionTimeout: 10,
+		SessionTickets: "on",
+		BufferSize:     4,
+		HSTSConfig:     newHSTSConfig(),
+	}
+}
+
 // HSTSConfig represents configuration options having to do with HTTP Strict Transport Security.
 type HSTSConfig struct {
 	Enabled           bool `router:"enabled"`
@@ -133,7 +155,7 @@ type HSTSConfig struct {
 func newHSTSConfig() *HSTSConfig {
 	return &HSTSConfig{
 		Enabled:           false,
-		MaxAge:            10886400,
+		MaxAge:            15552000, // 180 days
 		IncludeSubDomains: false,
 		Preload:           false,
 	}
@@ -165,12 +187,16 @@ func Build(kubeClient *client.Client) (*RouterConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	defaultCertSecret, err := getCertSecret(kubeClient, "deis-router-default-cert", namespace)
+	defaultCertSecret, err := getSecret(kubeClient, "deis-router-default-cert", namespace)
+	if err != nil {
+		return nil, err
+	}
+	dhParamSecret, err := getSecret(kubeClient, "deis-router-dhparam", namespace)
 	if err != nil {
 		return nil, err
 	}
 	// Build the model...
-	routerConfig, err := build(kubeClient, routerRC, defaultCertSecret, appServices, builderService)
+	routerConfig, err := build(kubeClient, routerRC, defaultCertSecret, dhParamSecret, appServices, builderService)
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +242,7 @@ func getBuilderService(kubeClient *client.Client) (*api.Service, error) {
 	return service, nil
 }
 
-func getCertSecret(kubeClient *client.Client, name string, ns string) (*api.Secret, error) {
+func getSecret(kubeClient *client.Client, name string, ns string) (*api.Secret, error) {
 	secretClient := kubeClient.Secrets(ns)
 	secret, err := secretClient.Get(name)
 	if err != nil {
@@ -231,8 +257,8 @@ func getCertSecret(kubeClient *client.Client, name string, ns string) (*api.Secr
 	return secret, nil
 }
 
-func build(kubeClient *client.Client, routerRC *api.ReplicationController, defaultCertSecret *api.Secret, appServices *api.ServiceList, builderService *api.Service) (*RouterConfig, error) {
-	routerConfig, err := buildRouterConfig(routerRC, defaultCertSecret)
+func build(kubeClient *client.Client, routerRC *api.ReplicationController, defaultCertSecret *api.Secret, dhParamSecret *api.Secret, appServices *api.ServiceList, builderService *api.Service) (*RouterConfig, error) {
+	routerConfig, err := buildRouterConfig(routerRC, defaultCertSecret, dhParamSecret)
 	if err != nil {
 		return nil, err
 	}
@@ -257,7 +283,7 @@ func build(kubeClient *client.Client, routerRC *api.ReplicationController, defau
 	return routerConfig, nil
 }
 
-func buildRouterConfig(rc *api.ReplicationController, defaultCertSecret *api.Secret) (*RouterConfig, error) {
+func buildRouterConfig(rc *api.ReplicationController, defaultCertSecret *api.Secret, dhParamSecret *api.Secret) (*RouterConfig, error) {
 	routerConfig := newRouterConfig()
 	err := modeler.MapToModel(rc.Annotations, routerConfig)
 	if err != nil {
@@ -269,6 +295,13 @@ func buildRouterConfig(rc *api.ReplicationController, defaultCertSecret *api.Sec
 			return nil, err
 		}
 		routerConfig.DefaultCertificate = defaultCertificate
+	}
+	if dhParamSecret != nil {
+		dhParam, err := buildDHParam(dhParamSecret)
+		if err != nil {
+			return nil, err
+		}
+		routerConfig.SSLConfig.DHParam = dhParam
 	}
 	return routerConfig, nil
 }
@@ -297,7 +330,7 @@ func buildAppConfig(kubeClient *client.Client, service api.Service, routerConfig
 			} else {
 				secretName = fmt.Sprintf("%s-cert", domain)
 			}
-			certSecret, err := getCertSecret(kubeClient, secretName, service.Namespace)
+			certSecret, err := getSecret(kubeClient, secretName, service.Namespace)
 			if err != nil {
 				return nil, err
 			}
@@ -344,4 +377,14 @@ func buildCertificate(certSecret *api.Secret, context string) (*Certificate, err
 	certStr := string(cert[:])
 	keyStr := string(key[:])
 	return newCertificate(certStr, keyStr), nil
+}
+
+func buildDHParam(dhParamSecret *api.Secret) (string, error) {
+	dhParam, ok := dhParamSecret.Data["dhparam"]
+	// If no dhparam is found in the secret, warn and return ""
+	if !ok {
+		log.Println("WARN: The k8s secret intended to convey the dhparam contained no entry \"dhparam\".")
+		return "", nil
+	}
+	return string(dhParam), nil
 }
