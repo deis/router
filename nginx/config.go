@@ -61,6 +61,24 @@ http {
 		'' close;
 	}
 
+	# Trust http_x_forwarded_proto headers correctly indicate ssl offloading.
+	map $http_x_forwarded_proto $access_scheme {
+		default $http_x_forwarded_proto;
+		'' $scheme;
+	}
+
+	{{ $hstsConfig := $routerConfig.HSTSConfig }}{{ if $hstsConfig.Enabled }}
+	# HSTS instructs the browser to replace all HTTP links with HTTPS links for this domain until maxAge seconds from now.
+	# The $sts variable is used later in each server block.
+	map $access_scheme $sts {
+		'https' 'max-age={{ $hstsConfig.MaxAge }}{{ if $hstsConfig.IncludeSubDomains }}; includeSubDomains{{ end }}{{ if $hstsConfig.Preload }}; preload{{ end }}';
+	}
+	{{ end }}
+
+	{{/* Since HSTS headers are not permitted on HTTP requests, 301 redirects to HTTPS resources are also necessary. */}}
+	{{/* This means we force HTTPS if HSTS is enabled. */}}
+	{{ $enforceHTTPS := or $routerConfig.EnforceHTTPS $hstsConfig.Enabled }}
+
 	# Default server handles requests for unmapped hostnames, including healthchecks
 	server {
 		listen 80 default_server reuseport{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
@@ -123,6 +141,13 @@ http {
 			proxy_http_version 1.1;
 			proxy_set_header Upgrade $http_upgrade;
 			proxy_set_header Connection $connection_upgrade;
+
+			{{ if $enforceHTTPS }}if ($access_scheme != "https") {
+				return 301 https://$host$request_uri;
+			}{{ end }}
+
+			{{ if $hstsConfig.Enabled }}add_header Strict-Transport-Security $sts always;{{ end }}
+
 			proxy_pass http://{{$appConfig.ServiceIP}}:80;
 		}
 	}
