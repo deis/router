@@ -231,11 +231,17 @@ _Note that Kubernetes annotation maps are all of Go type `map[string]string`.  A
 | deis-router | router.deis.io/defaultDomain | N/A | This defines the router's default domain.  Any domains added to a routable application _not_ containing the `.` character will be assumed to be subdomains of this default domain.  Thus, for example, a default domain of `example.com` coupled with a routable app counting `foo` among its domains will result in router configuration that routes traffic for `foo.example.com` to that application. |
 | deis-router | router.deis.io/useProxyProtocol | `"false"` | PROXY is a simple protocol supported by nginx, HAProxy, Amazon ELB, and others.  It provides a method to obtain information about a request's originating IP address from an external (to Kubernetes) load balancer in front of the router.  Enabling this option allows the router to select the originating IP from the HTTP `X-Forwarded-For` header. |
 | deis-router | router.deis.io/enforceWhitelists | `"false"` | Whether to honor application-level IP / CIDR whitelists. |
-| deis-router | router.deis.io/enforceHttps | `"false"` | Whether to send a redirect for all HTTP requests to prompt the user-agent to re-request using HTTPS. |
-| deis-router | router.deis.io/hsts.enabled | `"false"` | Whether to use HTTP Strict Transport Security. |
-| deis-router | router.deis.io/hsts.maxAge | `"10886400"` | Maximum number of seconds user agents should observe HSTS rewrites. |
-| deis-router | router.deis.io/hsts.includeSubDomains | `"false"` | Whether to enforce HSTS for subsequent requests to all subdomains of the original request. |
-| deis-router | router.deis.io/hsts.preload | `"false"` | Whether to allow the domain to be included in the HSTS preload list. |
+| deis-router | router.deis.io/ssl.enforce | `"false"` | Whether to respond with a 301 for all HTTP requests with a permanent redirect to the HTTPS equivalent address. |
+| deis-router | router.deis.io/ssl.protocols | `"TLSv1 TLSv1.1 TLSv1.2"` | nginx `ssl_protocols` setting. |
+| deis-router | router.deis.io/ssl.ciphers | `""` | nginx `ssl_ciphers`.  If the value is the empty string, OpenSSL's default ciphers are used.  In _all_ cases, server side cipher preferences (order matter) are used. |
+| deis-router | router.deis.io/ssl.sessionCache | `""` | nginx `ssl_session_cache` setting. |
+| deis-router | router.deis.io/ssl.sessionTimeout | `"10"` | nginx `ssl_session_timeout` setting (in minutes).  |
+| deis-router | router.deis.io/ssl.sessionTickets | `"on"` | nginx `ssl_session_tickets` setting. |
+| deis-router | router.deis.io/ssl.bufferSize | `"4"` | nginx `ssl_buffer_size` setting (in kilobytes). |
+| deis-router | router.deis.io/ssl.hsts.enabled | `"false"` | Whether to use HTTP Strict Transport Security. |
+| deis-router | router.deis.io/ssl.hsts.maxAge | `"10886400"` | Maximum number of seconds user agents should observe HSTS rewrites. |
+| deis-router | router.deis.io/ssl.hsts.includeSubDomains | `"false"` | Whether to enforce HSTS for subsequent requests to all subdomains of the original request. |
+| deis-router | router.deis.io/ssl.hsts.preload | `"false"` | Whether to allow the domain to be included in the HSTS preload list. |
 | deis-builder | router.deis.io/connectTimeout | `"10"` | nginx `proxy_connect_timeout` setting (in seconds). |
 | deis-builder | router.deis.io/tcpTimeout | `"1200"` | nginx `proxy_timeout` setting (in seconds). |
 | routable application | router.deis.io/domains | N/A | Comma-delimited list of domains for which traffic should be routed to the application.  These may be fully qualified (e.g. `foo.example.com`) or, if not containing any `.` character, will be considered subdomains of the router's domain, if that is defined. |
@@ -293,7 +299,7 @@ metadata:
 
 ### SSL
 
-Router currently has limited support for HTTPS with the ability to perform SSL termination using certificates supplied via Kubernetes secrets.  Just as router utilizes the Kubernetes API to discover routable services, router also uses the API to discover cert-bearing secrets.  This allows the router to dynamically refresh and reload configuration whenever such a certificate is added, updated, or removed.  There is never a need to explicitly restart the router.
+Router has support for HTTPS with the ability to perform SSL termination using certificates supplied via Kubernetes secrets.  Just as router utilizes the Kubernetes API to discover routable services, router also uses the API to discover cert-bearing secrets.  This allows the router to dynamically refresh and reload configuration whenever such a certificate is added, updated, or removed.  There is never a need to explicitly restart the router.
 
 A certificate may be supplied in the manner described above and can be used to provide a secure virtual host (in addition to the insecure virtual host) for any _fully-qualified domain name_ associated with a routable service.
 
@@ -352,6 +358,12 @@ data:
   cert: LS0...tCg==
   key: LS0...LQo=
 ```
+
+#### SSL options
+
+When combined with a good certificate, the router's _default_ SSL options are sufficient to earn an A grade from [Qualys SSL Labs](https://www.ssllabs.com/ssltest/analyze.html).
+
+Earning an A+ is as easy as simply enabling HTTP Strict Transport Security (see the `router.deis.io/ssl.hsts.enabled` option), but be aware that this will implicitly trigger the `router.deis.io/ssl.enforce` option and cause your applications to permanently use HTTPS for _all_ requests.
 
 ## License
 

@@ -67,7 +67,7 @@ http {
 		'' $scheme;
 	}
 
-	{{ $hstsConfig := $routerConfig.HSTSConfig }}{{ if $hstsConfig.Enabled }}
+	{{ $hstsConfig := $routerConfig.SSLConfig.HSTSConfig }}{{ if $hstsConfig.Enabled }}
 	# HSTS instructs the browser to replace all HTTP links with HTTPS links for this domain until maxAge seconds from now.
 	# The $sts variable is used later in each server block.
 	map $access_scheme $sts {
@@ -77,7 +77,7 @@ http {
 
 	{{/* Since HSTS headers are not permitted on HTTP requests, 301 redirects to HTTPS resources are also necessary. */}}
 	{{/* This means we force HTTPS if HSTS is enabled. */}}
-	{{ $enforceHTTPS := or $routerConfig.EnforceHTTPS $hstsConfig.Enabled }}
+	{{ $enforceHTTPS := or $routerConfig.SSLConfig.Enforce $hstsConfig.Enabled }}
 
 	# Default server handles requests for unmapped hostnames, including healthchecks
 	server {
@@ -119,11 +119,18 @@ http {
 		server_name_in_redirect off;
 		port_in_redirect off;
 
-		{{ if index $appConfig.Certificates $domain }}
+		{{ if index $appConfig.Certificates $domain }}{{ $sslConfig := $routerConfig.SSLConfig }}
 		listen 443 ssl{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
-		ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+		ssl_protocols {{ $sslConfig.Protocols }};
+		{{ if ne $sslConfig.Ciphers "" }}ssl_ciphers {{ $sslConfig.Ciphers }};{{ end }}
+		ssl_prefer_server_ciphers on;
 		ssl_certificate /opt/nginx/ssl/{{ $domain }}.crt;
 		ssl_certificate_key /opt/nginx/ssl/{{ $domain }}.key;
+		{{ if ne $sslConfig.SessionCache "" }}ssl_session_cache {{ $sslConfig.SessionCache }};
+		ssl_session_timeout {{ $sslConfig.SessionTimeout }};{{ end }}
+		ssl_session_tickets {{ $sslConfig.SessionTickets }};
+		ssl_buffer_size {{ $sslConfig.BufferSize }}k;
+		{{ if ne $sslConfig.DHParam "" }}ssl_dhparam /opt/nginx/ssl/dhparam.pem;{{ end }}
 		{{ end }}
 
 		{{ if and $routerConfig.EnforceWhitelists (ne (len $appConfig.Whitelist) 0) }}{{ range $whitelistEntry := $appConfig.Whitelist }}
@@ -196,6 +203,17 @@ func writeCert(context string, certificate *model.Certificate, sslPath string) e
 	err = ioutil.WriteFile(keyPath, []byte(certificate.Key), 0600)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func WriteDHParam(routerConfig *model.RouterConfig, sslPath string) error {
+	if routerConfig.SSLConfig.DHParam != "" {
+		dhParamPath := path.Join(sslPath, "dhparam.pem")
+		err := ioutil.WriteFile(dhParamPath, []byte(routerConfig.SSLConfig.DHParam), 0644)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
