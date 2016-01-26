@@ -59,3 +59,23 @@ func newNonStructPointerModelError(tipe reflect.Type) NonStructPointerModelError
 func (e NonStructPointerModelError) Error() string {
 	return fmt.Sprintf("Cannot populate non-struct-pointer type %s from the map.", e.tipe)
 }
+
+// ModelValidationError represents an error resulting from a field having a value that doesn't
+// satisfy a prescribed constraint.
+type ModelValidationError struct {
+	field      string
+	constraint string
+	value      string
+}
+
+func newModelValidationError(field string, constraint string, value string) ModelValidationError {
+	return ModelValidationError{
+		field:      field,
+		constraint: constraint,
+		value:      value,
+	}
+}
+
+func (e ModelValidationError) Error() string {
+	return fmt.Sprintf("Field \"%s\" value \"%s\" does not satisfy constraint /%s/", e.field, e.value, e.constraint)
+}

@@ -163,7 +163,7 @@ func newHSTSConfig() *HSTSConfig {
 
 var (
 	namespace = utils.GetOpt("POD_NAMESPACE", "default")
-	modeler   = modelerUtility.NewModeler("router.deis.io", "router")
+	modeler   = modelerUtility.NewModeler("router.deis.io", "router", "constraint", true)
 )
 
 // Build creates a RouterConfig configuration object by querying the k8s API for
