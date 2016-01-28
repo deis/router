@@ -47,11 +47,12 @@ http {
 
 	client_max_body_size {{ $routerConfig.BodySize }}m;
 
-	{{ if $routerConfig.UseProxyProtocol }}set_real_ip_from {{ $routerConfig.ProxyRealIPCIDR }};
-	real_ip_header proxy_protocol;
+	set_real_ip_from {{ $routerConfig.ProxyRealIPCIDR }};
+	{{ if $routerConfig.UseProxyProtocol }}
+	real_ip_header proxy_protocol;{{ else }}real_ip_header X-Forwarded-For;
 	{{ end }}
 
-	log_format upstreaminfo '[$time_local] - {{ if $routerConfig.UseProxyProtocol }}$proxy_protocol_addr{{ else }}$remote_addr{{ end }} - $remote_user - $status - "$request" - $bytes_sent - "$http_referer" - "$http_user_agent" - "$server_name" - $upstream_addr - $http_host - $upstream_response_time - $request_time';
+	log_format upstreaminfo '[$time_local] - $remote_addr - $remote_user - $status - "$request" - $bytes_sent - "$http_referer" - "$http_user_agent" - "$server_name" - $upstream_addr - $http_host - $upstream_response_time - $request_time';
 
 	access_log /opt/nginx/logs/access.log upstreaminfo;
 	error_log  /opt/nginx/logs/error.log {{ $routerConfig.ErrorLogLevel }};
@@ -140,7 +141,7 @@ http {
 		location / {
 			proxy_buffering off;
 			proxy_set_header Host $host;
-			proxy_set_header X-Forwarded-For {{ if $routerConfig.UseProxyProtocol }}$proxy_protocol_addr{{ else }}$proxy_add_x_forwarded_for{{ end }};
+			proxy_set_header X-Forwarded-For $remote_addr;
 			proxy_redirect off;
 			proxy_connect_timeout {{ $appConfig.ConnectTimeout }}s;
 			proxy_send_timeout {{ $appConfig.TCPTimeout }}s;
