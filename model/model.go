@@ -15,7 +15,7 @@ import (
 
 const (
 	modelerKeyPrefix     string = "router.deis.io"
-	modelerFieldTag      string = "router"
+	modelerFieldTag      string = "key"
 	modelerConstraintTag string = "constraint"
 )
 
@@ -26,19 +26,19 @@ var (
 
 // RouterConfig is the primary type used to encapsulate all router configuration.
 type RouterConfig struct {
-	WorkerProcesses          string      `router:"workerProcesses"`
-	MaxWorkerConnections     int         `router:"maxWorkerConnections"`
-	DefaultTimeout           int         `router:"defaultTimeout"`
-	ServerNameHashMaxSize    int         `router:"serverNameHashMaxSize"`
-	ServerNameHashBucketSize int         `router:"serverNameHashBucketSize"`
-	GzipConfig               *GzipConfig `router:"gzip"`
-	BodySize                 int         `router:"bodySize"`
-	ProxyRealIPCIDR          string      `router:"proxyRealIpCidr"`
-	ErrorLogLevel            string      `router:"errorLogLevel"`
-	DefaultDomain            string      `router:"defaultDomain"`
-	UseProxyProtocol         bool        `router:"useProxyProtocol"`
-	EnforceWhitelists        bool        `router:"enforceWhitelists"`
-	SSLConfig                *SSLConfig  `router:"ssl"`
+	WorkerProcesses          string      `key:"workerProcesses" constraint:"^(auto|[1-9]\\d*)$"`
+	MaxWorkerConnections     string      `key:"maxWorkerConnections" constraint:"^[1-9]\\d*$"`
+	DefaultTimeout           string      `key:"defaultTimeout" constraint:"^[1-9]\\d*(ms|[smhdwMy])?$"`
+	ServerNameHashMaxSize    string      `key:"serverNameHashMaxSize" constraint:"^[1-9]\\d*[kKmM]?$"`
+	ServerNameHashBucketSize string      `key:"serverNameHashBucketSize" constraint:"^[1-9]\\d*[kKmM]?$"`
+	GzipConfig               *GzipConfig `key:"gzip"`
+	BodySize                 string      `key:"bodySize" constraint:"^[1-9]\\d*[kKmM]?$"`
+	ProxyRealIPCIDR          string      `key:"proxyRealIpCidr" constraint:"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$"`
+	ErrorLogLevel            string      `key:"errorLogLevel" constraint:"^(info|notice|warn|error|crit|alert|emerg)$"`
+	DefaultDomain            string      `key:"defaultDomain" constraint:"(?i)^([a-z0-9]+(-[a-z0-9]+)*\\.)+[a-z]{2,}$"`
+	UseProxyProtocol         bool        `key:"useProxyProtocol" constraint:"(?i)^(true|false)$"`
+	EnforceWhitelists        bool        `key:"enforceWhitelists" constraint:"(?i)^(true|false)$"`
+	SSLConfig                *SSLConfig  `key:"ssl"`
 	AppConfigs               []*AppConfig
 	BuilderConfig            *BuilderConfig
 	DefaultCertificate       *Certificate
@@ -47,12 +47,12 @@ type RouterConfig struct {
 func newRouterConfig() *RouterConfig {
 	return &RouterConfig{
 		WorkerProcesses:          "auto",
-		MaxWorkerConnections:     768,
-		DefaultTimeout:           1300,
-		ServerNameHashMaxSize:    512,
-		ServerNameHashBucketSize: 64,
+		MaxWorkerConnections:     "768",
+		DefaultTimeout:           "1300s",
+		ServerNameHashMaxSize:    "512",
+		ServerNameHashBucketSize: "64",
 		GzipConfig:               newGzipConfig(),
-		BodySize:                 1,
+		BodySize:                 "1m",
 		ProxyRealIPCIDR:          "10.0.0.0/8",
 		ErrorLogLevel:            "error",
 		UseProxyProtocol:         false,
@@ -63,23 +63,23 @@ func newRouterConfig() *RouterConfig {
 
 // GzipConfig encapsulates gzip configuration.
 type GzipConfig struct {
-	Enabled     bool   `router:"enabled"`
-	CompLevel   int    `router:"compLevel"`
-	Disable     string `router:"disable"`
-	HTTPVersion string `router:"httpVersion"`
-	MinLength   int    `router:"minLength"`
-	Proxied     string `router:"proxied"`
-	Types       string `router:"types"`
-	Vary        string `router:"vary"`
+	Enabled     bool   `key:"enabled" constraint:"(?i)^(true|false)$"`
+	CompLevel   string `key:"compLevel" constraint:"^[1-9]$"`
+	Disable     string `key:"disable"`
+	HTTPVersion string `key:"httpVersion" constraint:"^(1\\.0|1\\.1)$"`
+	MinLength   string `key:"minLength" constraint:"^\\d+$"`
+	Proxied     string `key:"proxied" constraint:"^((off|expired|no-cache|no-store|private|no_last_modified|no_etag|auth|any)\\s*)+$"`
+	Types       string `key:"types" constraint:"(?i)^([a-z\\d]+/[a-z\\d][a-z\\d+\\-\\.]*[a-z\\d]\\s*)+$"`
+	Vary        string `key:"vary" constraint:"^(on|off)$"`
 }
 
 func newGzipConfig() *GzipConfig {
 	return &GzipConfig{
 		Enabled:     true,
-		CompLevel:   5,
+		CompLevel:   "5",
 		Disable:     "msie6",
 		HTTPVersion: "1.1",
-		MinLength:   256,
+		MinLength:   "256",
 		Proxied:     "any",
 		Types:       "application/atom+xml application/javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component",
 		Vary:        "on",
@@ -88,17 +88,17 @@ func newGzipConfig() *GzipConfig {
 
 // AppConfig encapsulates the configuration for all routes to a single back end.
 type AppConfig struct {
-	Domains        []string `router:"domains"`
-	Whitelist      []string `router:"whitelist"`
-	ConnectTimeout int      `router:"connectTimeout"`
-	TCPTimeout     int      `router:"tcpTimeout"`
+	Domains        []string `key:"domains" constraint:"(?i)^((([a-z0-9]+(-[a-z0-9]+)*)|([a-z0-9]+(-[a-z0-9]+)*\\.)+[a-z]{2,})(\\s*,\\s*)?)+$"`
+	Whitelist      []string `key:"whitelist" constraint:"^((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))?(\\s*,\\s*)?)+$"`
+	ConnectTimeout string   `key:"connectTimeout" constraint:"^[1-9]\\d*(ms|[smhdwMy])?$"`
+	TCPTimeout     string   `key:"tcpTimeout" constraint:"^[1-9]\\d*(ms|[smhdwMy])?$"`
 	ServiceIP      string
 	Certificates   map[string]*Certificate
 }
 
 func newAppConfig(routerConfig *RouterConfig) *AppConfig {
 	return &AppConfig{
-		ConnectTimeout: 30,
+		ConnectTimeout: "30s",
 		TCPTimeout:     routerConfig.DefaultTimeout,
 		Certificates:   make(map[string]*Certificate, 0),
 	}
@@ -106,15 +106,15 @@ func newAppConfig(routerConfig *RouterConfig) *AppConfig {
 
 // BuilderConfig encapsulates the configuration of the deis-builder-- if it's in use.
 type BuilderConfig struct {
-	ConnectTimeout int `router:"connectTimeout"`
-	TCPTimeout     int `router:"tcpTimeout"`
+	ConnectTimeout string `key:"connectTimeout" constraint:"^[1-9]\\d*(ms|[smhdwMy])?$"`
+	TCPTimeout     string `key:"tcpTimeout" constraint:"^[1-9]\\d*(ms|[smhdwMy])?$"`
 	ServiceIP      string
 }
 
 func newBuilderConfig() *BuilderConfig {
 	return &BuilderConfig{
-		ConnectTimeout: 10,
-		TCPTimeout:     1200,
+		ConnectTimeout: "10s",
+		TCPTimeout:     "1200s",
 	}
 }
 
@@ -133,34 +133,34 @@ func newCertificate(cert string, key string) *Certificate {
 
 // SSLConfig represents SSL-related configuration options.
 type SSLConfig struct {
-	Enforce        bool        `router:"enforce"`
-	Protocols      string      `router:"protocols"`
-	Ciphers        string      `router:"ciphers"`
-	SessionCache   string      `router:"sessionCache"`
-	SessionTimeout int         `router:"sessionTimeout"`
-	SessionTickets string      `router:"sessionTickets"`
-	BufferSize     int         `router:"bufferSize"`
-	HSTSConfig     *HSTSConfig `router:"hsts"`
-	DHParam        string
+	Enforce           bool        `key:"enforce" constraint:"(?i)^(true|false)$"`
+	Protocols         string      `key:"protocols" constraint:"^((SSLv2|SSLv3|TLSv1|TLSv1\\.1|TLSv1\\.2)\\s*)+$"`
+	Ciphers           string      `key:"ciphers" constraint:"^([A-Z][A-Z\\d-]+:?)*$"`
+	SessionCache      string      `key:"sessionCache" constraint:"^(off|none|((builtin(:[1-9]\\d*)?|shared:\\w+:[1-9]\\d*[kKmM]?)\\s*){1,2})$"`
+	SessionTimeout    string      `key:"sessionTimeout" constraint:"^[1-9]\\d*(ms|[smhdwMy])?$"`
+	UseSessionTickets bool        `key:"useSessionTickets" constraint:"(?i)^(true|false)$"`
+	BufferSize        string      `key:"bufferSize" constraint:"^[1-9]\\d*[kKmM]?$"`
+	HSTSConfig        *HSTSConfig `key:"hsts"`
+	DHParam           string
 }
 
 func newSSLConfig() *SSLConfig {
 	return &SSLConfig{
-		Enforce:        false,
-		Protocols:      "TLSv1 TLSv1.1 TLSv1.2",
-		SessionTimeout: 10,
-		SessionTickets: "on",
-		BufferSize:     4,
-		HSTSConfig:     newHSTSConfig(),
+		Enforce:           false,
+		Protocols:         "TLSv1 TLSv1.1 TLSv1.2",
+		SessionTimeout:    "10m",
+		UseSessionTickets: true,
+		BufferSize:        "4k",
+		HSTSConfig:        newHSTSConfig(),
 	}
 }
 
 // HSTSConfig represents configuration options having to do with HTTP Strict Transport Security.
 type HSTSConfig struct {
-	Enabled           bool `router:"enabled"`
-	MaxAge            int  `router:"maxAge"`
-	IncludeSubDomains bool `router:"includeSubDomains"`
-	Preload           bool `router:"preload"`
+	Enabled           bool `key:"enabled" constraint:"(?i)^(true|false)$"`
+	MaxAge            int  `key:"maxAge" constraint:"^[1-9]\\d*$"`
+	IncludeSubDomains bool `key:"includeSubDomains" constraint:"(?i)^(true|false)$"`
+	Preload           bool `key:"preload" constraint:"(?i)^(true|false)$"`
 }
 
 func newHSTSConfig() *HSTSConfig {
