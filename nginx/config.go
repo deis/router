@@ -68,7 +68,8 @@ http {
 		'' $scheme;
 	}
 
-	{{ $hstsConfig := $routerConfig.SSLConfig.HSTSConfig }}{{ if $hstsConfig.Enabled }}
+	{{ $sslConfig := $routerConfig.SSLConfig }}
+	{{ $hstsConfig := $sslConfig.HSTSConfig }}{{ if $hstsConfig.Enabled }}
 	# HSTS instructs the browser to replace all HTTP links with HTTPS links for this domain until maxAge seconds from now.
 	# The $sts variable is used later in each server block.
 	map $access_scheme $sts {
@@ -78,14 +79,14 @@ http {
 
 	{{/* Since HSTS headers are not permitted on HTTP requests, 301 redirects to HTTPS resources are also necessary. */}}
 	{{/* This means we force HTTPS if HSTS is enabled. */}}
-	{{ $enforceHTTPS := or $routerConfig.SSLConfig.Enforce $hstsConfig.Enabled }}
+	{{ $enforceHTTPS := or $sslConfig.Enforce $hstsConfig.Enabled }}
 
 	# Default server handles requests for unmapped hostnames, including healthchecks
 	server {
 		listen 80 default_server reuseport{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
 		{{ if $routerConfig.DefaultCertificate }}
 		listen 443 default_server ssl{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
-		ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+		ssl_protocols {{ $sslConfig.Protocols }};
 		ssl_certificate /opt/nginx/ssl/default.crt;
 		ssl_certificate_key /opt/nginx/ssl/default.key;
 		{{ end }}
@@ -120,7 +121,7 @@ http {
 		server_name_in_redirect off;
 		port_in_redirect off;
 
-		{{ if index $appConfig.Certificates $domain }}{{ $sslConfig := $routerConfig.SSLConfig }}
+		{{ if index $appConfig.Certificates $domain }}
 		listen 443 ssl{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
 		ssl_protocols {{ $sslConfig.Protocols }};
 		{{ if ne $sslConfig.Ciphers "" }}ssl_ciphers {{ $sslConfig.Ciphers }};{{ end }}
