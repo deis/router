@@ -79,10 +79,14 @@ func (m *Modeler) mapToModel(data map[string]string, context string, rv reflect.
 		} else {
 			// We're not nested!
 			var key string
+			prefix := m.prefix
+			if prefix != "" && !strings.HasSuffix(prefix, "/") {
+				prefix = fmt.Sprintf("%s/", prefix)
+			}
 			if context == "" {
-				key = fmt.Sprintf("%s/%s", m.prefix, fieldTagValue)
+				key = fmt.Sprintf("%s%s", prefix, fieldTagValue)
 			} else {
-				key = fmt.Sprintf("%s/%s.%s", m.prefix, context, fieldTagValue)
+				key = fmt.Sprintf("%s%s.%s", prefix, context, fieldTagValue)
 			}
 			stringVal, ok := data[key]
 			if ok {
