@@ -13,6 +13,17 @@ import (
 	"k8s.io/kubernetes/pkg/labels"
 )
 
+const (
+	modelerKeyPrefix     string = "router.deis.io"
+	modelerFieldTag      string = "router"
+	modelerConstraintTag string = "constraint"
+)
+
+var (
+	namespace = utils.GetOpt("POD_NAMESPACE", "default")
+	modeler   = modelerUtility.NewModeler(modelerKeyPrefix, modelerFieldTag, modelerConstraintTag, true)
+)
+
 // RouterConfig is the primary type used to encapsulate all router configuration.
 type RouterConfig struct {
 	WorkerProcesses          string      `router:"workerProcesses"`
@@ -160,11 +171,6 @@ func newHSTSConfig() *HSTSConfig {
 		Preload:           false,
 	}
 }
-
-var (
-	namespace = utils.GetOpt("POD_NAMESPACE", "default")
-	modeler   = modelerUtility.NewModeler("router.deis.io", "router", "constraint", true)
-)
 
 // Build creates a RouterConfig configuration object by querying the k8s API for
 // relevant metadata concerning itself and all routable services.
