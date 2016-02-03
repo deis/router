@@ -112,7 +112,7 @@ func (m *Modeler) mapToModel(data map[string]string, context string, rv reflect.
 					}
 					elem.Field(i).Set(reflect.ValueOf(intVal))
 				} else if rf.Type.Kind() == reflect.Bool {
-					boolVal, err := strconv.ParseBool(stringVal)
+					boolVal, err := strconv.ParseBool(strings.ToLower(stringVal))
 					if err != nil {
 						return err
 					}
