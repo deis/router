@@ -31,6 +31,14 @@ func TestValidMaxWorkerConnections(t *testing.T) {
 	testValidValues(t, newTestRouterConfig, "MaxWorkerConnections", "maxWorkerConnections", []string{"1", "2", "10"})
 }
 
+func TestInvalidTrafficStatusZoneSize(t *testing.T) {
+	testInvalidValues(t, newTestRouterConfig, "TrafficStatusZoneSize", "trafficStatusZoneSize", []string{"0", "-1", "foobar"})
+}
+
+func TestValidTrafficStatusZoneSize(t *testing.T) {
+	testValidValues(t, newTestRouterConfig, "TrafficStatusZoneSize", "trafficStatusZoneSize", []string{"1", "2", "20", "1k", "2k", "10m", "10M"})
+}
+
 func TestInvalidDefaultTimeout(t *testing.T) {
 	testInvalidValues(t, newTestRouterConfig, "DefaultTimeout", "defaultTimeout", []string{"0", "-1", "foobar"})
 }
