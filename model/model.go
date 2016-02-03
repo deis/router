@@ -14,15 +14,24 @@ import (
 )
 
 const (
-	modelerKeyPrefix     string = "router.deis.io"
+	prefix               string = "router.deis.io"
 	modelerFieldTag      string = "key"
 	modelerConstraintTag string = "constraint"
 )
 
 var (
-	namespace = utils.GetOpt("POD_NAMESPACE", "default")
-	modeler   = modelerUtility.NewModeler(modelerKeyPrefix, modelerFieldTag, modelerConstraintTag, true)
+	namespace        = utils.GetOpt("POD_NAMESPACE", "default")
+	modeler          = modelerUtility.NewModeler(prefix, modelerFieldTag, modelerConstraintTag, true)
+	servicesSelector labels.Selector
 )
+
+func init() {
+	var err error
+	servicesSelector, err = labels.Parse(fmt.Sprintf("%s/routable==true", prefix))
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 // RouterConfig is the primary type used to encapsulate all router configuration.
 type RouterConfig struct {
@@ -220,10 +229,6 @@ func getRC(kubeClient *client.Client) (*api.ReplicationController, error) {
 
 func getAppServices(kubeClient *client.Client) (*api.ServiceList, error) {
 	serviceClient := kubeClient.Services(api.NamespaceAll)
-	servicesSelector, err := labels.Parse("routable==true")
-	if err != nil {
-		return nil, err
-	}
 	services, err := serviceClient.List(servicesSelector)
 	if err != nil {
 		return nil, err
