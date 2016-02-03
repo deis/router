@@ -9,17 +9,19 @@ import (
 )
 
 const (
-	prefix string = "sample"
-	tag    string = "sample"
+	prefix        string = "sample"
+	fieldTag      string = "sample"
+	constraintTag string = "constraint"
 )
 
 var (
-	sampleData = make(map[string]string, 0)
-	m          = NewModeler(prefix, tag)
+	sampleData        = make(map[string]string, 0)
+	invalidSampleData = make(map[string]string, 0)
+	m                 = NewModeler(prefix, fieldTag, constraintTag, false)
 )
 
 type SampleModel struct {
-	SampleString      string          `sample:"a_string"`
+	SampleString      string          `sample:"a_string" constraint:"^foobar$"`
 	SampleInt         int             `sample:"an_int"`
 	SampleBool        bool            `sample:"a_bool"`
 	SampleStringSlice []string        `sample:"a_string_slice"`
@@ -78,6 +80,12 @@ func TestNonPointerSubModel(t *testing.T) {
 	sampleModel := newBadSampleModel()
 	err := m.MapToModel(sampleData, sampleModel)
 	checkError(t, "modeler.NonPointerModelError", err)
+}
+
+func TestValidationError(t *testing.T) {
+	sampleModel := newSampleModel()
+	err := m.MapToModel(invalidSampleData, sampleModel)
+	checkError(t, "modeler.ModelValidationError", err)
 }
 
 func TestMapping(t *testing.T) {
@@ -141,6 +149,7 @@ func checkStringSliceField(t *testing.T, want string, got []string) {
 
 func TestMain(m *testing.M) {
 	initializeSampleData()
+	initializeInvalidSampleData()
 	os.Exit(m.Run())
 }
 
@@ -156,4 +165,8 @@ func initializeSampleData() {
 	sampleData[prefix+"/a_submodel.an_int"] = "5"
 	sampleData[prefix+"/a_submodel.a_bool"] = "true"
 	sampleData[prefix+"/a_submodel.a_string_slice"] = "foo,bar,baz"
+}
+
+func initializeInvalidSampleData() {
+	invalidSampleData[prefix+"/a_string"] = "invalid value"
 }

@@ -30,7 +30,7 @@ http {
 
 	# The timeout value must be greater than the front facing load balancers timeout value.
 	# Default is the deis recommended timeout value for ELB - 1200 seconds + 100s extra.
-	keepalive_timeout {{ $routerConfig.DefaultTimeout }}s;
+	keepalive_timeout {{ $routerConfig.DefaultTimeout }};
 
 	types_hash_max_size 2048;
 	server_names_hash_max_size {{ $routerConfig.ServerNameHashMaxSize }};
@@ -45,7 +45,7 @@ http {
 	gzip_proxied {{ $gzipConfig.Proxied }};
 	gzip_vary {{ $gzipConfig.Vary }};{{ end }}
 
-	client_max_body_size {{ $routerConfig.BodySize }}m;
+	client_max_body_size {{ $routerConfig.BodySize }};
 
 	set_real_ip_from {{ $routerConfig.ProxyRealIPCIDR }};
 	{{ if $routerConfig.UseProxyProtocol }}
@@ -129,8 +129,8 @@ http {
 		ssl_certificate_key /opt/nginx/ssl/{{ $domain }}.key;
 		{{ if ne $sslConfig.SessionCache "" }}ssl_session_cache {{ $sslConfig.SessionCache }};
 		ssl_session_timeout {{ $sslConfig.SessionTimeout }};{{ end }}
-		ssl_session_tickets {{ $sslConfig.SessionTickets }};
-		ssl_buffer_size {{ $sslConfig.BufferSize }}k;
+		ssl_session_tickets {{ if $sslConfig.UseSessionTickets }}on{{ else }}off{{ end }};
+		ssl_buffer_size {{ $sslConfig.BufferSize }};
 		{{ if ne $sslConfig.DHParam "" }}ssl_dhparam /opt/nginx/ssl/dhparam.pem;{{ end }}
 		{{ end }}
 
@@ -143,9 +143,9 @@ http {
 			proxy_set_header Host $host;
 			proxy_set_header X-Forwarded-For $remote_addr;
 			proxy_redirect off;
-			proxy_connect_timeout {{ $appConfig.ConnectTimeout }}s;
-			proxy_send_timeout {{ $appConfig.TCPTimeout }}s;
-			proxy_read_timeout {{ $appConfig.TCPTimeout }}s;
+			proxy_connect_timeout {{ $appConfig.ConnectTimeout }};
+			proxy_send_timeout {{ $appConfig.TCPTimeout }};
+			proxy_read_timeout {{ $appConfig.TCPTimeout }};
 			proxy_http_version 1.1;
 			proxy_set_header Upgrade $http_upgrade;
 			proxy_set_header Connection $connection_upgrade;
@@ -166,8 +166,8 @@ http {
 {{ if $routerConfig.BuilderConfig }}{{ $builderConfig := $routerConfig.BuilderConfig }}stream {
 	server {
 		listen 2222;
-		proxy_connect_timeout {{ $builderConfig.ConnectTimeout }}s;
-		proxy_timeout {{ $builderConfig.TCPTimeout }}s;
+		proxy_connect_timeout {{ $builderConfig.ConnectTimeout }};
+		proxy_timeout {{ $builderConfig.TCPTimeout }};
 		proxy_pass {{$builderConfig.ServiceIP}}:2222;
 	}
 }{{ end }}
