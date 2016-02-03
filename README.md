@@ -233,7 +233,7 @@ _Note that Kubernetes annotation maps are all of Go type `map[string]string`.  A
 | deis-router | router.deis.io/enforceWhitelists | `"false"` | Whether to honor application-level IP / CIDR whitelists. |
 | deis-router | router.deis.io/ssl.enforce | `"false"` | Whether to respond with a 301 for all HTTP requests with a permanent redirect to the HTTPS equivalent address. |
 | deis-router | router.deis.io/ssl.protocols | `"TLSv1 TLSv1.1 TLSv1.2"` | nginx `ssl_protocols` setting. |
-| deis-router | router.deis.io/ssl.ciphers | `""` | nginx `ssl_ciphers`.  If the value is the empty string, OpenSSL's default ciphers are used.  In _all_ cases, server side cipher preferences (order matter) are used. |
+| deis-router | router.deis.io/ssl.ciphers | `""` | nginx `ssl_ciphers`.  If the value is the empty string, OpenSSL's default ciphers are used.  In _all_ cases, server side cipher preferences (order matters) are used. |
 | deis-router | router.deis.io/ssl.sessionCache | `""` | nginx `ssl_session_cache` setting. |
 | deis-router | router.deis.io/ssl.sessionTimeout | `"10"` | nginx `ssl_session_timeout` setting (in minutes).  |
 | deis-router | router.deis.io/ssl.sessionTickets | `"on"` | nginx `ssl_session_tickets` setting. |
