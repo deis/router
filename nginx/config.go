@@ -135,9 +135,11 @@ http {
 		{{ if ne $sslConfig.DHParam "" }}ssl_dhparam /opt/nginx/ssl/dhparam.pem;{{ end }}
 		{{ end }}
 
-		{{ if and $routerConfig.EnforceWhitelists (ne (len $appConfig.Whitelist) 0) }}{{ range $whitelistEntry := $appConfig.Whitelist }}
-		allow {{ $whitelistEntry }};{{ end }}
-		deny all;{{ end }}
+		{{ if or $routerConfig.EnforceWhitelists (or (ne (len $routerConfig.DefaultWhitelist) 0) (ne (len $appConfig.Whitelist) 0)) }}
+		{{ if or (eq (len $appConfig.Whitelist) 0) (eq $routerConfig.WhitelistMode "extend") }}{{ range $whitelistEntry := $routerConfig.DefaultWhitelist }}allow {{ $whitelistEntry }};{{ end }}{{ end }}
+		{{ range $whitelistEntry := $appConfig.Whitelist }}allow {{ $whitelistEntry }};{{ end }}
+		deny all;
+		{{ end }}
 
 		location / {
 			proxy_buffering off;

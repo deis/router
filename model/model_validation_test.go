@@ -103,6 +103,22 @@ func TestValidEnforceWhitelists(t *testing.T) {
 	testValidValues(t, newTestRouterConfig, "EnforceWhitelists", "enforceWhitelists", []string{"true", "false", "TRUE", "FALSE"})
 }
 
+func TestInvalidDefaultWhitelist(t *testing.T) {
+	testInvalidValues(t, newTestRouterConfig, "DefaultWhitelist", "defaultWhitelist", []string{"0", "-1", "foobar"})
+}
+
+func TestValidDefaultWhitelist(t *testing.T) {
+	testValidValues(t, newTestRouterConfig, "DefaultWhitelist", "defaultWhitelist", []string{"1.2.3.4", "0.0.0.0/0", "1.2.3.4,0.0.0.0/0", "1.2.3.4, 0.0.0.0/0"})
+}
+
+func TestInvalidWhitelistMode(t *testing.T) {
+	testInvalidValues(t, newTestRouterConfig, "WhitelistMode", "whitelistMode", []string{"0", "-1", "foobar"})
+}
+
+func TestValidWhitelistMode(t *testing.T) {
+	testValidValues(t, newTestRouterConfig, "WhitelistMode", "whitelistMode", []string{"extend", "override"})
+}
+
 func TestInvalidGzipEnabled(t *testing.T) {
 	testInvalidValues(t, newTestGzipConfig, "Enabled", "enabled", []string{"0", "-1", "foobar"})
 }
