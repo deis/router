@@ -365,6 +365,14 @@ When combined with a good certificate, the router's _default_ SSL options are su
 
 Earning an A+ is as easy as simply enabling HTTP Strict Transport Security (see the `router.deis.io/ssl.hsts.enabled` option), but be aware that this will implicitly trigger the `router.deis.io/ssl.enforce` option and cause your applications to permanently use HTTPS for _all_ requests.
 
+### Front-facing load balancer and idle connection timeouts
+
+Depending on what distribution of Kubernetes you use and where you host it, installation of the router _may_ automatically include an external (to Kubernetes) load balancer or similar mechanism for routing inbound traffic from beyond the cluster into the cluster to the router(s).  For example, [kube-aws](https://coreos.com/kubernetes/docs/latest/kubernetes-on-aws.html) and [Google Container Engine](https://cloud.google.com/container-engine/) both do this.  On some other platforms-- Vagrant or bare metal, for instance-- this must either be accomplished manually or does not apply at all.
+
+If a load balancer such as the one described above does exist (whether created automatically or manually) _and_ if you intend on handling any long-running requests, the load balancer (or similar) _may_ require some manual configuration to increase the idle connection timeout.  Typically, this is most applicable to AWS and Elastic Load Balancers, but may apply in other cases as well.  It does _not_ apply to Google Container Engine, as the idle connection timeout cannot be configured there, but also works fine as-is.
+
+If, for instance, router were installed on kube-aws, in conjunction with the rest of the Deis platform, this timeout should be increased to a recommended value of 1200 seconds.  This will ensure the load balancer does not hang up on the client during long-running operations like an application deployment.  Directions for this can be found [here](http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/config-idle-timeout.html).
+
 ## License
 
 Copyright 2013, 2014, 2015 Engine Yard, Inc.
