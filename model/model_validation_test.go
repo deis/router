@@ -207,6 +207,14 @@ func TestValidAppTCPTimeout(t *testing.T) {
 	testValidValues(t, newTestAppConfig, "TCPTimeout", "tcpTimeout", []string{"1", "2", "10", "1ms", "2s", "10m"})
 }
 
+func TestInvalidCertMappings(t *testing.T) {
+	testInvalidValues(t, newTestAppConfig, "CertMappings", "certificates", []string{"0", "-1", "foobar"})
+}
+
+func TestValidCertMappings(t *testing.T) {
+	testValidValues(t, newTestAppConfig, "CertMappings", "certificates", []string{"foobar.com:foobar,*.foobar.deis.ninja:foobar-deis-ninja"})
+}
+
 func TestInvalidBuilderConnectTimeout(t *testing.T) {
 	testInvalidValues(t, newTestBuilderConfig, "ConnectTimeout", "connectTimeout", []string{"0", "-1", "foobar"})
 }
