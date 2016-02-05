@@ -123,6 +123,16 @@ func (m *Modeler) mapToModel(data map[string]string, context string, rv reflect.
 						sliceVal[j] = strings.TrimSpace(token)
 					}
 					elem.Field(i).Set(reflect.ValueOf(sliceVal))
+				} else if rf.Type.Kind() == reflect.Map {
+					sliceVal := strings.Split(stringVal, ",")
+					mapVal := make(map[string]string, len(sliceVal))
+					for _, kvStr := range sliceVal {
+						kvTokens := strings.Split(kvStr, ":")
+						key := strings.TrimSpace(kvTokens[0])
+						value := strings.TrimSpace(kvTokens[1])
+						mapVal[key] = value
+					}
+					elem.Field(i).Set(reflect.ValueOf(mapVal))
 				} else {
 					return fmt.Errorf("Unsupported type %s.", rf.Type.Kind())
 				}

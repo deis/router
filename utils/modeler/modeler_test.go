@@ -21,11 +21,12 @@ var (
 )
 
 type SampleModel struct {
-	SampleString      string          `sample:"a_string" constraint:"^foobar$"`
-	SampleInt         int             `sample:"an_int"`
-	SampleBool        bool            `sample:"a_bool"`
-	SampleStringSlice []string        `sample:"a_string_slice"`
-	SampleSubModel    *SampleSubModel `sample:"a_submodel"`
+	SampleString      string            `sample:"a_string" constraint:"^foobar$"`
+	SampleInt         int               `sample:"an_int"`
+	SampleBool        bool              `sample:"a_bool"`
+	SampleStringSlice []string          `sample:"a_string_slice"`
+	SampleStringMap   map[string]string `sample:"a_string_map"`
+	SampleSubModel    *SampleSubModel   `sample:"a_submodel"`
 	UnmappedString    string
 }
 
@@ -34,11 +35,12 @@ func newSampleModel() *SampleModel {
 }
 
 type BadSampleModel struct {
-	SampleString      string         `sample:"a_string"`
-	SampleInt         int            `sample:"an_int"`
-	SampleBool        bool           `sample:"a_bool"`
-	SampleStringSlice []string       `sample:"a_string_slice"`
-	SampleSubModel    SampleSubModel `sample:"a_submodel"`
+	SampleString      string            `sample:"a_string"`
+	SampleInt         int               `sample:"an_int"`
+	SampleBool        bool              `sample:"a_bool"`
+	SampleStringSlice []string          `sample:"a_string_slice"`
+	SampleStringMap   map[string]string `sample:"a_string_map"`
+	SampleSubModel    SampleSubModel    `sample:"a_submodel"`
 	UnmappedString    string
 }
 
@@ -98,6 +100,7 @@ func TestMapping(t *testing.T) {
 	checkIntField(t, sampleData[prefix+"/an_int"], sampleModel.SampleInt)
 	checkBoolField(t, sampleData[prefix+"/a_bool"], sampleModel.SampleBool)
 	checkStringSliceField(t, sampleData[prefix+"/a_string_slice"], sampleModel.SampleStringSlice)
+	checkStringMapField(t, sampleData[prefix+"/a_string_map"], sampleModel.SampleStringMap)
 	checkStringField(t, sampleData[prefix+"/a_submodel.a_string"], sampleModel.SampleSubModel.SampleString)
 	checkIntField(t, sampleData[prefix+"/a_submodel.an_int"], sampleModel.SampleSubModel.SampleInt)
 	checkBoolField(t, sampleData[prefix+"/a_submodel.a_bool"], sampleModel.SampleSubModel.SampleBool)
@@ -147,6 +150,20 @@ func checkStringSliceField(t *testing.T, want string, got []string) {
 	}
 }
 
+func checkStringMapField(t *testing.T, want string, got map[string]string) {
+	wantStringSlice := strings.Split(want, ",")
+	wantStringMap := make(map[string]string, len(wantStringSlice))
+	for _, kvStr := range wantStringSlice {
+		kvTokens := strings.Split(kvStr, ":")
+		key := strings.TrimSpace(kvTokens[0])
+		value := strings.TrimSpace(kvTokens[1])
+		wantStringMap[key] = value
+	}
+	if !reflect.DeepEqual(wantStringMap, got) {
+		t.Errorf("Expected %s, but got %s", wantStringMap, got)
+	}
+}
+
 func TestMain(m *testing.M) {
 	initializeSampleData()
 	initializeInvalidSampleData()
@@ -160,6 +177,7 @@ func initializeSampleData() {
 	sampleData[prefix+"/an_int"] = "5"
 	sampleData[prefix+"/a_bool"] = "true"
 	sampleData[prefix+"/a_string_slice"] = "foo,bar,baz"
+	sampleData[prefix+"/a_string_map"] = "foo:bar,bat:baz"
 	// Key/values for a model within the model...
 	sampleData[prefix+"/a_submodel.a_string"] = "foobar"
 	sampleData[prefix+"/a_submodel.an_int"] = "5"
