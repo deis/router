@@ -3,6 +3,7 @@
 set -eof pipefail
 
 export NGINX_VERSION=1.9.6
+export VTS_VERSION=0.1.8
 
 export BUILD_PATH=/tmp/build
 
@@ -32,6 +33,9 @@ apk add --update-cache \
 get_src ed501fc6d0eff9d3bc1049cc1ba3a3ac8c602de046acb2a4c108392bbfa865ea \
         "http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
+get_src 6bb9a36d8d70302d691c49557313fb7262cafd942a961d11a2730d9a5d9f70e0 \
+        "https://github.com/vozlt/nginx-module-vts/archive/v$VTS_VERSION.tar.gz"
+
 # build nginx
 cd "$BUILD_PATH/nginx-$NGINX_VERSION"
 
@@ -54,6 +58,7 @@ cd "$BUILD_PATH/nginx-$NGINX_VERSION"
   --with-mail \
   --with-mail_ssl_module \
   --with-stream \
+  --add-module="$BUILD_PATH/nginx-module-vts-$VTS_VERSION" \
   && make && make install
 
 rm -rf "$BUILD_PATH"

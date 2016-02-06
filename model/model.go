@@ -37,6 +37,7 @@ func init() {
 type RouterConfig struct {
 	WorkerProcesses          string      `key:"workerProcesses" constraint:"^(auto|[1-9]\\d*)$"`
 	MaxWorkerConnections     string      `key:"maxWorkerConnections" constraint:"^[1-9]\\d*$"`
+	TrafficStatusZoneSize    string      `key:"trafficStatusZoneSize" constraint:"^[1-9]\\d*[kKmM]?$"`
 	DefaultTimeout           string      `key:"defaultTimeout" constraint:"^[1-9]\\d*(ms|[smhdwMy])?$"`
 	ServerNameHashMaxSize    string      `key:"serverNameHashMaxSize" constraint:"^[1-9]\\d*[kKmM]?$"`
 	ServerNameHashBucketSize string      `key:"serverNameHashBucketSize" constraint:"^[1-9]\\d*[kKmM]?$"`
@@ -59,6 +60,7 @@ func newRouterConfig() *RouterConfig {
 	return &RouterConfig{
 		WorkerProcesses:          "auto",
 		MaxWorkerConnections:     "768",
+		TrafficStatusZoneSize:    "1m",
 		DefaultTimeout:           "1300s",
 		ServerNameHashMaxSize:    "512",
 		ServerNameHashBucketSize: "64",

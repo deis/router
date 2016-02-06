@@ -28,6 +28,8 @@ http {
 	tcp_nopush on;
 	tcp_nodelay on;
 
+	vhost_traffic_status_zone shared:vhost_traffic_status:{{ $routerConfig.TrafficStatusZoneSize }};
+
 	# The timeout value must be greater than the front facing load balancers timeout value.
 	# Default is the deis recommended timeout value for ELB - 1200 seconds + 100s extra.
 	keepalive_timeout {{ $routerConfig.DefaultTimeout }};
@@ -109,6 +111,12 @@ http {
 			access_log off;
 			default_type 'text/plain';
 			return 200;
+		}
+		location ~ ^/stats/?$ {
+			vhost_traffic_status_display;
+			vhost_traffic_status_display_format json;
+			allow 127.0.0.1;
+			deny all;
 		}
 		location / {
 			return 404;
