@@ -248,6 +248,7 @@ _Note that Kubernetes annotation maps are all of Go type `map[string]string`.  A
 | deis-builder | router.deis.io/connectTimeout | `"10s"` | nginx `proxy_connect_timeout` setting expressed in units `ms`, `s`, `m`, `h`, `d`, `w`, `M`, or `y`. |
 | deis-builder | router.deis.io/tcpTimeout | `"1200s"` | nginx `proxy_timeout` setting expressed in units `ms`, `s`, `m`, `h`, `d`, `w`, `M`, or `y`. |
 | routable application | router.deis.io/domains | N/A | Comma-delimited list of domains for which traffic should be routed to the application.  These may be fully qualified (e.g. `foo.example.com`) or, if not containing any `.` character, will be considered subdomains of the router's domain, if that is defined. |
+| <a name="certificates-annotation"></a>routable application | router.deis.io/certificates | N/A | Comma delimited list of mappings between domain names (see `router.deis.io/domains`) and the certificate to be used for each.  The domain name and certificate name must be separated by a colon.  See the [SSL section](#ssl) below for further details. |
 | routable application | router.deis.io/whitelist | N/A | Comma-delimited list of addresses permitted to access the application (using IP or CIDR notation).  These may either extend or override the router-wide default whitelist (if defined).  Requests from all other addresses are denied. |
 | routable application | router.deis.io/connectTimeout | `"30s"` | nginx `proxy_connect_timeout` setting expressed in units `ms`, `s`, `m`, `h`, `d`, `w`, `M`, or `y`. |
 | routable application | router.deis.io/tcpTimeout | router's `defaultTimeout` | nginx `proxy_send_timeout` and `proxy_read_timeout` settings expressed in units `ms`, `s`, `m`, `h`, `d`, `w`, `M`, or `y`. |
@@ -300,7 +301,7 @@ metadata:
 # ...
 ```
 
-### SSL
+### <a name="ssl"></a>SSL
 
 Router has support for HTTPS with the ability to perform SSL termination using certificates supplied via Kubernetes secrets.  Just as router utilizes the Kubernetes API to discover routable services, router also uses the API to discover cert-bearing secrets.  This allows the router to dynamically refresh and reload configuration whenever such a certificate is added, updated, or removed.  There is never a need to explicitly restart the router.
 
@@ -310,13 +311,27 @@ A certificate may be supplied in the manner described above and can be used to p
 
 Here is an example of a Kubernetes secret bearing a certificate for use with a specific fully-qualified domain name.  The following criteria must be met:
 
-* Must be named `<domain>-cert`
+* Secret name must be for the form `<arbitrary name>-cert`
+  * This must be associated to the domain using the [router.deis.io/certificates](#certificates-annotation) annotation.
 * Must be in the same namespace as the routable service
 * Certificate must be supplied as the value of the key `cert`
 * Certificate private key must be supplied as the value of the key `key`
 * Both the certificate and private key must be base64 encoded
 
-For example, assuming a routable service exists in the namespace `cheery-yardbird` and lists `www.example.com` among its associated domains, the `www.example.com` certificate (or a wildcard `*.example.com` certificate) could be supplied as follows:
+For example, assuming a routable service exists in the namespace `cheery-yardbird` and is configured with `www.example.com` among its domains, like so:
+
+```
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: cheery-yardbird
+  annotations:
+    router.deis.io/domains: cheery-yardbird,www.example.com
+    router.deis.io/certificates: www.example.com:www-example-com"
+# ...
+```
+
+The corresponding cert-bearing secret would appear as follows:
 
 ```
 apiVersion: v1
@@ -332,7 +347,7 @@ data:
 
 #### Default certificate
 
-A wildcard certificate may be supplied in the manner described above and can be used as a default certificate to provide a secure virtual host (in addition to the insecure virtual host) for _every_ "domain" of a routable service that is not a fully-qualified domain name.
+A wildcard certificate may be supplied in a manner similar to that described above and can be used as a default certificate to provide a secure virtual host (in addition to the insecure virtual host) for _every_ "domain" of a routable service that is not a fully-qualified domain name.
 
 For instance, if a routable service exists having a "domain" `frozen-wookie` and the router's default domain is `example.com`, a supplied wildcard certificate for `*.example.com` will be used to secure a `frozen-wookie.example.com` virtual host.  Similarly, if no default domain is defined, the supplied wildcard certificate will be used to secure a virtual host matching the expression `~^frozen-wookie\.(?<domain>.+)$`.  (The latter is almost certainly guaranteed to result in certificate warnings in an end user's browser, so it is advisable to always define the router's default domain.)
 
@@ -343,7 +358,7 @@ If the same routable service also had a domain `www.frozen-wookie.com`, the `*.e
 Here is an example of a Kubernetes secret bearing a wildcard certificate for use by the router.  The following criteria must be met:
 
 * Namespace must be the same namespace as the router
-* Name must be `deis-router-default-cert`
+* Name _must_ be `deis-router-default-cert`
 * Certificate must be supplied as the value of the key `cert`
 * Certificate private key must be supplied as the value of the key `key`
 * Both the certificate and private key must be base64 encoded

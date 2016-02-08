@@ -188,7 +188,7 @@ func TestInvalidAppDomains(t *testing.T) {
 }
 
 func TestValidAppDomains(t *testing.T) {
-	testValidValues(t, newTestAppConfig, "Domains", "domains", []string{"foobar", "foo-bar", "foobar.com", "foobar,foobar.com", "foobar, foobar.com"})
+	testValidValues(t, newTestAppConfig, "Domains", "domains", []string{"foobar", "foo-bar", "foobar.com", "foobar,foobar.com", "foobar, foobar.com", "*.foobar.com"})
 }
 
 func TestInvalidAppWhitelist(t *testing.T) {
@@ -213,6 +213,14 @@ func TestInvalidAppTCPTimeout(t *testing.T) {
 
 func TestValidAppTCPTimeout(t *testing.T) {
 	testValidValues(t, newTestAppConfig, "TCPTimeout", "tcpTimeout", []string{"1", "2", "10", "1ms", "2s", "10m"})
+}
+
+func TestInvalidCertMappings(t *testing.T) {
+	testInvalidValues(t, newTestAppConfig, "CertMappings", "certificates", []string{"0", "-1", "foobar"})
+}
+
+func TestValidCertMappings(t *testing.T) {
+	testValidValues(t, newTestAppConfig, "CertMappings", "certificates", []string{"foobar.com:foobar,*.foobar.deis.ninja:foobar-deis-ninja"})
 }
 
 func TestInvalidBuilderConnectTimeout(t *testing.T) {
