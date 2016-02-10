@@ -24,7 +24,7 @@ metadata:
   name: nginx
   namespace: nginx
   labels:
-    routable: "true"
+    router.deis.io/routable: "true"
     app: nginx
   annotations:
     router.deis.io/domains: nginx
@@ -62,7 +62,7 @@ metadata:
   name: apache
   namespace: apache
   labels:
-    routable: "true"
+    router.deis.io/routable: "true"
     app: apache
   annotations:
     # Demonstrates a subdomain of the router's default domain as well as a fully-qualified domain name
