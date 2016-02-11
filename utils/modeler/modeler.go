@@ -30,9 +30,9 @@ func NewModeler(prefix string, fieldTag string, constraintTag string, warnOnVali
 }
 
 // MapToModel populates the provided model with values from the provided map.
-func (m *Modeler) MapToModel(data map[string]string, out interface{}) error {
+func (m *Modeler) MapToModel(data map[string]string, initialContext string, out interface{}) error {
 	rv := reflect.ValueOf(out)
-	return m.mapToModel(data, "", rv)
+	return m.mapToModel(data, initialContext, rv)
 }
 
 func (m *Modeler) mapToModel(data map[string]string, context string, rv reflect.Value) error {
