@@ -149,6 +149,8 @@ http {
 		deny all;
 		{{ end }}
 
+		vhost_traffic_status_filter_by_set_key {{ $appConfig.Name }} application::*;
+
 		location / {
 			proxy_buffering off;
 			proxy_set_header Host $host;

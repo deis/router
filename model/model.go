@@ -102,6 +102,7 @@ func newGzipConfig() *GzipConfig {
 
 // AppConfig encapsulates the configuration for all routes to a single back end.
 type AppConfig struct {
+	Name           string
 	Domains        []string `key:"domains" constraint:"(?i)^((([a-z0-9]+(-[a-z0-9]+)*)|((\\*\\.)?[a-z0-9]+(-[a-z0-9]+)*\\.)+[a-z]{2,})(\\s*,\\s*)?)+$"`
 	Whitelist      []string `key:"whitelist" constraint:"^((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))?(\\s*,\\s*)?)+$"`
 	ConnectTimeout string   `key:"connectTimeout" constraint:"^[1-9]\\d*(ms|[smhdwMy])?$"`
@@ -325,6 +326,12 @@ func buildRouterConfig(rc *api.ReplicationController, defaultCertSecret *api.Sec
 
 func buildAppConfig(kubeClient *client.Client, service api.Service, routerConfig *RouterConfig) (*AppConfig, error) {
 	appConfig := newAppConfig(routerConfig)
+	appConfig.Name = service.Labels["app"]
+	// If we didn't get the app name from the app label, fall back to inferring the app name from
+	// the service's own name.
+	if appConfig.Name == "" {
+		appConfig.Name = service.Name
+	}
 	err := modeler.MapToModel(service.Annotations, appConfig)
 	if err != nil {
 		return nil, err
