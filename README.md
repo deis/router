@@ -28,7 +28,9 @@ $ helm repo add deis https://github.com/deis/charts
 To install the router:
 
 ```
-$ helm install deis/<chart>
+$ helm fetch deis/<chart>
+$ helm generate <chart>
+$ helm install <chart>
 ```
 Where `<chart>` is selected from the options below:
 
