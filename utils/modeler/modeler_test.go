@@ -56,43 +56,43 @@ type SampleSubModel struct {
 }
 
 func TestNilLiteral(t *testing.T) {
-	err := m.MapToModel(sampleData, nil)
+	err := m.MapToModel(sampleData, "", nil)
 	checkError(t, "modeler.NilLiteralModelError", err)
 }
 
 func TestNil(t *testing.T) {
 	var sampleModel *SampleModel
-	err := m.MapToModel(sampleData, sampleModel)
+	err := m.MapToModel(sampleData, "", sampleModel)
 	checkError(t, "modeler.NilModelError", err)
 }
 
 func TestNonPointer(t *testing.T) {
 	sampleModel := SampleModel{}
-	err := m.MapToModel(sampleData, sampleModel)
+	err := m.MapToModel(sampleData, "", sampleModel)
 	checkError(t, "modeler.NonPointerModelError", err)
 }
 
 func TestNonStructPointer(t *testing.T) {
 	sampleModel := "foo"
-	err := m.MapToModel(sampleData, &sampleModel)
+	err := m.MapToModel(sampleData, "", &sampleModel)
 	checkError(t, "modeler.NonStructPointerModelError", err)
 }
 
 func TestNonPointerSubModel(t *testing.T) {
 	sampleModel := newBadSampleModel()
-	err := m.MapToModel(sampleData, sampleModel)
+	err := m.MapToModel(sampleData, "", sampleModel)
 	checkError(t, "modeler.NonPointerModelError", err)
 }
 
 func TestValidationError(t *testing.T) {
 	sampleModel := newSampleModel()
-	err := m.MapToModel(invalidSampleData, sampleModel)
+	err := m.MapToModel(invalidSampleData, "", sampleModel)
 	checkError(t, "modeler.ModelValidationError", err)
 }
 
 func TestMapping(t *testing.T) {
 	sampleModel := newSampleModel()
-	err := m.MapToModel(sampleData, sampleModel)
+	err := m.MapToModel(sampleData, "", sampleModel)
 	if err != nil {
 		t.Error(err)
 	}

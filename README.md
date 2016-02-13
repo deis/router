@@ -201,59 +201,60 @@ Altering the value of the `POD_NAMESPACE` environment variable requires the rout
 
 ### Annotations
 
-All remaining configuration options are configured through annotations.  Any of the following three Kubernetes resources can be configured:
+All remaining options are configured through annotations.  Any of the following three Kubernetes resources can be configured:
 
-* deis-router replication controller
-* deis-builder service (if in use)
-* routable applications (labeled with `router.deis.io/routable: "true"`)
+| Resource | Notes |
+|----------|-------|
+| <ul><li>deis-router replication controller</li><li>deis-builder service (if in use)</li></ul> | All of these configuration options are specific to _this_ implementation of the router (as indicated by the inclusion of the token `nginx` in the annotations' names).  Customized and alternative router implementations are possible.  Such routers are under no obligation to honor these annotations, as many or all of these may not be applicable in such scenarios.  Customized and alternative implementations _should_ document their own configuration options. |
+| <ul><li>routable application services</li></ul> | These are services labeled with `router.deis.io/routable: "true"`.  In the context of the broader Deis PaaS, these annotations are _written_ by the Deis workflow component (the API).  These annotations, therefore, represent the contract or _interface_ between that component and the router.  As such, any customized or alternative router implementations that wishes to remain compatible with deis-workflow must honor (or ignore) these annotations, but may _not_ alter their names or redefine their meanings. |
 
-The table below summarizes the configuration options that are currently available for each.
+The table below details the configuration options that are available for each of the above.
 
 _Note that Kubernetes annotation maps are all of Go type `map[string]string`.  As such, all configuration values must also be strings.  To avoid Kubernetes attempting to populate the `map[string]string` with non-string values, all numeric and boolean configuration values should be enclosed in double quotes to help avoid confusion._
 
 
-| Component | Annotation | Default Value | Description |
-|-----------|------------|---------------|-------------|
-| deis-router | router.deis.io/workerProcesses | `"auto"` (number of CPU cores) | Number of worker processes to start. |
-| deis-router | router.deis.io/workerConnections| `"768"` | Maximum number of simultaneous connections that can be opened by a worker process. |
-| deis-router | router.deis.io/trafficStatusZoneSize | `"1m"` | Size of a shared memory zone for storing stats collected by the Nginx [VTS module](https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_zone) expressed in bytes (no suffix), kilobytes (suffixes `k` and `K`), or megabytes (suffixes `m` and `M`). |
-| deis-router | router.deis.io/defaultTimeout | `"1300s"` | Default timeout value expressed in units `ms`, `s`, `m`, `h`, `d`, `w`, `M`, or `y`.  Should be longer than the front-facing load balancer's idle timeout. |
-| deis-router | router.deis.io/serverNameHashMaxSize | `"512"` | nginx `server_names_hash_max_size` setting expressed in bytes (no suffix), kilobytes (suffixes `k` and `K`), or megabytes (suffixes `m` and `M`). |
-| deis-router | router.deis.io/serverNameHashBucketSize | `"64"` | nginx `server_names_hash_bucket_size` setting expressed in bytes (no suffix), kilobytes (suffixes `k` and `K`), or megabytes (suffixes `m` and `M`). |
-| deis-router | router.deis.io/gzip.enabled | `"true"` | Whether to enable gzip compression. |
-| deis-router | router.deis.io/gzip.compLevel | `"5"` | nginx `gzip_comp_level` setting. |
-| deis-router | router.deis.io/gzip.disable | `"msie6"` | nginx `gzip_disable` setting. |
-| deis-router | router.deis.io/gzip.httpVersion | `"1.1"` | nginx `gzip_http_version` setting. |
-| deis-router | router.deis.io/gzip.minLength | `"256"` | nginx `gzip_min_length` setting. |
-| deis-router | router.deis.io/gzip.proxied | `"any"` | nginx `gzip_proxied` setting. |
-| deis-router | router.deis.io/gzip.types | `"application/atom+xml application/javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"` | nginx `gzip_types` setting. |
-| deis-router | router.deis.io/gzip.vary | `"on"` | nginx `gzip_vary` setting. |
-| deis-router | router.deis.io/bodySize | `"1m"`| nginx `client_max_body_size` setting expressed in bytes (no suffix), kilobytes (suffixes `k` and `K`), or megabytes (suffixes `m` and `M`). |
-| deis-router | router.deis.io/proxyRealIpCidr | `"10.0.0.0/8"` | nginx `set_real_ip_from` setting.  Defines trusted addresses that are known to send correct replacement addresses. |
-| deis-router | router.deis.io/errorLogLevel | `"error"` | Log level used in the nginx `error_log` setting (valid values are: `debug`, `info`, `notice`, `warn`, `error`, `crit`, `alert`, and `emerg`). |
-| deis-router | router.deis.io/defaultDomain | N/A | This defines the router's default domain.  Any domains added to a routable application _not_ containing the `.` character will be assumed to be subdomains of this default domain.  Thus, for example, a default domain of `example.com` coupled with a routable app counting `foo` among its domains will result in router configuration that routes traffic for `foo.example.com` to that application. |
-| deis-router | router.deis.io/useProxyProtocol | `"false"` | PROXY is a simple protocol supported by nginx, HAProxy, Amazon ELB, and others.  It provides a method to obtain information about a request's originating IP address from an external (to Kubernetes) load balancer in front of the router.  Enabling this option allows the router to select the originating IP from the HTTP `X-Forwarded-For` header. |
-| deis-router | router.deis.io/enforceWhitelists | `"false"` | Whether to _require_ application-level whitelists that explicitly enumerate allowed clients by IP / CIDR range.  With this enabled, each app will drop _all_ requests unless a whitelist has been defined. |
-| deis-router | router.deis.io/defaultWhitelist | N/A | A default (router-wide) whitelist expressed as  a comma-delimited list of addresses (using IP or CIDR notation).  Application-specific whitelists can either extend or override this default. |
-| deis-router | router.deis.io/defaultWhitelist | `"extend"` | Whether application-specific whitelists should extend or override the router-wide default whitelist (if defined).  Valid values are `"extend"` and `"override"`. |
-| deis-router | router.deis.io/ssl.enforce | `"false"` | Whether to respond with a 301 for all HTTP requests with a permanent redirect to the HTTPS equivalent address. |
-| deis-router | router.deis.io/ssl.protocols | `"TLSv1 TLSv1.1 TLSv1.2"` | nginx `ssl_protocols` setting. |
-| deis-router | router.deis.io/ssl.ciphers | `""` | nginx `ssl_ciphers`.  If the value is the empty string, OpenSSL's default ciphers are used.  In _all_ cases, server side cipher preferences (order matters) are used. |
-| deis-router | router.deis.io/ssl.sessionCache | `""` | nginx `ssl_session_cache` setting. |
-| deis-router | router.deis.io/ssl.sessionTimeout | `"10m"` | nginx `ssl_session_timeout` expressed in units `ms`, `s`, `m`, `h`, `d`, `w`, `M`, or `y`. |
-| deis-router | router.deis.io/ssl.useSessionTickets | `"true"` | Whether to use [TLS session tickets](http://tools.ietf.org/html/rfc5077) for session resumption without server-side state. |
-| deis-router | router.deis.io/ssl.bufferSize | `"4k"` | nginx `ssl_buffer_size` setting expressed in bytes (no suffix), kilobytes (suffixes `k` and `K`), or megabytes (suffixes `m` and `M`). |
-| deis-router | router.deis.io/ssl.hsts.enabled | `"false"` | Whether to use HTTP Strict Transport Security. |
-| deis-router | router.deis.io/ssl.hsts.maxAge | `"10886400"` | Maximum number of seconds user agents should observe HSTS rewrites. |
-| deis-router | router.deis.io/ssl.hsts.includeSubDomains | `"false"` | Whether to enforce HSTS for subsequent requests to all subdomains of the original request. |
-| deis-router | router.deis.io/ssl.hsts.preload | `"false"` | Whether to allow the domain to be included in the HSTS preload list. |
-| deis-builder | router.deis.io/connectTimeout | `"10s"` | nginx `proxy_connect_timeout` setting expressed in units `ms`, `s`, `m`, `h`, `d`, `w`, `M`, or `y`. |
-| deis-builder | router.deis.io/tcpTimeout | `"1200s"` | nginx `proxy_timeout` setting expressed in units `ms`, `s`, `m`, `h`, `d`, `w`, `M`, or `y`. |
-| routable application | router.deis.io/domains | N/A | Comma-delimited list of domains for which traffic should be routed to the application.  These may be fully qualified (e.g. `foo.example.com`) or, if not containing any `.` character, will be considered subdomains of the router's domain, if that is defined. |
+| Component | Resource Type | Annotation | Default Value | Description |
+|-----------|---------------|------------|---------------|-------------|
+| deis-router | RC | router.deis.io/nginx.workerProcesses | `"auto"` (number of CPU cores) | Number of worker processes to start. |
+| deis-router | RC | router.deis.io/nginx.workerConnections| `"768"` | Maximum number of simultaneous connections that can be opened by a worker process. |
+| deis-router | RC | router.deis.io/nginx.trafficStatusZoneSize | `"1m"` | Size of a shared memory zone for storing stats collected by the Nginx [VTS module](https://github.com/vozlt/nginx-module-vts#vhost_traffic_status_zone) expressed in bytes (no suffix), kilobytes (suffixes `k` and `K`), or megabytes (suffixes `m` and `M`). |
+| deis-router | RC | router.deis.io/nginx.defaultTimeout | `"1300s"` | Default timeout value expressed in units `ms`, `s`, `m`, `h`, `d`, `w`, `M`, or `y`.  Should be longer than the front-facing load balancer's idle timeout. |
+| deis-router | RC | router.deis.io/nginx.serverNameHashMaxSize | `"512"` | nginx `server_names_hash_max_size` setting expressed in bytes (no suffix), kilobytes (suffixes `k` and `K`), or megabytes (suffixes `m` and `M`). |
+| deis-router | RC | router.deis.io/nginx.serverNameHashBucketSize | `"64"` | nginx `server_names_hash_bucket_size` setting expressed in bytes (no suffix), kilobytes (suffixes `k` and `K`), or megabytes (suffixes `m` and `M`). |
+| deis-router | RC | router.deis.io/nginx.gzip.enabled | `"true"` | Whether to enable gzip compression. |
+| deis-router | RC | router.deis.io/nginx.gzip.compLevel | `"5"` | nginx `gzip_comp_level` setting. |
+| deis-router | RC | router.deis.io/nginx.gzip.disable | `"msie6"` | nginx `gzip_disable` setting. |
+| deis-router | RC | router.deis.io/nginx.gzip.httpVersion | `"1.1"` | nginx `gzip_http_version` setting. |
+| deis-router | RC | router.deis.io/nginx.gzip.minLength | `"256"` | nginx `gzip_min_length` setting. |
+| deis-router | RC | router.deis.io/nginx.gzip.proxied | `"any"` | nginx `gzip_proxied` setting. |
+| deis-router | RC | router.deis.io/nginx.gzip.types | `"application/atom+xml application/javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component"` | nginx `gzip_types` setting. |
+| deis-router | RC | router.deis.io/nginx.gzip.vary | `"on"` | nginx `gzip_vary` setting. |
+| deis-router | RC | router.deis.io/nginx.bodySize | `"1m"`| nginx `client_max_body_size` setting expressed in bytes (no suffix), kilobytes (suffixes `k` and `K`), or megabytes (suffixes `m` and `M`). |
+| deis-router | RC | router.deis.io/nginx.proxyRealIpCidr | `"10.0.0.0/8"` | nginx `set_real_ip_from` setting.  Defines trusted addresses that are known to send correct replacement addresses. |
+| deis-router | RC | router.deis.io/nginx.errorLogLevel | `"error"` | Log level used in the nginx `error_log` setting (valid values are: `debug`, `info`, `notice`, `warn`, `error`, `crit`, `alert`, and `emerg`). |
+| deis-router | RC | router.deis.io/nginx.defaultDomain | N/A | This defines the router's default domain.  Any domains added to a routable application _not_ containing the `.` character will be assumed to be subdomains of this default domain.  Thus, for example, a default domain of `example.com` coupled with a routable app counting `foo` among its domains will result in router configuration that routes traffic for `foo.example.com` to that application. |
+| deis-router | RC | router.deis.io/nginx.useProxyProtocol | `"false"` | PROXY is a simple protocol supported by nginx, HAProxy, Amazon ELB, and others.  It provides a method to obtain information about a request's originating IP address from an external (to Kubernetes) load balancer in front of the router.  Enabling this option allows the router to select the originating IP from the HTTP `X-Forwarded-For` header. |
+| deis-router | RC | router.deis.io/nginx.enforceWhitelists | `"false"` | Whether to _require_ application-level whitelists that explicitly enumerate allowed clients by IP / CIDR range.  With this enabled, each app will drop _all_ requests unless a whitelist has been defined. |
+| deis-router | RC | router.deis.io/nginx.defaultWhitelist | N/A | A default (router-wide) whitelist expressed as  a comma-delimited list of addresses (using IP or CIDR notation).  Application-specific whitelists can either extend or override this default. |
+| deis-router | RC | router.deis.io/nginx.whitelistMode | `"extend"` | Whether application-specific whitelists should extend or override the router-wide default whitelist (if defined).  Valid values are `"extend"` and `"override"`. |
+| deis-router | RC | router.deis.io/nginx.ssl.enforce | `"false"` | Whether to respond with a 301 for all HTTP requests with a permanent redirect to the HTTPS equivalent address. |
+| deis-router | RC | router.deis.io/nginx.ssl.protocols | `"TLSv1 TLSv1.1 TLSv1.2"` | nginx `ssl_protocols` setting. |
+| deis-router | RC | router.deis.io/nginx.ssl.ciphers | `""` | nginx `ssl_ciphers`.  If the value is the empty string, OpenSSL's default ciphers are used.  In _all_ cases, server side cipher preferences (order matters) are used. |
+| deis-router | RC | router.deis.io/nginx.ssl.sessionCache | `""` | nginx `ssl_session_cache` setting. |
+| deis-router | RC | router.deis.io/nginx.ssl.sessionTimeout | `"10m"` | nginx `ssl_session_timeout` expressed in units `ms`, `s`, `m`, `h`, `d`, `w`, `M`, or `y`. |
+| deis-router | RC | router.deis.io/nginx.ssl.useSessionTickets | `"true"` | Whether to use [TLS session tickets](http://tools.ietf.org/html/rfc5077) for session resumption without server-side state. |
+| deis-router | RC | router.deis.io/nginx.ssl.bufferSize | `"4k"` | nginx `ssl_buffer_size` setting expressed in bytes (no suffix), kilobytes (suffixes `k` and `K`), or megabytes (suffixes `m` and `M`). |
+| deis-router | RC | router.deis.io/nginx.ssl.hsts.enabled | `"false"` | Whether to use HTTP Strict Transport Security. |
+| deis-router | RC | router.deis.io/nginx.ssl.hsts.maxAge | `"10886400"` | Maximum number of seconds user agents should observe HSTS rewrites. |
+| deis-router | RC | router.deis.io/nginx.ssl.hsts.includeSubDomains | `"false"` | Whether to enforce HSTS for subsequent requests to all subdomains of the original request. |
+| deis-router | RC | router.deis.io/nginx.ssl.hsts.preload | `"false"` | Whether to allow the domain to be included in the HSTS preload list. |
+| deis-builder | service | router.deis.io/nginx.connectTimeout | `"10s"` | nginx `proxy_connect_timeout` setting expressed in units `ms`, `s`, `m`, `h`, `d`, `w`, `M`, or `y`. |
+| deis-builder | service | router.deis.io/nginx.tcpTimeout | `"1200s"` | nginx `proxy_timeout` setting expressed in units `ms`, `s`, `m`, `h`, `d`, `w`, `M`, or `y`. |
+| routable application | service | router.deis.io/domains | N/A | Comma-delimited list of domains for which traffic should be routed to the application.  These may be fully qualified (e.g. `foo.example.com`) or, if not containing any `.` character, will be considered subdomains of the router's domain, if that is defined. |
 | <a name="certificates-annotation"></a>routable application | router.deis.io/certificates | N/A | Comma delimited list of mappings between domain names (see `router.deis.io/domains`) and the certificate to be used for each.  The domain name and certificate name must be separated by a colon.  See the [SSL section](#ssl) below for further details. |
-| routable application | router.deis.io/whitelist | N/A | Comma-delimited list of addresses permitted to access the application (using IP or CIDR notation).  These may either extend or override the router-wide default whitelist (if defined).  Requests from all other addresses are denied. |
-| routable application | router.deis.io/connectTimeout | `"30s"` | nginx `proxy_connect_timeout` setting expressed in units `ms`, `s`, `m`, `h`, `d`, `w`, `M`, or `y`. |
-| routable application | router.deis.io/tcpTimeout | router's `defaultTimeout` | nginx `proxy_send_timeout` and `proxy_read_timeout` settings expressed in units `ms`, `s`, `m`, `h`, `d`, `w`, `M`, or `y`. |
+| routable application | service | router.deis.io/whitelist | N/A | Comma-delimited list of addresses permitted to access the application (using IP or CIDR notation).  These may either extend or override the router-wide default whitelist (if defined).  Requests from all other addresses are denied. |
+| routable application | service | router.deis.io/connectTimeout | `"30s"` | nginx `proxy_connect_timeout` setting expressed in units `ms`, `s`, `m`, `h`, `d`, `w`, `M`, or `y`. |
+| routable application | service | router.deis.io/tcpTimeout | router's `defaultTimeout` | nginx `proxy_send_timeout` and `proxy_read_timeout` settings expressed in units `ms`, `s`, `m`, `h`, `d`, `w`, `M`, or `y`. |
 
 #### Annotations by example
 
@@ -267,8 +268,8 @@ metadata:
   namespace: deis
   # ...
   annotations:
-    router.deis.io/domain: example.com
-    router.deis.io/useProxyProtocol: "true"
+    router.deis.io/nginx.defaultDomain: example.com
+    router.deis.io/nginx.useProxyProtocol: "true"
 # ...
 ```
 
@@ -282,8 +283,8 @@ metadata:
   namespace: deis
   # ...
   annotations:
-    router.deis.io/connectTimeout: "20000"
-    router.deis.io/tcpTimeout: "2400000"
+    router.deis.io/nginx.connectTimeout: "20000"
+    router.deis.io/nginx.tcpTimeout: "2400000"
 # ...
 ```
 
@@ -383,7 +384,7 @@ data:
 
 When combined with a good certificate, the router's _default_ SSL options are sufficient to earn an A grade from [Qualys SSL Labs](https://www.ssllabs.com/ssltest/analyze.html).
 
-Earning an A+ is as easy as simply enabling HTTP Strict Transport Security (see the `router.deis.io/ssl.hsts.enabled` option), but be aware that this will implicitly trigger the `router.deis.io/ssl.enforce` option and cause your applications to permanently use HTTPS for _all_ requests.
+Earning an A+ is as easy as simply enabling HTTP Strict Transport Security (see the `router.deis.io/nginx.ssl.hsts.enabled` option), but be aware that this will implicitly trigger the `router.deis.io/nginx.ssl.enforce` option and cause your applications to permanently use HTTPS for _all_ requests.
 
 ### Front-facing load balancer
 

@@ -303,7 +303,7 @@ func build(kubeClient *client.Client, routerRC *api.ReplicationController, defau
 
 func buildRouterConfig(rc *api.ReplicationController, defaultCertSecret *api.Secret, dhParamSecret *api.Secret) (*RouterConfig, error) {
 	routerConfig := newRouterConfig()
-	err := modeler.MapToModel(rc.Annotations, routerConfig)
+	err := modeler.MapToModel(rc.Annotations, "nginx", routerConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -332,7 +332,7 @@ func buildAppConfig(kubeClient *client.Client, service api.Service, routerConfig
 	if appConfig.Name == "" {
 		appConfig.Name = service.Name
 	}
-	err := modeler.MapToModel(service.Annotations, appConfig)
+	err := modeler.MapToModel(service.Annotations, "", appConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -373,7 +373,7 @@ func buildAppConfig(kubeClient *client.Client, service api.Service, routerConfig
 func buildBuilderConfig(service *api.Service) (*BuilderConfig, error) {
 	builderConfig := newBuilderConfig()
 	builderConfig.ServiceIP = service.Spec.ClusterIP
-	err := modeler.MapToModel(service.Annotations, builderConfig)
+	err := modeler.MapToModel(service.Annotations, "nginx", builderConfig)
 	if err != nil {
 		return nil, err
 	}

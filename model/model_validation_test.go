@@ -332,7 +332,7 @@ func testInvalidValues(t *testing.T, builder func() interface{}, fieldName strin
 	for _, badValue := range badValues {
 		badMap[key] = badValue
 		model := builder()
-		err := testModeler.MapToModel(badMap, model)
+		err := testModeler.MapToModel(badMap, "", model)
 		checkError(t, badValue, err)
 	}
 }
@@ -342,7 +342,7 @@ func testValidValues(t *testing.T, builder func() interface{}, fieldName string,
 	for _, goodValue := range goodValues {
 		goodMap[key] = goodValue
 		model := builder()
-		err := testModeler.MapToModel(goodMap, model)
+		err := testModeler.MapToModel(goodMap, "", model)
 		if err != nil {
 			t.Errorf("Using value \"%s\", received an unexpected error: %s", goodValue, err)
 			t.FailNow()
