@@ -385,13 +385,78 @@ When combined with a good certificate, the router's _default_ SSL options are su
 
 Earning an A+ is as easy as simply enabling HTTP Strict Transport Security (see the `router.deis.io/ssl.hsts.enabled` option), but be aware that this will implicitly trigger the `router.deis.io/ssl.enforce` option and cause your applications to permanently use HTTPS for _all_ requests.
 
-### Front-facing load balancer and idle connection timeouts
+### Front-facing load balancer
 
 Depending on what distribution of Kubernetes you use and where you host it, installation of the router _may_ automatically include an external (to Kubernetes) load balancer or similar mechanism for routing inbound traffic from beyond the cluster into the cluster to the router(s).  For example, [kube-aws](https://coreos.com/kubernetes/docs/latest/kubernetes-on-aws.html) and [Google Container Engine](https://cloud.google.com/container-engine/) both do this.  On some other platforms-- Vagrant or bare metal, for instance-- this must either be accomplished manually or does not apply at all.
+
+#### Idle connection timeouts
 
 If a load balancer such as the one described above does exist (whether created automatically or manually) _and_ if you intend on handling any long-running requests, the load balancer (or similar) _may_ require some manual configuration to increase the idle connection timeout.  Typically, this is most applicable to AWS and Elastic Load Balancers, but may apply in other cases as well.  It does _not_ apply to Google Container Engine, as the idle connection timeout cannot be configured there, but also works fine as-is.
 
 If, for instance, router were installed on kube-aws, in conjunction with the rest of the Deis platform, this timeout should be increased to a recommended value of 1200 seconds.  This will ensure the load balancer does not hang up on the client during long-running operations like an application deployment.  Directions for this can be found [here](http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/config-idle-timeout.html).
+
+#### Manually configuring a load balancer
+
+If using a Kubernetes distribution or underlying infrastructure that does not support the automated provisioning of a front-facing load balancer, operators will wish to manually configure a load balancer (or use other tricks) to route inbound traffic from beyond the cluster _into_ the cluster to the platform's own router(s).  There are many ways to accomplish this.  The remainder of this section discusses three general options for accomplishing this.
+
+##### Option 1
+
+This manually replicates the configuration that would be achieved automatically with some distributions on some infrastructure providers, as discussed above.
+
+First, determine the "node ports" for the `deis-router` service:
+
+```
+$ kubectl describe service deis-router --namespace=deis
+```
+
+This will yield output similar to the following:
+
+```
+...
+Port:			http	80/TCP
+NodePort:		http	32477/TCP
+Endpoints:		10.2.80.11:80
+Port:			https	443/TCP
+NodePort:		https	32389/TCP
+Endpoints:		10.2.80.11:443
+Port:			builder	2222/TCP
+NodePort:		builder	30729/TCP
+Endpoints:		10.2.80.11:2222
+Port:			healthz	9090/TCP
+NodePort:		healthz	31061/TCP
+Endpoints:		10.2.80.11:9090
+...
+```
+
+The node ports shown above are high-numbered ports that are allocated on _every_ Kubernetes worker node for use by the router service.  The kube-proxy component on _every_ Kubernetes node will listen on these ports and proxy traffic through to the corresponding port within an "endpoint--" that is, a pod running the Deis router.
+
+If manually creating a load balancer, configure the load balancer to have _all_ Kubernetes worker nodes in the back-end pool, and listen on ports 80, 443, and 2222 (port 9090 can be ignored).  Each of these listeners should proxy inbound traffic to the corresponding node ports on the worker nodes.  Ports 80 and 443 may use either HTTP/S or TCP as protocols.  Port 2222 must use TCP.
+
+With this configuration, the path a request takes from the end-user to an application pod is as follows:
+
+```
+user agent (browser) --> front-facing load balancer --> kube-proxy on _any_ Kubernetes worker node --> _any_ Deis router pod --> kube-proxy on that same node --> _any_ application pod
+```
+
+##### Option 2
+
+Option 2 differs only slightly from option 1, but is more efficient.  As such, even operators who had a front-facing load balancer automatically provisioned on their infrastructure by Kubernetes might consider manually reconfiguring that load balancer as follows.
+
+Deis router pods will listen on _host_ ports 80, 443, 2222, and 9090 wherever they run.  (They will not run on any worker nodes where all of these four ports are not available.)  Taking advantage of this, an operator may completely dismiss the node ports discussed in option 1.  The load balancer can be configured to have _all_ Kubernetes worker nodes in the back-end pool, and listen on ports 80, 443, and 2222.  Each of these listeners should proxy inbound traffic to the _same_ ports on the worker nodes.  Ports 80 and 443 may use either HTTP/S or TCP as protocols.  Port 2222 must use TCP.
+
+Additionally, a health check _must_ be configured using the HTTP protocol, port 9090, and the `/healthz` endpoint.  With such a health check in place, _only_ nodes that are actually hosting a router pods will pass and be included in the load balancer's pool of active back end instances.
+
+With this configuration, the path a request takes from the end-user to an application pod is as follows:
+
+```
+user agent (browser) --> front-facing load balancer --> a Deis router pod --> kube-proxy on that same node --> _any_ application pod
+```
+
+##### Option 3
+
+Option 3 is similar to option 2, but does not actually utilize a load balancer at all.  Instead, a DNS A record may be created that lists the public IP addresses of _all_ Kubernetes worker nodes.  This will leverage DNS round-robining to direct requests to all nodes.  To guarantee _all_ nodes can adequately route incoming traffic, the Deis router component should be scaled out by increasing the number of replicas specified in the replication controller to match the number of worker nodes.  Anti-affinity should ensure exactly one router pod runs per worker node.
+
+__This configuration is not suitable for production.__ The primary use case for this configuration is demonstrating or evaluating Deis on bare metal Kubernetes clusters without incurring the effort to configure an _actual_ front-facing load balancer.
 
 ## License
 
