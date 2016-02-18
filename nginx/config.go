@@ -12,9 +12,8 @@ import (
 )
 
 const (
-	confTemplate = `{{ $routerConfig := . }}user nginx;
-daemon off;
-pid /run/nginx.pid;
+	confTemplate = `{{ $routerConfig := . }}daemon off;
+pid /tmp/nginx.pid;
 worker_processes {{ $routerConfig.WorkerProcesses }};
 
 events {
@@ -56,8 +55,8 @@ http {
 
 	log_format upstreaminfo '[$time_local] - $remote_addr - $remote_user - $status - "$request" - $bytes_sent - "$http_referer" - "$http_user_agent" - "$server_name" - $upstream_addr - $http_host - $upstream_response_time - $request_time';
 
-	access_log /opt/nginx/logs/access.log upstreaminfo;
-	error_log  /opt/nginx/logs/error.log {{ $routerConfig.ErrorLogLevel }};
+	access_log /opt/router/logs/access.log upstreaminfo;
+	error_log  /opt/router/logs/error.log {{ $routerConfig.ErrorLogLevel }};
 
 	map $http_upgrade $connection_upgrade {
 		default upgrade;
@@ -89,8 +88,8 @@ http {
 		{{ if $routerConfig.DefaultCertificate }}
 		listen 443 default_server ssl{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
 		ssl_protocols {{ $sslConfig.Protocols }};
-		ssl_certificate /opt/nginx/ssl/default.crt;
-		ssl_certificate_key /opt/nginx/ssl/default.key;
+		ssl_certificate /opt/router/ssl/default.crt;
+		ssl_certificate_key /opt/router/ssl/default.key;
 		{{ end }}
 		server_name _;
 		location ~ ^/healthz/?$ {
@@ -134,13 +133,13 @@ http {
 		ssl_protocols {{ $sslConfig.Protocols }};
 		{{ if ne $sslConfig.Ciphers "" }}ssl_ciphers {{ $sslConfig.Ciphers }};{{ end }}
 		ssl_prefer_server_ciphers on;
-		ssl_certificate /opt/nginx/ssl/{{ $domain }}.crt;
-		ssl_certificate_key /opt/nginx/ssl/{{ $domain }}.key;
+		ssl_certificate /opt/router/ssl/{{ $domain }}.crt;
+		ssl_certificate_key /opt/router/ssl/{{ $domain }}.key;
 		{{ if ne $sslConfig.SessionCache "" }}ssl_session_cache {{ $sslConfig.SessionCache }};
 		ssl_session_timeout {{ $sslConfig.SessionTimeout }};{{ end }}
 		ssl_session_tickets {{ if $sslConfig.UseSessionTickets }}on{{ else }}off{{ end }};
 		ssl_buffer_size {{ $sslConfig.BufferSize }};
-		{{ if ne $sslConfig.DHParam "" }}ssl_dhparam /opt/nginx/ssl/dhparam.pem;{{ end }}
+		{{ if ne $sslConfig.DHParam "" }}ssl_dhparam /opt/router/ssl/dhparam.pem;{{ end }}
 		{{ end }}
 
 		{{ if or $routerConfig.EnforceWhitelists (or (ne (len $routerConfig.DefaultWhitelist) 0) (ne (len $appConfig.Whitelist) 0)) }}

@@ -9,26 +9,34 @@ RUN apk add --update-cache \
 	openssl \
 	pcre \
 	sudo \
+	libcap \
 	&& rm -rf /var/cache/apk/*
 
-# add nginx user
-RUN addgroup -S nginx && \
-  adduser -S -G nginx -H -h /opt/nginx -s /sbin/nologin -D nginx
+# add router user
+RUN addgroup -S router && \
+	adduser -S -G router -H -h /opt/router -D router
 
 COPY . /
 
 # compile nginx from source
 RUN build
 
-# Re-copy this file because the previous step will have overwritten it
-COPY opt/nginx/conf/nginx.conf /opt/nginx/conf/nginx.conf
+# Re-copy these files because the previous step will have overwritten them
+COPY opt/router /opt/router
 
-RUN mkdir /opt/nginx/ssl
+RUN mkdir /opt/router/ssl
 
-RUN ln -sf /dev/stdout /opt/nginx/logs/access.log
-RUN ln -sf /dev/stderr /opt/nginx/logs/error.log
+RUN ln -sf /dev/stdout /opt/router/logs/access.log && \
+	ln -sf /dev/stderr /opt/router/logs/error.log
 
-CMD ["/bin/router"]
+# Fix some permission since we'll be running as a non-root user.  This includes enabling
+# Nginx to always bind to low/privileged ports, even when running as a non-root user.
+RUN chown -R router:router /opt/router && \
+	setcap 'cap_net_bind_service=+ep' /opt/router/sbin/nginx
+
+USER router
+
+CMD ["/opt/router/sbin/router"]
 EXPOSE 80 2222 9090
 
 ENV DEIS_RELEASE 2.0.0

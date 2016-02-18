@@ -13,7 +13,7 @@ DEV_ENV_WORK_DIR := /go/src/${REPO_PATH}
 DEV_ENV_CMD := docker run --rm -v ${CURDIR}:${DEV_ENV_WORK_DIR} -w ${DEV_ENV_WORK_DIR} ${DEV_ENV_IMAGE}
 DEV_ENV_CMD_INT := docker run -it --rm -v ${CURDIR}:${DEV_ENV_WORK_DIR} -w ${DEV_ENV_WORK_DIR} ${DEV_ENV_IMAGE}
 LDFLAGS := "-s -X main.version=${VERSION}"
-BINDIR := ./rootfs/bin
+BINDIR := ./rootfs/opt/router/sbin
 
 # The following variables describe the source we build from
 GO_FILES := $(wildcard *.go)

@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	nginxBinary = "/opt/nginx/sbin/nginx"
+	nginxBinary = "/opt/router/sbin/nginx"
 )
 
 // Start nginx.

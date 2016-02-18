@@ -30,17 +30,17 @@ func main() {
 			continue
 		}
 		log.Println("INFO: Router configuration has changed in k8s.")
-		err = nginx.WriteCerts(routerConfig, "/opt/nginx/ssl")
+		err = nginx.WriteCerts(routerConfig, "/opt/router/ssl")
 		if err != nil {
 			log.Printf("Failed to write certs; continuing with existing certs, dhparam, and configuration: %v", err)
 			continue
 		}
-		err = nginx.WriteDHParam(routerConfig, "/opt/nginx/ssl")
+		err = nginx.WriteDHParam(routerConfig, "/opt/router/ssl")
 		if err != nil {
 			log.Printf("Failed to write dhparam; continuing with existing dhparam and configuration: %v", err)
 			continue
 		}
-		err = nginx.WriteConfig(routerConfig, "/opt/nginx/conf/nginx.conf")
+		err = nginx.WriteConfig(routerConfig, "/opt/router/conf/nginx.conf")
 		if err != nil {
 			log.Printf("Failed to write new nginx configuration; continuing with existing configuration: %v", err)
 			continue
