@@ -23,7 +23,7 @@ GO_PACKAGES := ${REPO_PATH} $(addprefix ${REPO_PATH}/,${GO_DIRS})
 # The following variables describe the Docker image we build and where it
 # is pushed to.
 # If DEIS_REGISTRY is not set, try to populate it from legacy DEV_REGISTRY.
-DEIS_REGISTRY ?= ${DEV_REGISTRY}/
+DEIS_REGISTRY ?= ${DEV_REGISTRY}
 IMAGE_PREFIX ?= deis
 IMAGE := ${DEIS_REGISTRY}${IMAGE_PREFIX}/${SHORT_NAME}:${VERSION}
 
@@ -47,7 +47,7 @@ bootstrap: check-docker
 	${DEV_ENV_CMD} glide install
 
 # Containerized build of the binary
-build: check-docker check-registry
+build: check-docker
 	mkdir -p ${BINDIR}
 	${DEV_ENV_CMD} make binary-build
 	docker build --rm -t ${IMAGE} rootfs
@@ -65,7 +65,7 @@ full-clean: check-docker
 
 dev-release: push set-image
 
-push: check-docker check-registry build
+push: check-docker build
 	docker push ${IMAGE}
 
 set-image:

@@ -11,7 +11,7 @@ services:
 install:
   - make bootstrap
 script:
-  - make test
+  - make build test
 deploy:
   provider: script
   script: _scripts/deploy.sh
