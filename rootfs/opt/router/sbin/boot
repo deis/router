@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+set -eof pipefail
+
+mkfifo -m 600 /tmp/logpipe
+cat < /tmp/logpipe 1>&2 &
+
+exec /opt/router/sbin/router
