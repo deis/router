@@ -8,7 +8,7 @@ export VTS_VERSION=0.1.8
 export BUILD_PATH=/tmp/build
 
 # nginx installation directory
-export PREFIX=/opt/nginx
+export PREFIX=/opt/router
 
 rm -rf "$PREFIX"
 mkdir "$PREFIX"
@@ -41,7 +41,7 @@ cd "$BUILD_PATH/nginx-$NGINX_VERSION"
 
 ./configure \
   --prefix="$PREFIX" \
-  --pid-path=/run/nginx.pid \
+  --pid-path=/tmp/nginx.pid \
   --with-debug \
   --with-pcre-jit \
   --with-ipv6 \
