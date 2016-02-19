@@ -24,9 +24,9 @@ spec:
             fieldRef:
               fieldPath: metadata.namespace
         ports:
-        - containerPort: 80
+        - containerPort: 8080
           hostPort: 80
-        - containerPort: 443
+        - containerPort: 6443
           hostPort: 443
         - containerPort: 2222
           hostPort: 2222

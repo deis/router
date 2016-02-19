@@ -9,7 +9,6 @@ RUN apk add --update-cache \
 	openssl \
 	pcre \
 	sudo \
-	libcap \
 	&& rm -rf /var/cache/apk/*
 
 # add router user
@@ -26,14 +25,12 @@ COPY opt/router /opt/router
 
 RUN mkdir /opt/router/ssl
 
-# Fix some permission since we'll be running as a non-root user.  This includes enabling
-# Nginx to always bind to low/privileged ports, even when running as a non-root user.
-RUN chown -R router:router /opt/router && \
-	setcap 'cap_net_bind_service=+ep' /opt/router/sbin/nginx
+# Fix some permission since we'll be running as a non-root user.
+RUN chown -R router:router /opt/router
 
 USER router
 
 CMD ["/opt/router/sbin/boot"]
-EXPOSE 80 2222 9090
+EXPOSE 2222 8080 6443 9090
 
 ENV DEIS_RELEASE 2.0.0
