@@ -1,15 +1,15 @@
 language: generic
 branches:
   only:
-    - master
+  - master
 cache:
   directories:
-    - vendor
+  - vendor
 sudo: required
 services:
-  - docker
+- docker
 install:
-  - make bootstrap
+- make bootstrap
 script:
   - make build test
 deploy:
@@ -20,7 +20,7 @@ deploy:
 notifications:
   webhooks:
     urls:
-      - secure: "k9yfhsC6oqlOv7pgd31qA8Nk1PykhJX4ojko2ljnH7XonjHRrGFhh+5eSfnqNxUoETeJorazGQgku9loUPquAFZBtO2tpjf0nb1WMU5fuVGYwXu8Fi+ddD8XusufJuHh9gt3cMHhzB26Baz5pfKgTt3g/GGNKAkf1Pg/pcv5Ulfud9dvLVef0yB4xph5W100YfP8YcFTPppNlXwDCmMXacQHVWlDHLpF2wieMqpb6w+tPt+H4iV1I5ggJjpjo85czr2wF2W+U+L8Rd5cEMNVzC2PnkPtX5TcIPwFOnUhkrN5Ir2Er9Aztf868CYoE7oHysaSM7OgavOFo70x7MKwSRsnMKnVgx3q0GRHBLcffQi8ZqG5C4Lmdn70n/FoCLSsOKHnp0u7HeMDRvFpVnuWw5JndFXhU3cgVgCPdj8AN5k6VQKwfKafZit5EIr6muI1czS36jVCORjTNo2X6kDOH2UJe3GWNYapD9B8poZUPbOJzZ8wBgX3zU6s93JTChL6cTXcN24Bzs1O/bwLJSnGjeI+WiPLc8iSRpiH1a1VLGwL1D2P0ZHcVy7rPqr79WEqslFI+c2L9q991/ejcOWjzI1NjGPsz0kti1Mv3ckT+1IeQpJ9jM2Tg+3rO8kwEpJHNBil6uhtb/f+E5ltQg+q3gMv6SDuAe0bKgnyVvbbw40="
+    - secure: "avqz9xMkCm15NfAMKhpkVIq5o4tEUNCq8Z4SDdshrHrVRS4uRPfCN0KiPn9WZ+JFWGLxyCA0cJpKOiyKlGb6UDAQiNs6FjpvropOpyToHXuo/pD5rpgvi0/u57GSWFlwBtwlK329UPovcVCJpRpWe+b60S2dNNpXlt5oOwAe7viVWUADYE9suoL8GFbkY2QD5oQhJopxto9VE+kzxRtrbT60kgPPWj0Pse9ot1z0H+tNmJwQ3ZRXiuWYPZrQl813c2q3e5JhFx4fYBS3IzrrwuDXbkYyfjFEP0XwBFnih2+8CNXQ64DJfBJrQKlr1Fw8+VsX5JD8mUl03f0YD/9YL6LTwepFSdJFaQA5YfVPyt23MRyyXWP16NBOI4bYam3Z2GqcnvDQr/fx1XRhp/sDfjVsp6qJid3pefvu4T+dmlu1wKNSj0o6ZF2iBo7yV7KC7edUEpeUkdPG/zKJQoIIGgbYeuKN0opHCbPmhHcr8iu9xclD/i/Vr+tyVHYE5Reov4/K6RXJydPMHkD2GTfw/m58scTjlO93C/nr3oltuEgWQeYbhgV8YrU8byWks8Z9K+g2GFWEzhWUOOlesJiLjMqcX26vBpnlF2YVli8JB0lDK7s8jqbZYStomMOm5xTA8TjMfpkPZi5qyisV9GBG9V6FQfiX8Ryb3rvgqlbI3ZE="
     on_success: always
     on_failure: never
     on_start: never
