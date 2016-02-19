@@ -84,9 +84,9 @@ http {
 
 	# Default server handles requests for unmapped hostnames, including healthchecks
 	server {
-		listen 80 default_server reuseport{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
+		listen 8080 default_server reuseport{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
 		{{ if $routerConfig.DefaultCertificate }}
-		listen 443 default_server ssl{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
+		listen 6443 default_server ssl{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
 		ssl_protocols {{ $sslConfig.Protocols }};
 		ssl_certificate /opt/router/ssl/default.crt;
 		ssl_certificate_key /opt/router/ssl/default.key;
@@ -123,13 +123,13 @@ http {
 	}
 
 	{{range $appConfig := $routerConfig.AppConfigs}}{{range $domain := $appConfig.Domains}}server {
-		listen 80{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
+		listen 8080{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
 		server_name {{ if contains "." $domain }}{{ $domain }}{{ else if ne $routerConfig.DefaultDomain "" }}{{ $domain }}.{{ $routerConfig.DefaultDomain }}{{ else }}~^{{ $domain }}\.(?<domain>.+)${{ end }};
 		server_name_in_redirect off;
 		port_in_redirect off;
 
 		{{ if index $appConfig.Certificates $domain }}
-		listen 443 ssl{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
+		listen 6443 ssl{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
 		ssl_protocols {{ $sslConfig.Protocols }};
 		{{ if ne $sslConfig.Ciphers "" }}ssl_ciphers {{ $sslConfig.Ciphers }};{{ end }}
 		ssl_prefer_server_ciphers on;
