@@ -26,9 +26,6 @@ COPY opt/router /opt/router
 
 RUN mkdir /opt/router/ssl
 
-RUN ln -sf /dev/stdout /opt/router/logs/access.log && \
-	ln -sf /dev/stderr /opt/router/logs/error.log
-
 # Fix some permission since we'll be running as a non-root user.  This includes enabling
 # Nginx to always bind to low/privileged ports, even when running as a non-root user.
 RUN chown -R router:router /opt/router && \
@@ -36,7 +33,7 @@ RUN chown -R router:router /opt/router && \
 
 USER router
 
-CMD ["/opt/router/sbin/router"]
+CMD ["/opt/router/sbin/boot"]
 EXPOSE 80 2222 9090
 
 ENV DEIS_RELEASE 2.0.0

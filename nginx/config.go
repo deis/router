@@ -55,8 +55,8 @@ http {
 
 	log_format upstreaminfo '[$time_local] - $remote_addr - $remote_user - $status - "$request" - $bytes_sent - "$http_referer" - "$http_user_agent" - "$server_name" - $upstream_addr - $http_host - $upstream_response_time - $request_time';
 
-	access_log /opt/router/logs/access.log upstreaminfo;
-	error_log  /opt/router/logs/error.log {{ $routerConfig.ErrorLogLevel }};
+	access_log /tmp/logpipe upstreaminfo;
+	error_log  /tmp/logpipe {{ $routerConfig.ErrorLogLevel }};
 
 	map $http_upgrade $connection_upgrade {
 		default upgrade;
