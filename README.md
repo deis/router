@@ -340,7 +340,7 @@ The corresponding cert-bearing secret would appear as follows:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: www.example.com-cert
+  name: www-example-com-cert
   namespace: cheery-yardbird
 type: Opaque
 data:
