@@ -22,6 +22,9 @@ GO_FILES := $(wildcard *.go)
 GO_DIRS := model/ nginx/ utils/ utils/modeler
 GO_PACKAGES := ${REPO_PATH} $(addprefix ${REPO_PATH}/,${GO_DIRS})
 
+# The binary compression command used
+GOUPX := goupx --strip-binary -9 --mono --no-progress
+
 # The following variables describe k8s manifests we may wish to deploy
 # to a running k8s cluster in the course of development.
 RC := manifests/deis-${SHORT_NAME}-rc.yaml
@@ -54,6 +57,8 @@ docker-build: build check-docker
 # containerized development environment.
 binary-build:
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o ${BINDIR}/${SHORT_NAME} -a -installsuffix cgo -ldflags ${LDFLAGS} ${SHORT_NAME}.go
+	$(call check-static-binary,$(BINDIR)/${SHORT_NAME})
+	${GOUPX} ${BINDIR}/${SHORT_NAME}
 
 clean: check-docker
 	docker rmi ${IMAGE}
