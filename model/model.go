@@ -343,8 +343,8 @@ func buildAppConfig(kubeClient *client.Client, service api.Service, routerConfig
 	}
 	// Step through the domains, and decide which cert, if any, will be used for securing each.
 	// For each that is a FQDN, we'll look to see if a corresponding cert-bearing secret also
-	// exists.  If so, that will be used.  If a domain isn't an FQDN OR a it is, but a corresponding
-	// cert-bearing secret does not exist, we will use the default cert-- even if that is nil.
+	// exists.  If so, that will be used.  If a domain isn't an FQDN we will use the default cert--
+	// even if that is nil.
 	for _, domain := range appConfig.Domains {
 		if strings.Contains(domain, ".") {
 			// Look for a cert-bearing secret for this domain.
@@ -353,9 +353,7 @@ func buildAppConfig(kubeClient *client.Client, service api.Service, routerConfig
 			if err != nil {
 				return nil, err
 			}
-			if certSecret == nil {
-				appConfig.Certificates[domain] = routerConfig.PlatformCertificate
-			} else {
+			if certSecret != nil {
 				certificate, err := buildCertificate(certSecret, domain)
 				if err != nil {
 					return nil, err
