@@ -232,7 +232,7 @@ _Note that Kubernetes annotation maps are all of Go type `map[string]string`.  A
 | deis-router | RC | router.deis.io/nginx.bodySize | `"1m"`| nginx `client_max_body_size` setting expressed in bytes (no suffix), kilobytes (suffixes `k` and `K`), or megabytes (suffixes `m` and `M`). |
 | deis-router | RC | router.deis.io/nginx.proxyRealIpCidr | `"10.0.0.0/8"` | nginx `set_real_ip_from` setting.  Defines trusted addresses that are known to send correct replacement addresses. |
 | deis-router | RC | router.deis.io/nginx.errorLogLevel | `"error"` | Log level used in the nginx `error_log` setting (valid values are: `debug`, `info`, `notice`, `warn`, `error`, `crit`, `alert`, and `emerg`). |
-| <a name="default-domain"></a>deis-router | RC | router.deis.io/nginx.defaultDomain | N/A | This defines the router's default domain.  Any domains added to a routable application _not_ containing the `.` character will be assumed to be subdomains of this default domain.  Thus, for example, a default domain of `example.com` coupled with a routable app counting `foo` among its domains will result in router configuration that routes traffic for `foo.example.com` to that application. |
+| <a name="platform-domain"></a>deis-router | RC | router.deis.io/nginx.platformDomain | N/A | This defines the router's platform domain.  Any domains added to a routable application _not_ containing the `.` character will be assumed to be subdomains of this platform domain.  Thus, for example, a platform domain of `example.com` coupled with a routable app counting `foo` among its domains will result in router configuration that routes traffic for `foo.example.com` to that application. |
 | deis-router | RC | router.deis.io/nginx.useProxyProtocol | `"false"` | PROXY is a simple protocol supported by nginx, HAProxy, Amazon ELB, and others.  It provides a method to obtain information about a request's originating IP address from an external (to Kubernetes) load balancer in front of the router.  Enabling this option allows the router to select the originating IP from the HTTP `X-Forwarded-For` header. |
 | <a name="whitelists"></a>deis-router | RC | router.deis.io/nginx.enforceWhitelists | `"false"` | Whether to _require_ application-level whitelists that explicitly enumerate allowed clients by IP / CIDR range.  With this enabled, each app will drop _all_ requests unless a whitelist has been defined. |
 | deis-router | RC | router.deis.io/nginx.defaultWhitelist | N/A | A default (router-wide) whitelist expressed as  a comma-delimited list of addresses (using IP or CIDR notation).  Application-specific whitelists can either extend or override this default. |
@@ -268,7 +268,7 @@ metadata:
   namespace: deis
   # ...
   annotations:
-    router.deis.io/nginx.defaultDomain: example.com
+    router.deis.io/nginx.platformDomain: example.com
     router.deis.io/nginx.useProxyProtocol: "true"
 # ...
 ```
@@ -348,20 +348,20 @@ data:
   key: MT1...MRp=
 ```
 
-#### <a name="default-cert"></a>Default certificate
+#### <a name="platform-cert"></a>Platform certificate
 
-A wildcard certificate may be supplied in a manner similar to that described above and can be used as a default certificate to provide a secure virtual host (in addition to the insecure virtual host) for _every_ "domain" of a routable service that is not a fully-qualified domain name.
+A wildcard certificate may be supplied in a manner similar to that described above and can be used as a platform certificate to provide a secure virtual host (in addition to the insecure virtual host) for _every_ "domain" of a routable service that is not a fully-qualified domain name.
 
-For instance, if a routable service exists having a "domain" `frozen-wookie` and the router's default domain is `example.com`, a supplied wildcard certificate for `*.example.com` will be used to secure a `frozen-wookie.example.com` virtual host.  Similarly, if no default domain is defined, the supplied wildcard certificate will be used to secure a virtual host matching the expression `~^frozen-wookie\.(?<domain>.+)$`.  (The latter is almost certainly guaranteed to result in certificate warnings in an end user's browser, so it is advisable to always define the router's default domain.)
+For instance, if a routable service exists having a "domain" `frozen-wookie` and the router's platform domain is `example.com`, a supplied wildcard certificate for `*.example.com` will be used to secure a `frozen-wookie.example.com` virtual host.  Similarly, if no platform domain is defined, the supplied wildcard certificate will be used to secure a virtual host matching the expression `~^frozen-wookie\.(?<domain>.+)$`.  (The latter is almost certainly guaranteed to result in certificate warnings in an end user's browser, so it is advisable to always define the router's platform domain.)
 
 If the same routable service also had a domain `www.frozen-wookie.com`, the `*.example.com` wildcard certificate plays no role in securing the `www.frozen-wookie.com` virtual host.
 
-##### Default certificate example
+##### Platform certificate example
 
 Here is an example of a Kubernetes secret bearing a wildcard certificate for use by the router.  The following criteria must be met:
 
 * Namespace must be the same namespace as the router
-* Name _must_ be `deis-router-default-cert`
+* Name _must_ be `deis-router-platform-cert`
 * Certificate must be supplied as the value of the key `cert`
 * Certificate private key must be supplied as the value of the key `key`
 * Both the certificate and private key must be base64 encoded
@@ -372,7 +372,7 @@ For example:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: deis-router-default-cert
+  name: deis-router-platform-cert
   namespace: deis
 type: Opaque
 data:
@@ -465,9 +465,9 @@ __This configuration is not suitable for production.__ The primary use case for 
 
 The Helm charts available for installing router (either with or without the rest of Deis) are intended to get users up and running as quickly as possible.  As such, the charts do not strictly require any editing prior to installation in order to successfully bootstrap a cluster.  However, there are some useful customizations that should be applied for use in production environments:
 
-* __Specify a [default domain](#default-domain).__  Without a default domain specified, any routable service specifying one or more non-fully-qualified domain names (not containing any `.` character) among its `router.deis.io/domains` will be matched using a regular expression of the form `^{{ $domain }}\.(?<domain>.+)$` where `{{ $domain }}` resolves to the non-fully-qualified domain name.  By way of example, the idiosyncrasy that this exposes is that traffic bound for the `foo` subdomain of _any_ domain would be routed to an application that lists the non-fully-qualified domain name `foo` among its `router.deis.io/domains`.  While this behavior is not innately wrong, it may not be desirable.  To circumvent this, specify a [default domain](#default-domain).  This will cause routable services specifying one or more non-fully-qualified domain names to be matched, explicitly, as subdomains of the default domain.  Apart from remediating this minor idiosyncrasy, this is required in order to properly utilize a wildcard SSL certificate and may also result in a very modest performance improvement.
+* __Specify a [platform domain](#platform-domain).__  Without a platform domain specified, any routable service specifying one or more non-fully-qualified domain names (not containing any `.` character) among its `router.deis.io/domains` will be matched using a regular expression of the form `^{{ $domain }}\.(?<domain>.+)$` where `{{ $domain }}` resolves to the non-fully-qualified domain name.  By way of example, the idiosyncrasy that this exposes is that traffic bound for the `foo` subdomain of _any_ domain would be routed to an application that lists the non-fully-qualified domain name `foo` among its `router.deis.io/domains`.  While this behavior is not innately wrong, it may not be desirable.  To circumvent this, specify a [platform domain](#platform-domain).  This will cause routable services specifying one or more non-fully-qualified domain names to be matched, explicitly, as subdomains of the platform domain.  Apart from remediating this minor idiosyncrasy, this is required in order to properly utilize a wildcard SSL certificate and may also result in a very modest performance improvement.
 
-* __Do you need to use SSL to [secure the default domain](#default-cert)?__
+* __Do you need to use SSL to [secure the platform domain](#platform-cert)?__
 
 * __If using SSL, generate and provide your own dhparam.__  A dhparam is a secret key used in [Diffie Hellman key exchange](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange) during the SSL handshake in order to help ensure [perfect forward secrecy](https://en.wikipedia.org/wiki/Forward_secrecy).  The Helm charts available for installing router (either with or without the rest of Deis) already include a dhparam, but recall that dhparams are intended to be secret.  The dhparam included in the charts is marginally preferable to using Nginx's default dhparam only because it is lesser-known, but it is _still_ publicly available in the [deis/charts](https://github.com/deis/charts) repository.  As such, users wishing to run the router in production _and_ use SSL are best off generating their own dhparam.  After being generated, it should be base64 encoded and included as the value of the `dhparam` key in a Kubernetes secret named `deis-router-dhparam` in the same namespace as the router itself.
 

@@ -87,12 +87,12 @@ func TestValidErrorLogLevel(t *testing.T) {
 	testValidValues(t, newTestRouterConfig, "ErrorLogLevel", "errorLogLevel", []string{"info", "notice", "warn"})
 }
 
-func TestInvalidDefaultDomain(t *testing.T) {
-	testInvalidValues(t, newTestRouterConfig, "DefaultDomain", "defaultDomain", []string{"0", "-1", "foobar", "foo_bar.com", "foobar.c"})
+func TestInvalidPlatformDomain(t *testing.T) {
+	testInvalidValues(t, newTestRouterConfig, "PlatformDomain", "platformDomain", []string{"0", "-1", "foobar", "foo_bar.com", "foobar.c"})
 }
 
-func TestValidDefaultDomain(t *testing.T) {
-	testValidValues(t, newTestRouterConfig, "DefaultDomain", "defaultDomain", []string{"foobar.com", "foo-bar.io"})
+func TestValidPlatformDomain(t *testing.T) {
+	testValidValues(t, newTestRouterConfig, "PlatformDomain", "platformDomain", []string{"foobar.com", "foo-bar.io"})
 }
 
 func TestInvalidUseProxyProtocol(t *testing.T) {
