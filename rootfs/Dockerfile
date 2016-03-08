@@ -23,8 +23,6 @@ RUN build
 # Re-copy these files because the previous step will have overwritten them
 COPY opt/router /opt/router
 
-RUN mkdir /opt/router/ssl
-
 # Fix some permission since we'll be running as a non-root user.
 RUN chown -R router:router /opt/router
 
