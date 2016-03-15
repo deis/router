@@ -1,8 +1,10 @@
 include includes.mk
 
 SHORT_NAME := router
-GIT_SHA := $(shell git rev-parse --short HEAD)
-VERSION ?= git-${GIT_SHA}
+DEIS_REGISTRY ?= ${DEV_REGISTRY}
+IMAGE_PREFIX ?= deis
+
+include versioning.mk
 
 REPO_PATH := github.com/deis/${SHORT_NAME}
 
@@ -19,13 +21,6 @@ BINDIR := ./rootfs/opt/router/sbin
 GO_FILES := $(wildcard *.go)
 GO_DIRS := model/ nginx/ utils/ utils/modeler
 GO_PACKAGES := ${REPO_PATH} $(addprefix ${REPO_PATH}/,${GO_DIRS})
-
-# The following variables describe the Docker image we build and where it
-# is pushed to.
-# If DEIS_REGISTRY is not set, try to populate it from legacy DEV_REGISTRY.
-DEIS_REGISTRY ?= ${DEV_REGISTRY}
-IMAGE_PREFIX ?= deis
-IMAGE := ${DEIS_REGISTRY}${IMAGE_PREFIX}/${SHORT_NAME}:${VERSION}
 
 # The following variables describe k8s manifests we may wish to deploy
 # to a running k8s cluster in the course of development.
@@ -50,7 +45,10 @@ bootstrap: check-docker
 build: check-docker
 	mkdir -p ${BINDIR}
 	${DEV_ENV_CMD} make binary-build
+
+docker-build: build check-docker
 	docker build --rm -t ${IMAGE} rootfs
+	docker tag -f ${IMAGE} ${MUTABLE_IMAGE}
 
 # Builds the binary-- this should only be executed within the
 # containerized development environment.
@@ -63,10 +61,7 @@ clean: check-docker
 full-clean: check-docker
 	docker images -q ${DEIS_REGISTRY}/${IMAGE_PREFIX}/${SHORT_NAME} | xargs docker rmi -f
 
-dev-release: push set-image
-
-push: check-docker build
-	docker push ${IMAGE}
+dev-release: docker-build docker-push set-image
 
 set-image:
 	sed "s#\(image:\) .*#\1 ${IMAGE}#" manifests/deis-${SHORT_NAME}-rc.yaml > manifests/deis-${SHORT_NAME}-rc.tmp.yaml
