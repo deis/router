@@ -10,7 +10,7 @@ This Deis component is currently in beta status, and we welcome your input! If y
 
 # About
 
-The Deis router handles ingress and routing of HTTP/S traffic bound for the Deis API and for your own applications. This component is 100% Kubernetes native and, while it's intended for use inside of the Deis [PaaS](https://en.wikipedia.org/wiki/Platform_as_a_service), it's flexible enough to be used as a standalone pod on any Kubernetes cluster.
+The Deis router handles ingress and routing of HTTP/S traffic bound for the Deis API and for your own applications. This component is 100% Kubernetes native and, while it's intended for use inside of the Deis [PaaS](https://en.wikipedia.org/wiki/Platform_as_a_service), it's flexible enough to be used standalone inside any Kubernetes cluster.
 
 # Development
 
