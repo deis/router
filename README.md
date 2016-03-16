@@ -20,7 +20,7 @@ The Deis project welcomes contributions from all developers. The high level proc
 * Make your changes
 * Submit a [pull request][prs] (PR) to this repository with your changes, and unit tests whenever possible.
 	* If your PR fixes any [issues][issues], make sure you write Fixes #1234 in your PR description (where #1234 is the number of the issue you're closing)
-* The Deis core contributors will review your code. After each of them sign off on your code, they'll label your PR with `LGTM1` and `LGTM2` (respectively). Once that happens, you may merge.
+* The Deis core contributors will review your code. After each of them sign off on your code, they'll label your PR with `LGTM1` and `LGTM2` (respectively). Once that happens, they'll merge it.
 
 ## Installation
 
