@@ -2,15 +2,25 @@
 
 [![Build Status](https://travis-ci.org/deis/router.svg?branch=master)](https://travis-ci.org/deis/router) [![Go Report Card](http://goreportcard.com/badge/deis/router)](http://goreportcard.com/report/deis/router)
 
-Deis (pronounced DAY-iss) is an open source PaaS that makes it easy to deploy and manage applications on your own servers. Deis builds on [Kubernetes](http://kubernetes.io/) to provide a lightweight, [Heroku-inspired](http://heroku.com) workflow.
+Deis (pronounced DAY-iss) Workflow is an open source Platform as a Service (PaaS) that adds a developer-friendly layer to any [Kubernetes](http://kubernetes.io) cluster, making it easy to deploy and manage applications on your own servers.
 
-The router component, specifically, handles ingress and routing of HTTP/S traffic bound for the Deis API and for your own applications.  This component is 100% Kubernetes native and is useful even without the rest of Deis!
+## Beta Status
 
-## Work in Progress
+This Deis component is currently in beta status, and we welcome your input! If you have feedback, please submit an [issue][issues]. If you'd like to participate in development, please read the "Development" section below and submit a [pull request][prs].
 
-![Deis Graphic](https://s3-us-west-2.amazonaws.com/get-deis/deis-graphic-small.png)
+# About
 
-Deis Router v2 is changing quickly. Your feedback and participation are more than welcome, but be aware that this project is considered a work in progress.
+The Deis router handles ingress and routing of HTTP/S traffic bound for the Deis API and for your own applications. This component is 100% Kubernetes native and, while it's intended for use inside of the Deis [PaaS](https://en.wikipedia.org/wiki/Platform_as_a_service), it's flexible enough to be used standalone inside any Kubernetes cluster.
+
+# Development
+
+The Deis project welcomes contributions from all developers. The high level process for development matches many other open source projects. See below for an outline.
+
+* Fork this repository
+* Make your changes
+* Submit a [pull request][prs] (PR) to this repository with your changes, and unit tests whenever possible.
+	* If your PR fixes any [issues][issues], make sure you write Fixes #1234 in your PR description (where #1234 is the number of the issue you're closing)
+* The Deis core contributors will review your code. After each of them sign off on your code, they'll label your PR with `LGTM1` and `LGTM2` (respectively). Once that happens, they'll merge it.
 
 ## Installation
 
@@ -507,8 +517,11 @@ The Helm charts available for installing router (either with or without the rest
 
 ## License
 
-Copyright 2013, 2014, 2015 Engine Yard, Inc.
+Copyright 2013, 2014, 2015, 2016 Engine Yard, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at <http://www.apache.org/licenses/LICENSE-2.0>
 
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
+[issues]: https://github.com/deis/router/issues
+[prs]: https://github.com/deis/router/pulls
