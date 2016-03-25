@@ -110,6 +110,7 @@ type AppConfig struct {
 	ServiceIP      string
 	CertMappings   map[string]string `key:"certificates" constraint:"(?i)^((([a-z0-9]+(-[a-z0-9]+)*)|((\\*\\.)?[a-z0-9]+(-[a-z0-9]+)*\\.)+[a-z]{2,}):([a-z0-9]+(-[a-z0-9]+)*)(\\s*,\\s*)?)+$"`
 	Certificates   map[string]*Certificate
+	Available      bool
 }
 
 func newAppConfig(routerConfig *RouterConfig) *AppConfig {
@@ -365,6 +366,12 @@ func buildAppConfig(kubeClient *client.Client, service api.Service, routerConfig
 		}
 	}
 	appConfig.ServiceIP = service.Spec.ClusterIP
+	endpointsClient := kubeClient.Endpoints(service.Namespace)
+	endpoints, err := endpointsClient.Get(service.Name)
+	if err != nil {
+		return nil, err
+	}
+	appConfig.Available = len(endpoints.Subsets) > 0 && len(endpoints.Subsets[0].Addresses) > 0
 	return appConfig, nil
 }
 

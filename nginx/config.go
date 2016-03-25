@@ -155,7 +155,7 @@ http {
 		vhost_traffic_status_filter_by_set_key {{ $appConfig.Name }} application::*;
 
 		location / {
-			proxy_buffering off;
+			{{ if $appConfig.Available }}proxy_buffering off;
 			proxy_set_header Host $host;
 			proxy_set_header X-Forwarded-For $remote_addr;
 			proxy_redirect off;
@@ -172,7 +172,7 @@ http {
 
 			{{ if $hstsConfig.Enabled }}add_header Strict-Transport-Security $sts always;{{ end }}
 
-			proxy_pass http://{{$appConfig.ServiceIP}}:80;
+			proxy_pass http://{{$appConfig.ServiceIP}}:80;{{ else }}return 503;{{ end }}
 		}
 	}
 
