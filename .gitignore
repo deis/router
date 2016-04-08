@@ -1,3 +1,4 @@
 manifests/deis-router-rc.tmp.yaml
 rootfs/opt/router/sbin/router
+rootfs/opt/router/sbin/router.*
 vendor/

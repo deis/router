@@ -10,7 +10,7 @@ REPO_PATH := github.com/deis/${SHORT_NAME}
 
 # The following variables describe the containerized development environment
 # and other build options
-DEV_ENV_IMAGE := quay.io/deis/go-dev:0.9.0
+DEV_ENV_IMAGE := quay.io/deis/go-dev:0.10.0
 DEV_ENV_WORK_DIR := /go/src/${REPO_PATH}
 DEV_ENV_CMD := docker run --rm -v ${CURDIR}:${DEV_ENV_WORK_DIR} -w ${DEV_ENV_WORK_DIR} ${DEV_ENV_IMAGE}
 DEV_ENV_CMD_INT := docker run -it --rm -v ${CURDIR}:${DEV_ENV_WORK_DIR} -w ${DEV_ENV_WORK_DIR} ${DEV_ENV_IMAGE}
@@ -21,6 +21,9 @@ BINDIR := ./rootfs/opt/router/sbin
 GO_FILES := $(wildcard *.go)
 GO_DIRS := model/ nginx/ utils/ utils/modeler
 GO_PACKAGES := ${REPO_PATH} $(addprefix ${REPO_PATH}/,${GO_DIRS})
+
+# The binary compression command used
+GOUPX := goupx --strip-binary -9 --mono --no-progress
 
 # The following variables describe k8s manifests we may wish to deploy
 # to a running k8s cluster in the course of development.
@@ -54,6 +57,8 @@ docker-build: build check-docker
 # containerized development environment.
 binary-build:
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o ${BINDIR}/${SHORT_NAME} -a -installsuffix cgo -ldflags ${LDFLAGS} ${SHORT_NAME}.go
+	$(call check-static-binary,$(BINDIR)/${SHORT_NAME})
+	${GOUPX} ${BINDIR}/${SHORT_NAME}
 
 clean: check-docker
 	docker rmi ${IMAGE}
