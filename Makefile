@@ -6,6 +6,8 @@ IMAGE_PREFIX ?= deis
 
 include versioning.mk
 
+SHELL_SCRIPTS = $(wildcard _scripts/*.sh) $(wildcard rootfs/bin/*) rootfs/opt/router/sbin/boot
+
 REPO_PATH := github.com/deis/${SHORT_NAME}
 
 # The following variables describe the containerized development environment
@@ -98,6 +100,7 @@ style-check:
 	@gofmt -l ${GO_FILES} ${GO_DIRS} | read; if [ $$? == 0 ]; then echo "gofmt check failed."; exit 1; fi
 	go vet ${GO_PACKAGES}
 	for package in $$(glide novendor | tr " " "\n"); do golint $$package; done
+	shellcheck $(SHELL_SCRIPTS)
 
 test-unit:
 	${DEV_ENV_CMD} go test --cover --race -v ${GO_PACKAGES}
