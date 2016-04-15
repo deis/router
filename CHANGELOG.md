@@ -1,3 +1,16 @@
+### v2.0.0-beta1 -> v2.0.0-beta2
+
+#### Features
+
+ - [`0c743f0`](https://github.com/deis/router/commit/0c743f0a08be1e837b1ec3e90b0ffbcd325c2014) certs: Add support for format of ingress TLS cert secrets
+ - [`e674c68`](https://github.com/deis/router/commit/e674c68a0262ff094d19487dac0244885f285f7d) README.md: add quay.io container badge
+ - [`a9568f5`](https://github.com/deis/router/commit/a9568f549135c78b1e978df8ec2d0843db4c82b1) _scripts: add CHANGELOG.md and generator script
+ - [`431f7ac`](https://github.com/deis/router/commit/431f7ac3fbdfc1a17607b359af9212534b494a2d) router: Respond with 503 for upstream svcs w/ no endpoints
+
+#### Maintenance
+
+ - [`5b9df61`](https://github.com/deis/router/commit/5b9df61b4cccc82fbc826ac392198bf69f2c7fc9) Makefile: update go-dev to 0.10.0 and compress router binary
+
 ### 2.0.0-alpha -> v2.0.0-beta1
 
 #### Features
