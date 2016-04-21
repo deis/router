@@ -6,11 +6,13 @@ IMAGE_PREFIX ?= deis
 
 include versioning.mk
 
+SHELL_SCRIPTS = $(wildcard _scripts/*.sh) $(wildcard rootfs/bin/*) rootfs/opt/router/sbin/boot
+
 REPO_PATH := github.com/deis/${SHORT_NAME}
 
 # The following variables describe the containerized development environment
 # and other build options
-DEV_ENV_IMAGE := quay.io/deis/go-dev:0.10.0
+DEV_ENV_IMAGE := quay.io/deis/go-dev:0.11.0
 DEV_ENV_WORK_DIR := /go/src/${REPO_PATH}
 DEV_ENV_CMD := docker run --rm -v ${CURDIR}:${DEV_ENV_WORK_DIR} -w ${DEV_ENV_WORK_DIR} ${DEV_ENV_IMAGE}
 DEV_ENV_CMD_INT := docker run -it --rm -v ${CURDIR}:${DEV_ENV_WORK_DIR} -w ${DEV_ENV_WORK_DIR} ${DEV_ENV_IMAGE}
@@ -98,6 +100,7 @@ style-check:
 	@gofmt -l ${GO_FILES} ${GO_DIRS} | read; if [ $$? == 0 ]; then echo "gofmt check failed."; exit 1; fi
 	go vet ${GO_PACKAGES}
 	for package in $$(glide novendor | tr " " "\n"); do golint $$package; done
+	shellcheck $(SHELL_SCRIPTS)
 
 test-unit:
 	${DEV_ENV_CMD} go test --cover --race -v ${GO_PACKAGES}
