@@ -48,10 +48,15 @@ http {
 
 	client_max_body_size {{ $routerConfig.BodySize }};
 
-	set_real_ip_from {{ $routerConfig.ProxyRealIPCIDR }};
-	{{ if $routerConfig.UseProxyProtocol }}
-	real_ip_header proxy_protocol;{{ else }}real_ip_header X-Forwarded-For;
-	{{ end }}
+	{{ range $realIPCIDR := $routerConfig.ProxyRealIPCIDRs -}}
+	set_real_ip_from {{ $realIPCIDR }};
+	{{ end -}}
+	real_ip_recursive on;
+	{{ if $routerConfig.UseProxyProtocol -}}
+	real_ip_header proxy_protocol;
+	{{- else -}}
+	real_ip_header X-Forwarded-For;
+	{{- end }}
 
 	log_format upstreaminfo '[$time_local] - $remote_addr - $remote_user - $status - "$request" - $bytes_sent - "$http_referer" - "$http_user_agent" - "$server_name" - $upstream_addr - $http_host - $upstream_response_time - $request_time';
 

@@ -71,12 +71,12 @@ func TestValidBodySize(t *testing.T) {
 	testValidValues(t, newTestRouterConfig, "BodySize", "bodySize", []string{"1", "2", "20", "1k", "2k", "10m", "10M"})
 }
 
-func TestInvalidProxyRealIPCIDR(t *testing.T) {
-	testInvalidValues(t, newTestRouterConfig, "ProxyRealIPCIDR", "proxyRealIpCidr", []string{"0", "-1", "foobar"})
+func TestInvalidProxyRealIPCIDRs(t *testing.T) {
+	testInvalidValues(t, newTestRouterConfig, "ProxyRealIPCIDRs", "proxyRealIpCidrs", []string{"0", "-1", "foobar"})
 }
 
-func TestValidProxyRealIPCIDR(t *testing.T) {
-	testValidValues(t, newTestRouterConfig, "ProxyRealIPCIDR", "proxyRealIpCidr", []string{"0.0.0.0/0", "10.0.0.0/16"})
+func TestValidProxyRealIPCIDRs(t *testing.T) {
+	testValidValues(t, newTestRouterConfig, "ProxyRealIPCIDRs", "proxyRealIpCidrs", []string{"0.0.0.0/0", "10.0.0.0/16", "10.0.0.0/16,192.168.0.0/16", "10.0.0.0/16, 192.168.0.0/16", "10.0.0.0/16 ,192.168.0.0/16", "10.0.0.0/16 , 192.168.0.0/16"})
 }
 
 func TestInvalidErrorLogLevel(t *testing.T) {

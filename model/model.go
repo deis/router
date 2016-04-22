@@ -43,7 +43,7 @@ type RouterConfig struct {
 	ServerNameHashBucketSize string      `key:"serverNameHashBucketSize" constraint:"^[1-9]\\d*[kKmM]?$"`
 	GzipConfig               *GzipConfig `key:"gzip"`
 	BodySize                 string      `key:"bodySize" constraint:"^[1-9]\\d*[kKmM]?$"`
-	ProxyRealIPCIDR          string      `key:"proxyRealIpCidr" constraint:"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$"`
+	ProxyRealIPCIDRs         []string    `key:"proxyRealIpCidrs" constraint:"^((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))?(\\s*,\\s*)?)+$"`
 	ErrorLogLevel            string      `key:"errorLogLevel" constraint:"^(info|notice|warn|error|crit|alert|emerg)$"`
 	PlatformDomain           string      `key:"platformDomain" constraint:"(?i)^([a-z0-9]+(-[a-z0-9]+)*\\.)+[a-z]{2,}$"`
 	UseProxyProtocol         bool        `key:"useProxyProtocol" constraint:"(?i)^(true|false)$"`
@@ -66,7 +66,7 @@ func newRouterConfig() *RouterConfig {
 		ServerNameHashBucketSize: "64",
 		GzipConfig:               newGzipConfig(),
 		BodySize:                 "1m",
-		ProxyRealIPCIDR:          "10.0.0.0/8",
+		ProxyRealIPCIDRs:         []string{"10.0.0.0/8"},
 		ErrorLogLevel:            "error",
 		UseProxyProtocol:         false,
 		EnforceWhitelists:        false,
