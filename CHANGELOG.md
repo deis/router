@@ -1,3 +1,13 @@
+### v2.0.0-beta2 -> v2.0.0-beta3
+
+#### Fixes
+
+ - [`e22c784`](https://github.com/deis/router/commit/e22c78491796b8e503e2bab50987d64501fb0de3) router: Allow for comma-delimited X-Forwarded-Proto
+
+#### Maintenance
+
+ - [`5610686`](https://github.com/deis/router/commit/56106866e77e3ba7c0fed98d05404b759152cdff) .travis.yml: Deep six the travis -> jenkins webhooks
+
 ### v2.0.0-beta1 -> v2.0.0-beta2
 
 #### Features
