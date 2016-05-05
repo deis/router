@@ -1,21 +1,21 @@
 apiVersion: v1
 kind: ReplicationController
 metadata:
-  name: deis-router
+  name: router
   namespace: deis
   labels:
     heritage: deis
 spec:
   replicas: 1
   selector:
-    app: deis-router
+    app: router
   template:
     metadata:
       labels:
-        app: deis-router
+        app: router
     spec:
       containers:
-      - name: deis-router
+      - name: router
         image: ## Image is dynamically set by `make set-image` as part of dev deployment ##
         imagePullPolicy: Always
         env:

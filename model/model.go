@@ -121,7 +121,7 @@ func newAppConfig(routerConfig *RouterConfig) *AppConfig {
 	}
 }
 
-// BuilderConfig encapsulates the configuration of the deis-builder-- if it's in use.
+// BuilderConfig encapsulates the configuration of the builder-- if it's in use.
 type BuilderConfig struct {
 	ConnectTimeout string `key:"connectTimeout" constraint:"^[1-9]\\d*(ms|[smhdwMy])?$"`
 	TCPTimeout     string `key:"tcpTimeout" constraint:"^[1-9]\\d*(ms|[smhdwMy])?$"`
@@ -193,9 +193,9 @@ func newHSTSConfig() *HSTSConfig {
 // relevant metadata concerning itself and all routable services.
 func Build(kubeClient *client.Client) (*RouterConfig, error) {
 	// Get all relevant information from k8s:
-	//   deis-router rc
+	//   router rc in the deis namespace
 	//   All services with label "routable=true"
-	//   deis-builder service, if it exists
+	//   deis builder service, if it exists
 	// These are used to construct a model...
 	routerRC, err := getRC(kubeClient)
 	if err != nil {
@@ -210,11 +210,11 @@ func Build(kubeClient *client.Client) (*RouterConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	platformCertSecret, err := getSecret(kubeClient, "deis-router-platform-cert", namespace)
+	platformCertSecret, err := getSecret(kubeClient, "router-platform-cert", namespace)
 	if err != nil {
 		return nil, err
 	}
-	dhParamSecret, err := getSecret(kubeClient, "deis-router-dhparam", namespace)
+	dhParamSecret, err := getSecret(kubeClient, "router-dhparam", namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +228,7 @@ func Build(kubeClient *client.Client) (*RouterConfig, error) {
 
 func getRC(kubeClient *client.Client) (*api.ReplicationController, error) {
 	rcClient := kubeClient.ReplicationControllers(namespace)
-	rc, err := rcClient.Get("deis-router")
+	rc, err := rcClient.Get("router")
 	if err != nil {
 		return nil, err
 	}
@@ -244,14 +244,14 @@ func getAppServices(kubeClient *client.Client) (*api.ServiceList, error) {
 	return services, nil
 }
 
-// getBuilderService will return the service named "deis-builder" from the same namespace as
+// getBuilderService will return the service named "builder" from the same namespace as
 // the router, but will return nil (without error) if no such service exists.
 func getBuilderService(kubeClient *client.Client) (*api.Service, error) {
 	serviceClient := kubeClient.Services(namespace)
-	service, err := serviceClient.Get("deis-builder")
+	service, err := serviceClient.Get("builder")
 	if err != nil {
 		statusErr, ok := err.(*errors.StatusError)
-		// If the issue is just that no deis-builder was found, that's ok.
+		// If the issue is just that no builder was found, that's ok.
 		if ok && statusErr.Status().Code == 404 {
 			// We'll just return nil instead of a found *api.Service.
 			return nil, nil

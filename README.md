@@ -49,7 +49,7 @@ Where `<chart>` is selected from the options below:
 | Chart | Description |
 |-------|-------------|
 | deis | Install the latest router release along with the rest of the latest Deis platform release. |
-| deis-dev | Install the edge router (from master) with the rest of the edge Deis platform. |
+| workflow-dev | Install the edge router (from master) with the rest of the edge Deis platform. |
 | router | Install the latest router release with its minimal set of dependencies. |
 | router-dev | Install the edge router (from master) with its minimal set of dependencies. |
 
@@ -184,7 +184,7 @@ For example, consider the following Kubernetes manifest.  Given a manifest conta
 apiVersion: v1
 kind: ReplicationController
 metadata:
-  name: deis-router
+  name: router
   namespace: deis
 # ...
 ```
@@ -199,7 +199,7 @@ spec:
     # ...
     spec:
       containers:
-      - name: deis-router
+      - name: router
         # ...
         env:
         - name: POD_NAMESPACE
@@ -217,7 +217,7 @@ All remaining options are configured through annotations.  Any of the following 
 
 | Resource | Notes |
 |----------|-------|
-| <ul><li>deis-router replication controller</li><li>deis-builder service (if in use)</li></ul> | All of these configuration options are specific to _this_ implementation of the router (as indicated by the inclusion of the token `nginx` in the annotations' names).  Customized and alternative router implementations are possible.  Such routers are under no obligation to honor these annotations, as many or all of these may not be applicable in such scenarios.  Customized and alternative implementations _should_ document their own configuration options. |
+| <ul><li>deis router replication controller</li><li>deis builder service (if in use)</li></ul> | All of these configuration options are specific to _this_ implementation of the router (as indicated by the inclusion of the token `nginx` in the annotations' names).  Customized and alternative router implementations are possible.  Such routers are under no obligation to honor these annotations, as many or all of these may not be applicable in such scenarios.  Customized and alternative implementations _should_ document their own configuration options. |
 | <ul><li>routable application services</li></ul> | These are services labeled with `router.deis.io/routable: "true"`.  In the context of the broader Deis PaaS, these annotations are _written_ by the Deis workflow component (the API).  These annotations, therefore, represent the contract or _interface_ between that component and the router.  As such, any customized or alternative router implementations that wishes to remain compatible with deis-workflow must honor (or ignore) these annotations, but may _not_ alter their names or redefine their meanings. |
 
 The table below details the configuration options that are available for each of the above.
@@ -276,7 +276,7 @@ _Note that Kubernetes annotation maps are all of Go type `map[string]string`.  A
 apiVersion: v1
 kind: ReplicationController
 metadata:
-  name: deis-router
+  name: router
   namespace: deis
   # ...
   annotations:
@@ -291,7 +291,7 @@ metadata:
 apiVersion: v1
 kind: Service
 metadata:
-  name: deis-builder
+  name: builder
   namespace: deis
   # ...
   annotations:
@@ -373,7 +373,7 @@ If the same routable service also had a domain `www.frozen-wookie.com`, the `*.e
 Here is an example of a Kubernetes secret bearing a wildcard certificate for use by the router.  The following criteria must be met:
 
 * Namespace must be the same namespace as the router
-* Name _must_ be `deis-router-platform-cert`
+* Name _must_ be `router-platform-cert`
 * Certificate must be supplied as the value of the key `cert`
 * Certificate private key must be supplied as the value of the key `key`
 * Both the certificate and private key must be base64 encoded
@@ -384,7 +384,7 @@ For example:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: deis-router-platform-cert
+  name: router-platform-cert
   namespace: deis
 type: Opaque
 data:
@@ -416,10 +416,10 @@ If using a Kubernetes distribution or underlying infrastructure that does not su
 
 This manually replicates the configuration that would be achieved automatically with some distributions on some infrastructure providers, as discussed above.
 
-First, determine the "node ports" for the `deis-router` service:
+First, determine the "node ports" for the deis `router` service:
 
 ```
-$ kubectl describe service deis-router --namespace=deis
+$ kubectl describe service router --namespace=deis
 ```
 
 This will yield output similar to the following:
@@ -481,7 +481,7 @@ The Helm charts available for installing router (either with or without the rest
 
 * __Do you need to use SSL to [secure the platform domain](#platform-cert)?__
 
-* __If using SSL, generate and provide your own dhparam.__  A dhparam is a secret key used in [Diffie Hellman key exchange](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange) during the SSL handshake in order to help ensure [perfect forward secrecy](https://en.wikipedia.org/wiki/Forward_secrecy).  The Helm charts available for installing router (either with or without the rest of Deis) already include a dhparam, but recall that dhparams are intended to be secret.  The dhparam included in the charts is marginally preferable to using Nginx's default dhparam only because it is lesser-known, but it is _still_ publicly available in the [deis/charts](https://github.com/deis/charts) repository.  As such, users wishing to run the router in production _and_ use SSL are best off generating their own dhparam.  After being generated, it should be base64 encoded and included as the value of the `dhparam` key in a Kubernetes secret named `deis-router-dhparam` in the same namespace as the router itself.
+* __If using SSL, generate and provide your own dhparam.__  A dhparam is a secret key used in [Diffie Hellman key exchange](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange) during the SSL handshake in order to help ensure [perfect forward secrecy](https://en.wikipedia.org/wiki/Forward_secrecy).  The Helm charts available for installing router (either with or without the rest of Deis) already include a dhparam, but recall that dhparams are intended to be secret.  The dhparam included in the charts is marginally preferable to using Nginx's default dhparam only because it is lesser-known, but it is _still_ publicly available in the [deis/charts](https://github.com/deis/charts) repository.  As such, users wishing to run the router in production _and_ use SSL are best off generating their own dhparam.  After being generated, it should be base64 encoded and included as the value of the `dhparam` key in a Kubernetes secret named `router-dhparam` in the same namespace as the router itself.
 
   For example, to generate and base64 encode the dhparam on a Mac:
 
@@ -498,7 +498,7 @@ The Helm charts available for installing router (either with or without the rest
   apiVersion: v1
   kind: Secret
   metadata:
-      name: deis-router-dhparam
+      name: router-dhparam
       namespace: deis
       labels:
         heritage: deis
@@ -515,7 +515,7 @@ The Helm charts available for installing router (either with or without the rest
 
 * __Should your router [define and enforce a default whitelist](#whitelists)?__  This may be advisable for routers governing ingress to a cluster that hosts applications intended for a limited audience-- e.g. applications for internal use within an organization.
 
-* __Do you need to scale the router?__ For greater availability, it's desirable to run more than one instance of the router.  _How many_ can only be informed by stress/performance testing the applications in your cluster.  To increase the number of router instances from the default of one, increase the number of replicas specified by the `deis-router` replication controller.  Do not specify a number of replicas greater than the number of worker nodes in your Kubernetes cluster.
+* __Do you need to scale the router?__ For greater availability, it's desirable to run more than one instance of the router.  _How many_ can only be informed by stress/performance testing the applications in your cluster.  To increase the number of router instances from the default of one, increase the number of replicas specified by the `router` replication controller.  Do not specify a number of replicas greater than the number of worker nodes in your Kubernetes cluster.
 
 ## License
 

@@ -74,9 +74,9 @@ set-image:
 	sed "s#\(image:\) .*#\1 ${IMAGE}#" manifests/deis-${SHORT_NAME}-rc.yaml > manifests/deis-${SHORT_NAME}-rc.tmp.yaml
 
 deploy: check-kubectl dev-release
-	@kubectl describe rc deis-${SHORT_NAME} --namespace=deis >/dev/null 2>&1; \
+	@kubectl describe rc ${SHORT_NAME} --namespace=deis >/dev/null 2>&1; \
 	if [ $$? -eq 0 ]; then \
-		kubectl delete rc deis-${SHORT_NAME} --namespace=deis; \
+		kubectl delete rc ${SHORT_NAME} --namespace=deis; \
 		kubectl create -f manifests/deis-${SHORT_NAME}-rc.tmp.yaml; \
 	else \
 		kubectl create -f manifests/deis-${SHORT_NAME}-rc.tmp.yaml; \
