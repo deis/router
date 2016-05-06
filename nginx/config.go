@@ -58,7 +58,7 @@ http {
 	real_ip_header X-Forwarded-For;
 	{{- end }}
 
-	log_format upstreaminfo '[$time_iso8601] - $remote_addr - $remote_user - $status - "$request" - $bytes_sent - "$http_referer" - "$http_user_agent" - "$server_name" - $upstream_addr - $http_host - $upstream_response_time - $request_time';
+	log_format upstreaminfo '[$time_iso8601] - $app_name - $remote_addr - $remote_user - $status - "$request" - $bytes_sent - "$http_referer" - "$http_user_agent" - "$server_name" - $upstream_addr - $http_host - $upstream_response_time - $request_time';
 
 	access_log /tmp/logpipe upstreaminfo;
 	error_log  /tmp/logpipe {{ $routerConfig.ErrorLogLevel }};
@@ -145,6 +145,7 @@ http {
 		server_name {{ if contains "." $domain }}{{ $domain }}{{ else if ne $routerConfig.PlatformDomain "" }}{{ $domain }}.{{ $routerConfig.PlatformDomain }}{{ else }}~^{{ $domain }}\.(?<domain>.+)${{ end }};
 		server_name_in_redirect off;
 		port_in_redirect off;
+		set $app_name "{{ $appConfig.Name }}";
 
 		{{ if index $appConfig.Certificates $domain }}
 		listen 6443 ssl{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
