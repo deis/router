@@ -333,6 +333,11 @@ func buildAppConfig(kubeClient *client.Client, service api.Service, routerConfig
 	if appConfig.Name == "" {
 		appConfig.Name = service.Name
 	}
+	// if app name and Namespace are not same then combine the two as it
+	// makes deis services (as an example) clearer, such as deis/controller
+	if appConfig.Name != service.Namespace {
+		appConfig.Name = service.Namespace + "/" + appConfig.Name
+	}
 	err := modeler.MapToModel(service.Annotations, "", appConfig)
 	if err != nil {
 		return nil, err
