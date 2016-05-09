@@ -12,7 +12,7 @@ This Deis component is currently in beta status, and we welcome your input! If y
 
 # About
 
-The Deis router handles ingress and routing of HTTP/S traffic bound for the Deis API and for your own applications. This component is 100% Kubernetes native and, while it's intended for use inside of the Deis [PaaS](https://en.wikipedia.org/wiki/Platform_as_a_service), it's flexible enough to be used standalone inside any Kubernetes cluster.
+The Deis router handles ingress and routing of HTTP/S traffic bound for the Deis Workflow controller (API) and for your own applications. This component is 100% Kubernetes native and, while it's intended for use with the Deis Workflow [PaaS](https://en.wikipedia.org/wiki/Platform_as_a_service), it's flexible enough to be used standalone inside any Kubernetes cluster.
 
 # Development
 
@@ -28,30 +28,29 @@ The Deis project welcomes contributions from all developers. The high level proc
 
 This section documents simple procedures for installing the Deis Router for evaluation or use.  Those wishing to contribute to Deis Router development might consider the more developer-oriented instructions in the [Hacking Router](#hacking) section.
 
-Deis Router can be installed with or without the rest of the Deis platform.  In either case, begin with a healthy Kubernetes cluster.  Kubernetes getting started documentation is available [here](http://kubernetes.io/gettingstarted/).
+Deis Router can be installed with or without the rest of the Deis Workflow platform.  In either case, begin with a healthy Kubernetes cluster.  Kubernetes getting started documentation is available [here](http://kubernetes.io/gettingstarted/).
 
-Next, install the [helm](http://helm.sh) package manager, then use the commands below to initialize that tool and load the [deis/charts](https://github.com/deis/charts) repository.
+Next, install the [Helm Classic](http://helm.sh) package manager, then use the commands below to initialize that tool and load the [deis/charts](https://github.com/deis/charts) repository.
 
 ```
-$ helm update
-$ helm repo add deis https://github.com/deis/charts
+$ helmc update
+$ helmc repo add deis https://github.com/deis/charts
 ```
 
 To install the router:
 
 ```
-$ helm fetch deis/<chart>
-$ helm generate <chart>
-$ helm install <chart>
+$ helmc fetch deis/<chart>
+$ helmc generate -x manifests <chart>
+$ helmc install <chart>
 ```
 Where `<chart>` is selected from the options below:
 
 | Chart | Description |
 |-------|-------------|
-| deis | Install the latest router release along with the rest of the latest Deis platform release. |
-| deis-dev | Install the edge router (from master) with the rest of the edge Deis platform. |
-| router | Install the latest router release with its minimal set of dependencies. |
-| router-dev | Install the edge router (from master) with its minimal set of dependencies. |
+| workflow-beta4 | Install the router along with the rest of the latest stable Deis Workflow release. |
+| workflow-dev | Install the router from master with the rest of the edge Deis Workflow platform. |
+| router-dev | Install the router from master with its minimal set of dependencies. |
 
 
 For next steps, skip ahead to the [How it Works](#how-it-works) and [Configuration Guide](#configuration) sections.
@@ -83,7 +82,7 @@ This will produce output containing further instructions such as:
 ```
 59ba57a3628fe04016634760e039a3202036d5db984f6de96ea8876a7ba8a945
 
-To use a local registry for Deis development:
+To use a local registry for Deis Router development:
     export DEIS_REGISTRY=192.168.99.102:5000/
 ```
 
@@ -218,7 +217,7 @@ All remaining options are configured through annotations.  Any of the following 
 | Resource | Notes |
 |----------|-------|
 | <ul><li>deis-router replication controller</li><li>deis-builder service (if in use)</li></ul> | All of these configuration options are specific to _this_ implementation of the router (as indicated by the inclusion of the token `nginx` in the annotations' names).  Customized and alternative router implementations are possible.  Such routers are under no obligation to honor these annotations, as many or all of these may not be applicable in such scenarios.  Customized and alternative implementations _should_ document their own configuration options. |
-| <ul><li>routable application services</li></ul> | These are services labeled with `router.deis.io/routable: "true"`.  In the context of the broader Deis PaaS, these annotations are _written_ by the Deis workflow component (the API).  These annotations, therefore, represent the contract or _interface_ between that component and the router.  As such, any customized or alternative router implementations that wishes to remain compatible with deis-workflow must honor (or ignore) these annotations, but may _not_ alter their names or redefine their meanings. |
+| <ul><li>routable application services</li></ul> | These are services labeled with `router.deis.io/routable: "true"`.  In the context of the broader Deis Workflow PaaS, these annotations are _written_ by the Deis Workflow controller component (the API).  These annotations, therefore, represent the contract or _interface_ between that component and the router.  As such, any customized or alternative router implementations that wishes to remain compatible with deis-controller must honor (or ignore) these annotations, but may _not_ alter their names or redefine their meanings. |
 
 The table below details the configuration options that are available for each of the above.
 
@@ -406,7 +405,7 @@ Depending on what distribution of Kubernetes you use and where you host it, inst
 
 If a load balancer such as the one described above does exist (whether created automatically or manually) _and_ if you intend on handling any long-running requests, the load balancer (or similar) _may_ require some manual configuration to increase the idle connection timeout.  Typically, this is most applicable to AWS and Elastic Load Balancers, but may apply in other cases as well.  It does _not_ apply to Google Container Engine, as the idle connection timeout cannot be configured there, but also works fine as-is.
 
-If, for instance, router were installed on kube-aws, in conjunction with the rest of the Deis platform, this timeout should be increased to a recommended value of 1200 seconds.  This will ensure the load balancer does not hang up on the client during long-running operations like an application deployment.  Directions for this can be found [here](http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/config-idle-timeout.html).
+If, for instance, router were installed on kube-aws, in conjunction with the rest of the Deis Workflow platform, this timeout should be increased to a recommended value of 1200 seconds.  This will ensure the load balancer does not hang up on the client during long-running operations like an application deployment.  Directions for this can be found [here](http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/config-idle-timeout.html).
 
 #### Manually configuring a load balancer
 
@@ -469,19 +468,19 @@ user agent (browser) --> front-facing load balancer --> a Deis router pod --> ku
 
 Option 3 is similar to option 2, but does not actually utilize a load balancer at all.  Instead, a DNS A record may be created that lists the public IP addresses of _all_ Kubernetes worker nodes.  This will leverage DNS round-robining to direct requests to all nodes.  To guarantee _all_ nodes can adequately route incoming traffic, the Deis router component should be scaled out by increasing the number of replicas specified in the replication controller to match the number of worker nodes.  Anti-affinity should ensure exactly one router pod runs per worker node.
 
-__This configuration is not suitable for production.__ The primary use case for this configuration is demonstrating or evaluating Deis on bare metal Kubernetes clusters without incurring the effort to configure an _actual_ front-facing load balancer.
+__This configuration is not suitable for production.__ The primary use case for this configuration is demonstrating or evaluating Deis Workflow on bare metal Kubernetes clusters without incurring the effort to configure an _actual_ front-facing load balancer.
 
 ## Production Considerations
 
 ### Customizing the charts
 
-The Helm charts available for installing router (either with or without the rest of Deis) are intended to get users up and running as quickly as possible.  As such, the charts do not strictly require any editing prior to installation in order to successfully bootstrap a cluster.  However, there are some useful customizations that should be applied for use in production environments:
+The Helm Classic charts available for installing router (either with or without the rest of Deis Workflow) are intended to get users up and running as quickly as possible.  As such, the charts do not strictly require any editing prior to installation in order to successfully bootstrap a cluster.  However, there are some useful customizations that should be applied for use in production environments:
 
 * __Specify a [platform domain](#platform-domain).__  Without a platform domain specified, any routable service specifying one or more non-fully-qualified domain names (not containing any `.` character) among its `router.deis.io/domains` will be matched using a regular expression of the form `^{{ $domain }}\.(?<domain>.+)$` where `{{ $domain }}` resolves to the non-fully-qualified domain name.  By way of example, the idiosyncrasy that this exposes is that traffic bound for the `foo` subdomain of _any_ domain would be routed to an application that lists the non-fully-qualified domain name `foo` among its `router.deis.io/domains`.  While this behavior is not innately wrong, it may not be desirable.  To circumvent this, specify a [platform domain](#platform-domain).  This will cause routable services specifying one or more non-fully-qualified domain names to be matched, explicitly, as subdomains of the platform domain.  Apart from remediating this minor idiosyncrasy, this is required in order to properly utilize a wildcard SSL certificate and may also result in a very modest performance improvement.
 
 * __Do you need to use SSL to [secure the platform domain](#platform-cert)?__
 
-* __If using SSL, generate and provide your own dhparam.__  A dhparam is a secret key used in [Diffie Hellman key exchange](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange) during the SSL handshake in order to help ensure [perfect forward secrecy](https://en.wikipedia.org/wiki/Forward_secrecy).  The Helm charts available for installing router (either with or without the rest of Deis) already include a dhparam, but recall that dhparams are intended to be secret.  The dhparam included in the charts is marginally preferable to using Nginx's default dhparam only because it is lesser-known, but it is _still_ publicly available in the [deis/charts](https://github.com/deis/charts) repository.  As such, users wishing to run the router in production _and_ use SSL are best off generating their own dhparam.  After being generated, it should be base64 encoded and included as the value of the `dhparam` key in a Kubernetes secret named `deis-router-dhparam` in the same namespace as the router itself.
+* __If using SSL, generate and provide your own dhparam.__  A dhparam is a secret key used in [Diffie Hellman key exchange](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange) during the SSL handshake in order to help ensure [perfect forward secrecy](https://en.wikipedia.org/wiki/Forward_secrecy).  The Helm Classic charts available for installing router (either with or without the rest of Deis Workflow) already include a dhparam, but recall that dhparams are intended to be secret.  The dhparam included in the charts is marginally preferable to using Nginx's default dhparam only because it is lesser-known, but it is _still_ publicly available in the [deis/charts](https://github.com/deis/charts) repository.  As such, users wishing to run the router in production _and_ use SSL are best off generating their own dhparam.  After being generated, it should be base64 encoded and included as the value of the `dhparam` key in a Kubernetes secret named `deis-router-dhparam` in the same namespace as the router itself.
 
   For example, to generate and base64 encode the dhparam on a Mac:
 
