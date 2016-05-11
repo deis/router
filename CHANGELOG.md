@@ -1,3 +1,19 @@
+### v2.0.0-beta3 -> v2.0.0-beta4
+
+#### Features
+
+ - [`b2b16a8`](https://github.com/deis/router/commit/b2b16a8430256781527adc9bbe07325a28d7117a) config: add application name as part of the log information
+ - [`7687fe1`](https://github.com/deis/router/commit/7687fe18f1e3d8ad7b6ec8f63538fe0156e1a38e) config: move from time_local to time_iso8601
+
+#### Fixes
+
+ - [`c804308`](https://github.com/deis/router/commit/c804308437834031721701a843f4c901fba0662a) router: Handle comma delimited X-Forwarded-For values
+
+#### Documentation
+
+ - [`dfcadbf`](https://github.com/deis/router/commit/dfcadbf1e65af2c52dd8c3cc0dffe2064c93f53a) README: Apply minor updates
+ - [`8cb35d4`](https://github.com/deis/router/commit/8cb35d4e48cd293b117ff8e7e6ff43988cbf6c1d) CHANGELOG.md: update for v2.0.0-beta3
+
 ### v2.0.0-beta2 -> v2.0.0-beta3
 
 #### Fixes
