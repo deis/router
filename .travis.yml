@@ -11,4 +11,6 @@ services:
 install:
 - make bootstrap
 script:
-  - make build test
+  - make build test-cover
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
