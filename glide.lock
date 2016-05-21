@@ -1,5 +1,5 @@
-hash: fd9c9a8b78bd4f4f347dd41fcfae038cbdec3e6e4111925a82aff94336e0b907
-updated: 2016-03-04T17:03:23.886433821Z
+hash: ce59e99066ab6f33e1ee95fd01604b9fa64b9a2aa1ecb91dcefb73a27fcfcc7e
+updated: 2016-05-21T02:59:11.962081061Z
 imports:
 - name: bitbucket.org/ww/goautoneg
   version: 75cd24fc2f2c
@@ -148,4 +148,6 @@ imports:
   - third_party/forked/reflect
 - name: speter.net/go/exp/math/dec/inf
   version: 42ca6cd68aa922bc3f32f1e056e61b65945d9ad7
+  repo: https://github.com/belua/inf
+  vcs: git
 devImports: []
