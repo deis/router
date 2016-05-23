@@ -58,7 +58,7 @@ docker-build: build check-docker
 # Builds the binary-- this should only be executed within the
 # containerized development environment.
 binary-build:
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o ${BINDIR}/${SHORT_NAME} -a -installsuffix cgo -ldflags ${LDFLAGS} ${SHORT_NAME}.go
+	GOOS=linux GOARCH=amd64 go build -o ${BINDIR}/${SHORT_NAME} -ldflags ${LDFLAGS} ${SHORT_NAME}.go
 	$(call check-static-binary,$(BINDIR)/${SHORT_NAME})
 	${GOUPX} ${BINDIR}/${SHORT_NAME}
 
