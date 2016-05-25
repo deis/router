@@ -1,3 +1,10 @@
+### v2.0.0-beta4 -> v2.0.0-rc1
+
+#### Maintenance
+
+ - [`6467e66`](https://github.com/deis/router/commit/6467e6656abe78fb07355bb3cc25b167c74f09b0) Dockerfile: Refactor image to use ubuntu-slim
+ - [`269029f`](https://github.com/deis/router/commit/269029ff88cd25f26c5bdbea7b588576b92561d5) rootfs/Dockerfile: DEIS_RELEASE -> WORKFLOW_RELEASE
+
 ### v2.0.0-beta3 -> v2.0.0-beta4
 
 #### Features
