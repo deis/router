@@ -83,6 +83,22 @@ http {
 		"https" "https";
 	}
 
+	# Determine the forwarded port:
+	# 1. First map the unprivileged ports that Nginx (as a non-root user) actually listen on to the
+	# familiar, equivalent privileged ports. (These would be the ports the k8s service listens on.)
+	map $server_port $standard_server_port {
+		default $server_port;
+		8080 80;
+		6443 443;
+	}
+	# 2. If the X-Forwarded-Port header has been set already (e.g. by a load balancer), use its
+	# value, otherwise, the port we're forwarding for is the $standard_server_port we determined
+	# above.
+	map $http_x_forwarded_proto $forwarded_port {
+		default $http_x_forwarded_port;
+		'' $standard_server_port;
+	}
+
 	{{ $sslConfig := $routerConfig.SSLConfig }}
 	{{ $hstsConfig := $sslConfig.HSTSConfig }}{{ if $hstsConfig.Enabled }}
 	# HSTS instructs the browser to replace all HTTP links with HTTPS links for this domain until maxAge seconds from now.
@@ -173,6 +189,8 @@ http {
 			{{ if $appConfig.Available }}proxy_buffering off;
 			proxy_set_header Host $host;
 			proxy_set_header X-Forwarded-For $remote_addr;
+			proxy_set_header X-Forwarded-Proto $access_scheme;
+			proxy_set_header X-Forwarded-Port $forwarded_port;
 			proxy_redirect off;
 			proxy_connect_timeout {{ $appConfig.ConnectTimeout }};
 			proxy_send_timeout {{ $appConfig.TCPTimeout }};
