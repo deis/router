@@ -116,6 +116,7 @@ http {
 	server {
 		listen 8080 default_server reuseport{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
 		listen 6443 default_server ssl{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
+		set $app_name "router-default-vhost";
 		{{ if $routerConfig.PlatformCertificate }}
 		ssl_protocols {{ $sslConfig.Protocols }};
 		ssl_certificate /opt/router/ssl/platform.crt;
@@ -140,6 +141,7 @@ http {
 	server {
 		listen 9090 default_server;
 		server_name _;
+		set $app_name "router-healthz";
 		location ~ ^/healthz/?$ {
 			access_log off;
 			default_type 'text/plain';
