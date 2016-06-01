@@ -309,7 +309,7 @@ func buildRouterConfig(rc *api.ReplicationController, platformCertSecret *api.Se
 		return nil, err
 	}
 	if platformCertSecret != nil {
-		platformCertificate, err := buildCertificate(platformCertSecret, "default")
+		platformCertificate, err := buildCertificate(platformCertSecret, "platform")
 		if err != nil {
 			return nil, err
 		}
