@@ -394,20 +394,14 @@ func buildCertificate(certSecret *api.Secret, context string) (*Certificate, err
 	cert, ok := certSecret.Data["tls.crt"]
 	// If no cert is found in the secret, warn and return nil
 	if !ok {
-		cert, ok = certSecret.Data["cert"]
-		if !ok {
-			log.Printf("WARN: The k8s secret intended to convey the %s certificate contained no entry \"tls.crt\" or \"cert\".\n", context)
-			return nil, nil
-		}
+		log.Printf("WARN: The k8s secret intended to convey the %s certificate contained no entry \"tls.crt\".\n", context)
+		return nil, nil
 	}
 	key, ok := certSecret.Data["tls.key"]
 	// If no key is found in the secret, warn and return nil
 	if !ok {
-		key, ok = certSecret.Data["key"]
-		if !ok {
-			log.Printf("WARN: The k8s secret intended to convey the %s certificate key contained no entry \"tls.key\" or \"key\".\n", context)
-			return nil, nil
-		}
+		log.Printf("WARN: The k8s secret intended to convey the %s certificate key contained no entry \"tls.key\".\n", context)
+		return nil, nil
 	}
 	certStr := string(cert[:])
 	keyStr := string(key[:])

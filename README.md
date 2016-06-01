@@ -328,8 +328,8 @@ Here is an example of a Kubernetes secret bearing a certificate for use with a s
 * Secret name must be for the form `<arbitrary name>-cert`
   * This must be associated to the domain using the [router.deis.io/certificates](#certificates-annotation) annotation.
 * Must be in the same namespace as the routable service
-* Certificate must be supplied as the value of the key `cert`
-* Certificate private key must be supplied as the value of the key `key`
+* Certificate must be supplied as the value of the key `tls.crt`
+* Certificate private key must be supplied as the value of the key `tls.key`
 * Both the certificate and private key must be base64 encoded
 
 For example, assuming a routable service exists in the namespace `cheery-yardbird` and is configured with `www.example.com` among its domains, like so:
@@ -355,8 +355,8 @@ metadata:
   namespace: cheery-yardbird
 type: Opaque
 data:
-  cert: MT1...uDh==
-  key: MT1...MRp=
+  tls.crt: MT1...uDh==
+  tls.key: MT1...MRp=
 ```
 
 #### <a name="platform-cert"></a>Platform certificate
@@ -373,8 +373,8 @@ Here is an example of a Kubernetes secret bearing a wildcard certificate for use
 
 * Namespace must be the same namespace as the router
 * Name _must_ be `deis-router-platform-cert`
-* Certificate must be supplied as the value of the key `cert`
-* Certificate private key must be supplied as the value of the key `key`
+* Certificate must be supplied as the value of the key `tls.crt`
+* Certificate private key must be supplied as the value of the key `tls.key`
 * Both the certificate and private key must be base64 encoded
 
 For example:
@@ -387,8 +387,8 @@ metadata:
   namespace: deis
 type: Opaque
 data:
-  cert: LS0...tCg==
-  key: LS0...LQo=
+  tls.crt: LS0...tCg==
+  tls.key: LS0...LQo=
 ```
 
 #### SSL options
