@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 	"text/template"
 
 	"github.com/Masterminds/sprig"
@@ -224,8 +224,28 @@ http {
 )
 
 func WriteCerts(routerConfig *model.RouterConfig, sslPath string) error {
+	// Start by deleting all certs and their corresponding keys. This will ensure certs we no longer
+	// need are deleted. Certs that are still needed will simply be re-written.
+	allCertsGlob, err := filepath.Glob(filepath.Join(sslPath, "*.crt"))
+	if err != nil {
+		return err
+	}
+	allKeysGlob, err := filepath.Glob(filepath.Join(sslPath, "*.key"))
+	if err != nil {
+		return err
+	}
+	for _, cert := range allCertsGlob {
+		if err := os.Remove(cert); err != nil {
+			return err
+		}
+	}
+	for _, key := range allKeysGlob {
+		if err := os.Remove(key); err != nil {
+			return err
+		}
+	}
 	if routerConfig.PlatformCertificate != nil {
-		err := writeCert("platform", routerConfig.PlatformCertificate, sslPath)
+		err = writeCert("platform", routerConfig.PlatformCertificate, sslPath)
 		if err != nil {
 			return err
 		}
@@ -233,7 +253,7 @@ func WriteCerts(routerConfig *model.RouterConfig, sslPath string) error {
 	for _, appConfig := range routerConfig.AppConfigs {
 		for domain, certificate := range appConfig.Certificates {
 			if certificate != nil {
-				err := writeCert(domain, certificate, sslPath)
+				err = writeCert(domain, certificate, sslPath)
 				if err != nil {
 					return err
 				}
@@ -244,8 +264,8 @@ func WriteCerts(routerConfig *model.RouterConfig, sslPath string) error {
 }
 
 func writeCert(context string, certificate *model.Certificate, sslPath string) error {
-	certPath := path.Join(sslPath, fmt.Sprintf("%s.crt", context))
-	keyPath := path.Join(sslPath, fmt.Sprintf("%s.key", context))
+	certPath := filepath.Join(sslPath, fmt.Sprintf("%s.crt", context))
+	keyPath := filepath.Join(sslPath, fmt.Sprintf("%s.key", context))
 	err := ioutil.WriteFile(certPath, []byte(certificate.Cert), 0644)
 	if err != nil {
 		return err
@@ -258,8 +278,13 @@ func writeCert(context string, certificate *model.Certificate, sslPath string) e
 }
 
 func WriteDHParam(routerConfig *model.RouterConfig, sslPath string) error {
-	if routerConfig.SSLConfig.DHParam != "" {
-		dhParamPath := path.Join(sslPath, "dhparam.pem")
+	dhParamPath := filepath.Join(sslPath, "dhparam.pem")
+	if routerConfig.SSLConfig.DHParam == "" {
+		err := os.RemoveAll(dhParamPath)
+		if err != nil {
+			return err
+		}
+	} else {
 		err := ioutil.WriteFile(dhParamPath, []byte(routerConfig.SSLConfig.DHParam), 0644)
 		if err != nil {
 			return err
