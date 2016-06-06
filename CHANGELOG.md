@@ -1,3 +1,19 @@
+### v2.0.0-rc1 -> v2.0.0-rc2
+
+#### Features
+
+- [`b6c5211`](https://github.com/deis/router/commit/b6c5211e0cea5965c10b9422c3082fa7bd5e61ec) router: Pass on X-Forwarded-Proto and X-Forwarded-Port
+- [`06b7ac8`](https://github.com/deis/router/commit/06b7ac874311f4a980a6e8feac196f5e68d8138a) ssl: Delete unused certs and dhparam
+
+#### Fixes
+
+- [`e266008`](https://github.com/deis/router/commit/e26600892dabb763af26ca8b3bd705a5ac39a0d3) router: Fix app_name issue
+- [`2e691dc`](https://github.com/deis/router/commit/2e691dcee0c1ccf4edc867dbb36999bfef6ba639) router: Improve accuracy of warning message
+
+#### Maintenance
+
+- [`8bebb03`](https://github.com/deis/router/commit/8bebb03da0e18102aad685d345a7585093eb0f18) ssl: Remove support for old cert secret format
+
 ### v2.0.0-beta4 -> v2.0.0-rc1
 
 #### Maintenance
