@@ -6,9 +6,7 @@
 
 Deis (pronounced DAY-iss) Workflow is an open source Platform as a Service (PaaS) that adds a developer-friendly layer to any [Kubernetes](http://kubernetes.io) cluster, making it easy to deploy and manage applications on your own servers.
 
-## Beta Status
-
-This Deis component is currently in beta status, and we welcome your input! If you have feedback, please submit an [issue][issues]. If you'd like to participate in development, please read the "Development" section below and submit a [pull request][prs].
+We welcome your input! If you have feedback, please submit an [issue][issues]. If you'd like to participate in development, please read the "Development" section below and submit a [pull request][prs].
 
 # About
 
@@ -48,7 +46,7 @@ Where `<chart>` is selected from the options below:
 
 | Chart | Description |
 |-------|-------------|
-| workflow-beta4 | Install the router along with the rest of the latest stable Deis Workflow release. |
+| workflow-rc2 | Install the router along with the rest of the latest stable Deis Workflow release. |
 | workflow-dev | Install the router from master with the rest of the edge Deis Workflow platform. |
 | router-dev | Install the router from master with its minimal set of dependencies. |
 
