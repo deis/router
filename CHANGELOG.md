@@ -1,3 +1,13 @@
+### v2.0.0-rc2 -> v2.0.0
+
+#### Documentation
+
+- [`07eb015`](https://github.com/deis/router/commit/07eb015f6296ae5353d348a48b8ae1dccff648dc) CHANGELOG.md: add entry for v2.0.0-rc2
+
+#### Maintenance
+
+- [`e618f9d`](https://github.com/deis/router/commit/e618f9d292a34871cd7d614f0789b5a051605ae8) README.md: remove beta status
+
 ### v2.0.0-rc1 -> v2.0.0-rc2
 
 #### Features
