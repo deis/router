@@ -53,7 +53,7 @@ build: check-docker
 
 docker-build: build check-docker
 	docker build --rm -t ${IMAGE} rootfs
-	docker tag -f ${IMAGE} ${MUTABLE_IMAGE}
+	docker tag ${IMAGE} ${MUTABLE_IMAGE}
 
 # Builds the binary-- this should only be executed within the
 # containerized development environment.
