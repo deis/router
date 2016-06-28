@@ -17,12 +17,12 @@ RUN apt-get update \
 		libssl-dev \
 		libpcre3-dev \
 		make \
-	&& export NGINX_VERSION=1.9.6 VTS_VERSION=0.1.8 BUILD_PATH=/tmp/build PREFIX=/opt/router \
+	&& export NGINX_VERSION=1.10.1 VTS_VERSION=0.1.8 BUILD_PATH=/tmp/build PREFIX=/opt/router \
 	&& rm -rf "$PREFIX" \
 	&& mkdir "$PREFIX" \
 	&& mkdir "$BUILD_PATH" \
 	&& cd "$BUILD_PATH" \
-	&& get_src ed501fc6d0eff9d3bc1049cc1ba3a3ac8c602de046acb2a4c108392bbfa865ea \
+	&& get_src 1fd35846566485e03c0e318989561c135c598323ff349c503a6c14826487a801 \
 		"http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz" \
 	&& get_src 6bb9a36d8d70302d691c49557313fb7262cafd942a961d11a2730d9a5d9f70e0 \
 		"https://github.com/vozlt/nginx-module-vts/archive/v$VTS_VERSION.tar.gz" \
