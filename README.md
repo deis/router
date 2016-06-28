@@ -1,6 +1,7 @@
 # Deis Router v2
 
 [![Build Status](https://travis-ci.org/deis/router.svg?branch=master)](https://travis-ci.org/deis/router)
+[![codecov.io](https://codecov.io/github/deis/router/coverage.svg?branch=master)](https://codecov.io/github/deis/router?branch=master)
 [![Go Report Card](http://goreportcard.com/badge/deis/router)](http://goreportcard.com/report/deis/router)
 [![Docker Repository on Quay](https://quay.io/repository/deis/router/status "Docker Repository on Quay")](https://quay.io/repository/deis/router)
 
