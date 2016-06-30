@@ -69,5 +69,3 @@ USER router
 
 CMD ["/opt/router/sbin/boot"]
 EXPOSE 2222 8080 6443 9090
-
-ENV WORKFLOW_RELEASE 2.0.0
