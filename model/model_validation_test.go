@@ -64,7 +64,7 @@ func TestValidServerNameHashBucketSize(t *testing.T) {
 }
 
 func TestInvalidBodySize(t *testing.T) {
-	testInvalidValues(t, newTestRouterConfig, "BodySize", "bodySize", []string{"0", "-1", "foobar"})
+	testInvalidValues(t, newTestRouterConfig, "BodySize", "bodySize", []string{"-1", "foobar"})
 }
 
 func TestValidBodySize(t *testing.T) {
