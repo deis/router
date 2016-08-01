@@ -11,6 +11,6 @@ gpg --list-keys --fingerprint --with-colons |
   gpg --import-ownertrust
 curl -sSL "$url" -o "$f"
 curl -sSL "$url.asc" -o "$f.asc"
-gpg --verify $f.asc
+gpg --verify "$f.asc"
 tar xzf "$f"
 rm "$f"

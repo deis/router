@@ -225,6 +225,7 @@ http {
 `
 )
 
+// WriteCerts writes SSL certs to file from router configuration.
 func WriteCerts(routerConfig *model.RouterConfig, sslPath string) error {
 	// Start by deleting all certs and their corresponding keys. This will ensure certs we no longer
 	// need are deleted. Certs that are still needed will simply be re-written.
@@ -272,13 +273,10 @@ func writeCert(context string, certificate *model.Certificate, sslPath string) e
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(keyPath, []byte(certificate.Key), 0600)
-	if err != nil {
-		return err
-	}
-	return nil
+	return ioutil.WriteFile(keyPath, []byte(certificate.Key), 0600)
 }
 
+// WriteDHParam writes router DHParam to file from router configuration.
 func WriteDHParam(routerConfig *model.RouterConfig, sslPath string) error {
 	dhParamPath := filepath.Join(sslPath, "dhparam.pem")
 	if routerConfig.SSLConfig.DHParam == "" {
