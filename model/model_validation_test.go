@@ -188,7 +188,7 @@ func TestInvalidAppDomains(t *testing.T) {
 }
 
 func TestValidAppDomains(t *testing.T) {
-	testValidValues(t, newTestAppConfig, "Domains", "domains", []string{"foobar", "foo-bar", "foobar.com", "foobar,foobar.com", "foobar, foobar.com", "*.foobar.com"})
+	testValidValues(t, newTestAppConfig, "Domains", "domains", []string{"foobar", "foo-bar", "foobar.com", "foobar,foobar.com", "foobar, foobar.com", "*.foobar.com", "xn--eckwd4c7c.xn--zckzah", "xn--80ahd1agd.ru", "xn--tst-qla.xn--knigsgsschen-lcb0w.de"})
 }
 
 func TestInvalidAppWhitelist(t *testing.T) {
