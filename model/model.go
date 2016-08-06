@@ -9,7 +9,9 @@ import (
 	modelerUtility "github.com/deis/router/utils/modeler"
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/errors"
+	"k8s.io/kubernetes/pkg/apis/extensions"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
+	"k8s.io/kubernetes/pkg/fields"
 	"k8s.io/kubernetes/pkg/labels"
 )
 
@@ -20,17 +22,14 @@ const (
 )
 
 var (
-	namespace        = utils.GetOpt("POD_NAMESPACE", "default")
-	modeler          = modelerUtility.NewModeler(prefix, modelerFieldTag, modelerConstraintTag, true)
-	servicesSelector labels.Selector
+	namespace   = utils.GetOpt("POD_NAMESPACE", "default")
+	modeler     = modelerUtility.NewModeler(prefix, modelerFieldTag, modelerConstraintTag, true)
+	listOptions api.ListOptions
 )
 
 func init() {
-	var err error
-	servicesSelector, err = labels.Parse(fmt.Sprintf("%s/routable==true", prefix))
-	if err != nil {
-		log.Fatal(err)
-	}
+	labelMap := labels.Set{fmt.Sprintf("%s/routable==true", prefix): "true"}
+	listOptions = api.ListOptions{LabelSelector: labelMap.AsSelector(), FieldSelector: fields.Everything()}
 }
 
 // RouterConfig is the primary type used to encapsulate all router configuration.
@@ -193,11 +192,11 @@ func newHSTSConfig() *HSTSConfig {
 // relevant metadata concerning itself and all routable services.
 func Build(kubeClient *client.Client) (*RouterConfig, error) {
 	// Get all relevant information from k8s:
-	//   deis-router rc
+	//   deis-router deployment
 	//   All services with label "routable=true"
 	//   deis-builder service, if it exists
 	// These are used to construct a model...
-	routerRC, err := getRC(kubeClient)
+	routerDeployment, err := getDeployment(kubeClient)
 	if err != nil {
 		return nil, err
 	}
@@ -219,25 +218,24 @@ func Build(kubeClient *client.Client) (*RouterConfig, error) {
 		return nil, err
 	}
 	// Build the model...
-	routerConfig, err := build(kubeClient, routerRC, platformCertSecret, dhParamSecret, appServices, builderService)
+	routerConfig, err := build(kubeClient, routerDeployment, platformCertSecret, dhParamSecret, appServices, builderService)
 	if err != nil {
 		return nil, err
 	}
 	return routerConfig, nil
 }
 
-func getRC(kubeClient *client.Client) (*api.ReplicationController, error) {
-	rcClient := kubeClient.ReplicationControllers(namespace)
-	rc, err := rcClient.Get("deis-router")
+func getDeployment(kubeClient *client.Client) (*extensions.Deployment, error) {
+	deployment, err := kubeClient.Extensions().Deployments(namespace).Get("deis-router")
 	if err != nil {
 		return nil, err
 	}
-	return rc, nil
+	return deployment, nil
 }
 
 func getAppServices(kubeClient *client.Client) (*api.ServiceList, error) {
 	serviceClient := kubeClient.Services(api.NamespaceAll)
-	services, err := serviceClient.List(servicesSelector)
+	services, err := serviceClient.List(listOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -276,8 +274,8 @@ func getSecret(kubeClient *client.Client, name string, ns string) (*api.Secret, 
 	return secret, nil
 }
 
-func build(kubeClient *client.Client, routerRC *api.ReplicationController, platformCertSecret *api.Secret, dhParamSecret *api.Secret, appServices *api.ServiceList, builderService *api.Service) (*RouterConfig, error) {
-	routerConfig, err := buildRouterConfig(routerRC, platformCertSecret, dhParamSecret)
+func build(kubeClient *client.Client, routerDeployment *extensions.Deployment, platformCertSecret *api.Secret, dhParamSecret *api.Secret, appServices *api.ServiceList, builderService *api.Service) (*RouterConfig, error) {
+	routerConfig, err := buildRouterConfig(routerDeployment, platformCertSecret, dhParamSecret)
 	if err != nil {
 		return nil, err
 	}
@@ -302,9 +300,9 @@ func build(kubeClient *client.Client, routerRC *api.ReplicationController, platf
 	return routerConfig, nil
 }
 
-func buildRouterConfig(rc *api.ReplicationController, platformCertSecret *api.Secret, dhParamSecret *api.Secret) (*RouterConfig, error) {
+func buildRouterConfig(routerDeployment *extensions.Deployment, platformCertSecret *api.Secret, dhParamSecret *api.Secret) (*RouterConfig, error) {
 	routerConfig := newRouterConfig()
-	err := modeler.MapToModel(rc.Annotations, "nginx", routerConfig)
+	err := modeler.MapToModel(routerDeployment.Annotations, "nginx", routerConfig)
 	if err != nil {
 		return nil, err
 	}
