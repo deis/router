@@ -29,7 +29,7 @@ UPX := upx -9 --mono --no-progress
 
 # The following variables describe k8s manifests we may wish to deploy
 # to a running k8s cluster in the course of development.
-RC := manifests/deis-${SHORT_NAME}-rc.yaml
+DEPLOYMENT := manifests/deis-${SHORT_NAME}-deployment.yaml
 SVC := manifests/deis-${SHORT_NAME}-service.yaml
 
 # Allow developers to step into the containerized development environment
@@ -65,15 +65,14 @@ full-clean: check-docker
 dev-release: docker-build docker-push set-image
 
 set-image:
-	sed "s#\(image:\) .*#\1 ${IMAGE}#" manifests/deis-${SHORT_NAME}-rc.yaml > manifests/deis-${SHORT_NAME}-rc.tmp.yaml
+	sed "s#\(image:\) .*#\1 ${IMAGE}#" manifests/deis-${SHORT_NAME}-deployment.yaml > manifests/deis-${SHORT_NAME}-deployment.tmp.yaml
 
 deploy: check-kubectl dev-release
-	@kubectl describe rc deis-${SHORT_NAME} --namespace=deis >/dev/null 2>&1; \
+	@kubectl describe deployment deis-${SHORT_NAME} --namespace=deis >/dev/null 2>&1; \
 	if [ $$? -eq 0 ]; then \
-		kubectl delete rc deis-${SHORT_NAME} --namespace=deis; \
-		kubectl create -f manifests/deis-${SHORT_NAME}-rc.tmp.yaml; \
+		kubectl apply -f manifests/deis-${SHORT_NAME}-deployment.tmp.yaml; \
 	else \
-		kubectl create -f manifests/deis-${SHORT_NAME}-rc.tmp.yaml; \
+		kubectl create -f manifests/deis-${SHORT_NAME}-deployment.tmp.yaml; \
 	fi
 
 examples:

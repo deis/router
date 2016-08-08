@@ -164,13 +164,13 @@ The router is implemented as a simple Go program that manages Nginx and Nginx co
 
 When generating configuration, the program reads all annotations of each service prefixed with `router.deis.io`.  These annotations describe all the configuration options that allow the program to dynamically construct Nginx configuration, including virtual hosts for all the domain names associated with each routable application.
 
-Similarly, the router watches the annotations on its _own_ replication controller to dynamically construct global Nginx configuration.
+Similarly, the router watches the annotations on its _own_ deployment object to dynamically construct global Nginx configuration.
 
 ## <a name="configuration"></a>Configuration Guide
 
 ### Environment variables
 
-Router configuration is driven almost entirely by annotations on the router's replication controller and the services of all routable applications-- those labeled with `router.deis.io/routable: "true"`.
+Router configuration is driven almost entirely by annotations on the router's deployment object and the services of all routable applications-- those labeled with `router.deis.io/routable: "true"`.
 
 One exception to this, however, is that in order for the router to discover its own annotations, the router must be configured via environment variable with some awareness of its own namespace.  (It cannot query the API for information about itself without knowing this.)
 
@@ -179,8 +179,8 @@ The `POD_NAMESPACE` environment variable is required by the router and it should
 For example, consider the following Kubernetes manifest.  Given a manifest containing the following metadata:
 
 ```
-apiVersion: v1
-kind: ReplicationController
+apiVersion: extensions/v1beta1
+kind: Deployment
 metadata:
   name: deis-router
   namespace: deis
@@ -215,7 +215,7 @@ All remaining options are configured through annotations.  Any of the following 
 
 | Resource | Notes |
 |----------|-------|
-| <ul><li>deis-router replication controller</li><li>deis-builder service (if in use)</li></ul> | All of these configuration options are specific to _this_ implementation of the router (as indicated by the inclusion of the token `nginx` in the annotations' names).  Customized and alternative router implementations are possible.  Such routers are under no obligation to honor these annotations, as many or all of these may not be applicable in such scenarios.  Customized and alternative implementations _should_ document their own configuration options. |
+| <ul><li>deis-router deployment object</li><li>deis-builder service (if in use)</li></ul> | All of these configuration options are specific to _this_ implementation of the router (as indicated by the inclusion of the token `nginx` in the annotations' names).  Customized and alternative router implementations are possible.  Such routers are under no obligation to honor these annotations, as many or all of these may not be applicable in such scenarios.  Customized and alternative implementations _should_ document their own configuration options. |
 | <ul><li>routable application services</li></ul> | These are services labeled with `router.deis.io/routable: "true"`.  In the context of the broader Deis Workflow PaaS, these annotations are _written_ by the Deis Workflow controller component (the API).  These annotations, therefore, represent the contract or _interface_ between that component and the router.  As such, any customized or alternative router implementations that wishes to remain compatible with deis-controller must honor (or ignore) these annotations, but may _not_ alter their names or redefine their meanings. |
 
 The table below details the configuration options that are available for each of the above.
@@ -268,11 +268,11 @@ _Note that Kubernetes annotation maps are all of Go type `map[string]string`.  A
 
 #### Annotations by example
 
-##### router replication controller:
+##### router deployment object:
 
 ```
-apiVersion: v1
-kind: ReplicationController
+apiVersion: extensions/v1beta1
+kind: Deployment
 metadata:
   name: deis-router
   namespace: deis
@@ -465,7 +465,7 @@ user agent (browser) --> front-facing load balancer --> a Deis router pod --> ku
 
 ##### Option 3
 
-Option 3 is similar to option 2, but does not actually utilize a load balancer at all.  Instead, a DNS A record may be created that lists the public IP addresses of _all_ Kubernetes worker nodes.  This will leverage DNS round-robining to direct requests to all nodes.  To guarantee _all_ nodes can adequately route incoming traffic, the Deis router component should be scaled out by increasing the number of replicas specified in the replication controller to match the number of worker nodes.  Anti-affinity should ensure exactly one router pod runs per worker node.
+Option 3 is similar to option 2, but does not actually utilize a load balancer at all.  Instead, a DNS A record may be created that lists the public IP addresses of _all_ Kubernetes worker nodes.  This will leverage DNS round-robining to direct requests to all nodes.  To guarantee _all_ nodes can adequately route incoming traffic, the Deis router component should be scaled out by increasing the number of replicas specified in the deployment object to match the number of worker nodes.  Anti-affinity should ensure exactly one router pod runs per worker node.
 
 __This configuration is not suitable for production.__ The primary use case for this configuration is demonstrating or evaluating Deis Workflow on bare metal Kubernetes clusters without incurring the effort to configure an _actual_ front-facing load balancer.
 
@@ -513,7 +513,7 @@ The Helm Classic charts available for installing router (either with or without 
 
 * __Should your router [define and enforce a default whitelist](#enforce-whitelists)?__  This may be advisable for routers governing ingress to a cluster that hosts applications intended for a limited audience-- e.g. applications for internal use within an organization.
 
-* __Do you need to scale the router?__ For greater availability, it's desirable to run more than one instance of the router.  _How many_ can only be informed by stress/performance testing the applications in your cluster.  To increase the number of router instances from the default of one, increase the number of replicas specified by the `deis-router` replication controller.  Do not specify a number of replicas greater than the number of worker nodes in your Kubernetes cluster.
+* __Do you need to scale the router?__ For greater availability, it's desirable to run more than one instance of the router.  _How many_ can only be informed by stress/performance testing the applications in your cluster.  To increase the number of router instances from the default of one, increase the number of replicas specified by the `deis-router` deployment object.  Do not specify a number of replicas greater than the number of worker nodes in your Kubernetes cluster.
 
 ## License
 
