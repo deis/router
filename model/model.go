@@ -54,6 +54,7 @@ type RouterConfig struct {
 	AppConfigs               []*AppConfig
 	BuilderConfig            *BuilderConfig
 	PlatformCertificate      *Certificate
+	Http2Enabled             bool        `key:"http2Enabled" constraint:"(?i)^(true|false)$"`
 }
 
 func newRouterConfig() *RouterConfig {
@@ -72,6 +73,7 @@ func newRouterConfig() *RouterConfig {
 		EnforceWhitelists:        false,
 		WhitelistMode:            "extend",
 		SSLConfig:                newSSLConfig(),
+		Http2Enabled:             true,
 	}
 }
 
