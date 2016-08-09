@@ -162,6 +162,27 @@ Requesting http://unknown.example.com should result in a 404 from the router sin
 
 The router is implemented as a simple Go program that manages Nginx and Nginx configuration.  It regularly queries the Kubernetes API for services labeled with `router.deis.io/routable: "true"`.  Such services are compared to known services resident in memory.  If there are differences, new Nginx configuration is generated and Nginx is reloaded.
 
+__Routable services must expose port 80.__ The target port in underlying pods may be anything, but the service itself must expose port 80. For example:
+
+```
+apiVersion: v1
+kind: Service
+metadata:
+  name: foo
+  labels:
+  	router.deis.io/routable: "true"
+  namespace: examples
+  annotations:
+    router.deis.io/domains: www.foobar.com
+  spec:
+    selector:
+      app: foo
+    ports:
+    - port: 80
+      targetPort: 3000
+# ...
+```
+
 When generating configuration, the program reads all annotations of each service prefixed with `router.deis.io`.  These annotations describe all the configuration options that allow the program to dynamically construct Nginx configuration, including virtual hosts for all the domain names associated with each routable application.
 
 Similarly, the router watches the annotations on its _own_ replication controller to dynamically construct global Nginx configuration.
