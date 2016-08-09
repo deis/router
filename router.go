@@ -7,7 +7,7 @@ import (
 	"github.com/deis/router/model"
 	"github.com/deis/router/nginx"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
-	"k8s.io/kubernetes/pkg/util"
+	"k8s.io/kubernetes/pkg/util/flowcontrol"
 )
 
 func main() {
@@ -16,7 +16,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create client: %v.", err)
 	}
-	rateLimiter := util.NewTokenBucketRateLimiter(0.1, 1)
+	rateLimiter := flowcontrol.NewTokenBucketRateLimiter(0.1, 1)
 	known := &model.RouterConfig{}
 	// Main loop
 	for {
