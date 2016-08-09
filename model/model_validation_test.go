@@ -260,7 +260,7 @@ func TestInvalidSSLCiphers(t *testing.T) {
 }
 
 func TestValidSSLCiphers(t *testing.T) {
-	testValidValues(t, newTestSSLConfig, "Ciphers", "ciphers", []string{"DHE-RSA-AES256-SHA", "DHE-RSA-AES256-SHA:DHE-DSS-AES256-SHA:AES256-SHA"})
+	testValidValues(t, newTestSSLConfig, "Ciphers", "ciphers", []string{"DHE-RSA-AES256-SHA", "DHE-RSA-AES256-SHA:DHE-DSS-AES256-SHA:AES256-SHA", "EECDH+AES128:RSA+AES128:EECDH+AES256:RSA+AES256:EECDH+3DES:RSA+3DES:!MD5"})
 }
 
 func TestInvalidSSLSessionCache(t *testing.T) {
