@@ -127,6 +127,14 @@ func TestValidWhitelistMode(t *testing.T) {
 	testValidValues(t, newTestRouterConfig, "WhitelistMode", "whitelistMode", []string{"extend", "override"})
 }
 
+func TestValidHttp2Enabled(t *testing.T) {
+  testValidValues(t, newTestRouterConfig, "HttpEnabled", "http2Enabled", []string{"true", "false", "TRUE", "FALSE"})
+}
+
+func TestInvalidHttp2Enabled(t *testing.T) {
+  testInvalidValues(t, newTestRouterConfig, "Http2Enabled", "http2Enabled", []string{"0", "-1", "foobar"})
+}
+
 func TestInvalidGzipEnabled(t *testing.T) {
 	testInvalidValues(t, newTestGzipConfig, "Enabled", "enabled", []string{"0", "-1", "foobar"})
 }
