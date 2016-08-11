@@ -53,7 +53,7 @@ type RouterConfig struct {
 	AppConfigs               []*AppConfig
 	BuilderConfig            *BuilderConfig
 	PlatformCertificate      *Certificate
-	Http2Enabled             bool        `key:"http2Enabled" constraint:"(?i)^(true|false)$"`
+	Http2Enabled             bool `key:"http2Enabled" constraint:"(?i)^(true|false)$"`
 }
 
 func newRouterConfig() *RouterConfig {
@@ -112,6 +112,7 @@ type AppConfig struct {
 	CertMappings   map[string]string `key:"certificates" constraint:"(?i)^((([a-z0-9]+(-*[a-z0-9]+)*)|((\\*\\.)?[a-z0-9]+(-*[a-z0-9]+)*\\.)+[a-z0-9]+(-*[a-z0-9]+)+):([a-z0-9]+(-*[a-z0-9]+)*)(\\s*,\\s*)?)+$"`
 	Certificates   map[string]*Certificate
 	Available      bool
+	Maintenance    bool `key:"maintenance" constraint:"(?i)^(true|false)$"`
 }
 
 func newAppConfig(routerConfig *RouterConfig) *AppConfig {

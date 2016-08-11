@@ -188,7 +188,7 @@ http {
 		vhost_traffic_status_filter_by_set_key {{ $appConfig.Name }} application::*;
 
 		location / {
-			{{ if $appConfig.Available }}proxy_buffering off;
+			{{ if $appConfig.Maintenance }}return 503;{{ else if $appConfig.Available }}proxy_buffering off;
 			proxy_set_header Host $host;
 			proxy_set_header X-Forwarded-For $remote_addr;
 			proxy_set_header X-Forwarded-Proto $access_scheme;
@@ -209,6 +209,12 @@ http {
 
 			proxy_pass http://{{$appConfig.ServiceIP}}:80;{{ else }}return 503;{{ end }}
 		}
+		{{ if $appConfig.Maintenance }}error_page 503 @maintenance;
+			location @maintenance {
+					root /;
+			    rewrite ^(.*)$ /www/maintenance.html break;
+			}
+		{{ end }}
 	}
 
 	{{end}}{{end}}
