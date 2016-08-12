@@ -28,7 +28,7 @@ var (
 )
 
 func init() {
-	labelMap := labels.Set{fmt.Sprintf("%s/routable==true", prefix): "true"}
+	labelMap := labels.Set{fmt.Sprintf("%s/routable", prefix): "true"}
 	listOptions = api.ListOptions{LabelSelector: labelMap.AsSelector(), FieldSelector: fields.Everything()}
 }
 
@@ -53,7 +53,7 @@ type RouterConfig struct {
 	AppConfigs               []*AppConfig
 	BuilderConfig            *BuilderConfig
 	PlatformCertificate      *Certificate
-	Http2Enabled             bool        `key:"http2Enabled" constraint:"(?i)^(true|false)$"`
+	Http2Enabled             bool `key:"http2Enabled" constraint:"(?i)^(true|false)$"`
 }
 
 func newRouterConfig() *RouterConfig {
