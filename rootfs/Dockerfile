@@ -7,7 +7,7 @@ RUN adduser --system \
 	--group \
 	router
 
-COPY . /
+COPY /bin /bin
 
 RUN apt-get update \
 	&& apt-get install -y \
@@ -59,8 +59,7 @@ RUN apt-get update \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/man /usr/share/doc \
 	&& rm -rf "$BUILD_PATH"
 
-# Re-copy these files because the previous step will have overwritten them
-COPY opt/router /opt/router
+COPY . /
 
 # Fix some permissions since we'll be running as a non-root user
 RUN chown -R router:router /opt/router
