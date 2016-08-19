@@ -115,7 +115,7 @@ http {
 	# Default server handles requests for unmapped hostnames, including healthchecks
 	server {
 		listen 8080 default_server reuseport{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
-		listen 6443 default_server ssl {{ if $routerConfig.Http2Enabled }}http2{{ end }} {{ if $routerConfig.UseProxyProtocol }}proxy_protocol{{ end }};
+		listen 6443 default_server ssl {{ if $routerConfig.HTTP2Enabled }}http2{{ end }} {{ if $routerConfig.UseProxyProtocol }}proxy_protocol{{ end }};
 		set $app_name "router-default-vhost";
 		{{ if $routerConfig.PlatformCertificate }}
 		ssl_protocols {{ $sslConfig.Protocols }};
@@ -166,7 +166,7 @@ http {
 		set $app_name "{{ $appConfig.Name }}";
 
 		{{ if index $appConfig.Certificates $domain }}
-		listen 6443 ssl {{ if $routerConfig.Http2Enabled }}http2{{ end }} {{ if $routerConfig.UseProxyProtocol }}proxy_protocol{{ end }};
+		listen 6443 ssl {{ if $routerConfig.HTTP2Enabled }}http2{{ end }} {{ if $routerConfig.UseProxyProtocol }}proxy_protocol{{ end }};
 		ssl_protocols {{ $sslConfig.Protocols }};
 		{{ if ne $sslConfig.Ciphers "" }}ssl_ciphers {{ $sslConfig.Ciphers }};{{ end }}
 		ssl_prefer_server_ciphers on;
@@ -311,8 +311,5 @@ func WriteConfig(routerConfig *model.RouterConfig, filePath string) error {
 		return err
 	}
 	err = tmpl.Execute(file, routerConfig)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
