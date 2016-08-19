@@ -112,7 +112,8 @@ type AppConfig struct {
 	CertMappings   map[string]string `key:"certificates" constraint:"(?i)^((([a-z0-9]+(-*[a-z0-9]+)*)|((\\*\\.)?[a-z0-9]+(-*[a-z0-9]+)*\\.)+[a-z0-9]+(-*[a-z0-9]+)+):([a-z0-9]+(-*[a-z0-9]+)*)(\\s*,\\s*)?)+$"`
 	Certificates   map[string]*Certificate
 	Available      bool
-	Maintenance    bool `key:"maintenance" constraint:"(?i)^(true|false)$"`
+	Maintenance    bool       `key:"maintenance" constraint:"(?i)^(true|false)$"`
+	SSLConfig      *SSLConfig `key:"ssl"`
 }
 
 func newAppConfig(routerConfig *RouterConfig) *AppConfig {
@@ -120,6 +121,7 @@ func newAppConfig(routerConfig *RouterConfig) *AppConfig {
 		ConnectTimeout: "30s",
 		TCPTimeout:     routerConfig.DefaultTimeout,
 		Certificates:   make(map[string]*Certificate, 0),
+		SSLConfig:      newSSLConfig(),
 	}
 }
 
@@ -165,8 +167,8 @@ type SSLConfig struct {
 
 func newSSLConfig() *SSLConfig {
 	return &SSLConfig{
-		Enforce:           false,
-		Protocols:         "TLSv1 TLSv1.1 TLSv1.2",
+		Enforce:   false,
+		Protocols: "TLSv1 TLSv1.1 TLSv1.2",
 		// Default cipher suite:
 		//  - Prefer 128-Bit over 256-Bit encryptions (lower overhead)
 		//  - Prefer GCM over EDH over RSA auth (for Forward Secrecy)
