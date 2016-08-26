@@ -112,7 +112,8 @@ type AppConfig struct {
 	CertMappings   map[string]string `key:"certificates" constraint:"(?i)^((([a-z0-9]+(-*[a-z0-9]+)*)|((\\*\\.)?[a-z0-9]+(-*[a-z0-9]+)*\\.)+[a-z0-9]+(-*[a-z0-9]+)+):([a-z0-9]+(-*[a-z0-9]+)*)(\\s*,\\s*)?)+$"`
 	Certificates   map[string]*Certificate
 	Available      bool
-	Maintenance    bool `key:"maintenance" constraint:"(?i)^(true|false)$"`
+	Maintenance    bool       `key:"maintenance" constraint:"(?i)^(true|false)$"`
+	SSLConfig      *SSLConfig `key:"ssl"`
 }
 
 func newAppConfig(routerConfig *RouterConfig) *AppConfig {
@@ -120,6 +121,7 @@ func newAppConfig(routerConfig *RouterConfig) *AppConfig {
 		ConnectTimeout: "30s",
 		TCPTimeout:     routerConfig.DefaultTimeout,
 		Certificates:   make(map[string]*Certificate, 0),
+		SSLConfig:      newSSLConfig(),
 	}
 }
 

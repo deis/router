@@ -288,6 +288,7 @@ _Note that Kubernetes annotation maps are all of Go type `map[string]string`.  A
 | <a name="app-connect-timeout"></a>routable application | service | [router.deis.io/connectTimeout](#app-connect-timeout) | `"30s"` | nginx `proxy_connect_timeout` setting expressed in units `ms`, `s`, `m`, `h`, `d`, `w`, `M`, or `y`. |
 | <a name="app-tcp-timeout"></a>routable application | service | [router.deis.io/tcpTimeout](#app-tcp-timeout) | router's `defaultTimeout` | nginx `proxy_send_timeout` and `proxy_read_timeout` settings expressed in units `ms`, `s`, `m`, `h`, `d`, `w`, `M`, or `y`. |
 | <a name="app-maintenance"></a>routable application | service | [router.deis.io/maintenance](#app-maintenance) | `"false"` | Whether the app is under maintenance so that all traffic for this app is redirected to a static maintenance page with an error code of `503`. |
+| <a name="ssl-enforce"></a>routable application | service | [router.deis.io/ssl.enforce](#ssl-enforce) | `"false"` | Whether to respond with a 301 for all HTTP requests with a permanent redirect to the HTTPS equivalent address. |
 
 #### Annotations by example
 

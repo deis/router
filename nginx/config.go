@@ -201,7 +201,7 @@ http {
 			proxy_set_header Upgrade $http_upgrade;
 			proxy_set_header Connection $connection_upgrade;
 
-			{{ if $enforceHTTPS }}if ($access_scheme != "https") {
+			{{ if or $enforceHTTPS $appConfig.SSLConfig.Enforce }}if ($access_scheme != "https") {
 				return 301 https://$host$request_uri;
 			}{{ end }}
 
