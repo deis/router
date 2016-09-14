@@ -17,7 +17,7 @@ RUN apt-get update \
 		libssl-dev \
 		libpcre3-dev \
 		make \
-	&& export NGINX_VERSION=1.11.2 SIGNING_KEY=A1C052F8 VTS_VERSION=0.1.10 BUILD_PATH=/tmp/build PREFIX=/opt/router \
+	&& export NGINX_VERSION=1.11.4 SIGNING_KEY=A1C052F8 VTS_VERSION=0.1.10 BUILD_PATH=/tmp/build PREFIX=/opt/router \
 	&& rm -rf "$PREFIX" \
 	&& mkdir "$PREFIX" \
 	&& mkdir "$BUILD_PATH" \
