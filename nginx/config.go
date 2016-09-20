@@ -108,6 +108,13 @@ http {
 	}
 	{{ end }}
 
+	{{ if $routerConfig.RequestIDs }}
+		map $http_x_correlation_id $correlation_id {
+			default "$http_x_correlation_id,$request_id";
+			'' $request_id;
+		}
+	{{ end }}
+
 	{{/* Since HSTS headers are not permitted on HTTP requests, 301 redirects to HTTPS resources are also necessary. */}}
 	{{/* This means we force HTTPS if HSTS is enabled. */}}
 	{{ $enforceHTTPS := or $sslConfig.Enforce $hstsConfig.Enabled }}
@@ -188,6 +195,11 @@ http {
 		vhost_traffic_status_filter_by_set_key {{ $appConfig.Name }} application::*;
 
 		location / {
+			{{ if $routerConfig.RequestIDs }}
+			add_header X-Request-Id $request_id always;
+			add_header X-Correlation-Id $correlation_id always;
+			{{end}}
+
 			{{ if $appConfig.Maintenance }}return 503;{{ else if $appConfig.Available }}proxy_buffering off;
 			proxy_set_header Host $host;
 			proxy_set_header X-Forwarded-For $remote_addr;
@@ -200,6 +212,10 @@ http {
 			proxy_http_version 1.1;
 			proxy_set_header Upgrade $http_upgrade;
 			proxy_set_header Connection $connection_upgrade;
+			{{ if $routerConfig.RequestIDs }}
+			proxy_set_header X-Request-Id $request_id;
+			proxy_set_header X-Correlation-Id $correlation_id;
+			{{ end }}
 
 			{{ if or $enforceHTTPS $appConfig.SSLConfig.Enforce }}if ($access_scheme != "https") {
 				return 301 https://$host$request_uri;

@@ -49,6 +49,7 @@ type RouterConfig struct {
 	EnforceWhitelists        bool        `key:"enforceWhitelists" constraint:"(?i)^(true|false)$"`
 	DefaultWhitelist         []string    `key:"defaultWhitelist" constraint:"^((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))?(\\s*,\\s*)?)+$"`
 	WhitelistMode            string      `key:"whitelistMode" constraint:"^(extend|override)$"`
+	RequestIDs               bool        `key:"RequestIDs" constraint:"(?i)^(true|false)$"`
 	SSLConfig                *SSLConfig  `key:"ssl"`
 	AppConfigs               []*AppConfig
 	BuilderConfig            *BuilderConfig
@@ -71,6 +72,7 @@ func newRouterConfig() *RouterConfig {
 		UseProxyProtocol:         false,
 		EnforceWhitelists:        false,
 		WhitelistMode:            "extend",
+		RequestIDs:               false,
 		SSLConfig:                newSSLConfig(),
 		HTTP2Enabled:             true,
 	}
