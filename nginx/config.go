@@ -75,12 +75,15 @@ http {
 		default $scheme;               # if X-Forwarded-Proto header is empty, $tmp_access_scheme will be the actual protocol used
 		"~^(.*, ?)?http$" "http";      # account for the possibility of a comma-delimited X-Forwarded-Proto header value
 		"~^(.*, ?)?https$" "https";    # account for the possibility of a comma-delimited X-Forwarded-Proto header value
+		"~^(.*, ?)?ws$" "ws";      # account for the possibility of a comma-delimited X-Forwarded-Proto header value
+		"~^(.*, ?)?wss$" "wss";    # account for the possibility of a comma-delimited X-Forwarded-Proto header value
 	}
-	# 2. If the request is an HTTPS request, upgrade $access_scheme to https, regardless of what the X-Forwarded-Proto
+	# 2. If the request is an HTTPS/wss request, upgrade $access_scheme to https/wss, regardless of what the X-Forwarded-Proto
 	# header might say.
 	map $scheme $access_scheme {
 		default $tmp_access_scheme;
 		"https" "https";
+		"wss"	"wss";
 	}
 
 	# Determine the forwarded port:
@@ -94,10 +97,16 @@ http {
 	# 2. If the X-Forwarded-Port header has been set already (e.g. by a load balancer), use its
 	# value, otherwise, the port we're forwarding for is the $standard_server_port we determined
 	# above.
-	map $http_x_forwarded_proto $forwarded_port {
+	map $http_x_forwarded_port $forwarded_port {
 		default $http_x_forwarded_port;
 		'' $standard_server_port;
 	}
+	# uri_scheme will be the scheme to use when the ssl is enforced.
+	map $access_scheme $uri_scheme {
+		default "https";
+		"ws"	"wss";
+	}
+
 
 	{{ $sslConfig := $routerConfig.SSLConfig }}
 	{{ $hstsConfig := $sslConfig.HSTSConfig }}{{ if $hstsConfig.Enabled }}
@@ -110,7 +119,7 @@ http {
 
 	{{/* Since HSTS headers are not permitted on HTTP requests, 301 redirects to HTTPS resources are also necessary. */}}
 	{{/* This means we force HTTPS if HSTS is enabled. */}}
-	{{ $enforceHTTPS := or $sslConfig.Enforce $hstsConfig.Enabled }}
+	{{ $enforceSecure := or $sslConfig.Enforce $hstsConfig.Enabled }}
 
 	# Default server handles requests for unmapped hostnames, including healthchecks
 	server {
@@ -201,8 +210,8 @@ http {
 			proxy_set_header Upgrade $http_upgrade;
 			proxy_set_header Connection $connection_upgrade;
 
-			{{ if or $enforceHTTPS $appConfig.SSLConfig.Enforce }}if ($access_scheme != "https") {
-				return 301 https://$host$request_uri;
+			{{ if or $enforceSecure $appConfig.SSLConfig.Enforce }}if ($access_scheme !~* "^https|wss$") {
+				return 301 $uri_scheme://$host$request_uri;
 			}{{ end }}
 
 			{{ if $hstsConfig.Enabled }}add_header Strict-Transport-Security $sts always;{{ end }}
