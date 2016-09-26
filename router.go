@@ -6,13 +6,18 @@ import (
 
 	"github.com/deis/router/model"
 	"github.com/deis/router/nginx"
-	client "k8s.io/kubernetes/pkg/client/unversioned"
-	"k8s.io/kubernetes/pkg/util/flowcontrol"
+	"k8s.io/client-go/1.4/kubernetes"
+	"k8s.io/client-go/1.4/pkg/util/flowcontrol"
+	"k8s.io/client-go/1.4/rest"
 )
 
 func main() {
 	nginx.Start()
-	kubeClient, err := client.NewInCluster()
+	cfg, err := rest.InClusterConfig()
+	if err != nil {
+		log.Fatalf("Failed to create config: %v", err)
+	}
+	kubeClient, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
 		log.Fatalf("Failed to create client: %v.", err)
 	}
