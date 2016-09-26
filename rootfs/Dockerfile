@@ -1,4 +1,4 @@
-FROM quay.io/deis/base:v0.3.2
+FROM quay.io/deis/base:v0.3.4
 
 RUN adduser --system \
 	--shell /bin/bash \
