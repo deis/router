@@ -247,7 +247,7 @@ http {
 
 {{ if $routerConfig.BuilderConfig }}{{ $builderConfig := $routerConfig.BuilderConfig }}stream {
 	server {
-		listen 2222;
+		listen 2222 {{ if $routerConfig.UseProxyProtocol }}proxy_protocol{{ end }};
 		proxy_connect_timeout {{ $builderConfig.ConnectTimeout }};
 		proxy_timeout {{ $builderConfig.TCPTimeout }};
 		proxy_pass {{$builderConfig.ServiceIP}}:2222;
