@@ -1,0 +1,7 @@
+name: router
+home: https://github.com/deis/router
+version: <Will be populated by the ci before publishing the chart>
+description: Edge router for Deis Workflow.
+maintainers:
+  - name: Deis Team
+    email: engineering@deis.com

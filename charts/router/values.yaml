@@ -1,0 +1,7 @@
+org: "deisci"
+pull_policy: "Always"
+docker_tag: canary
+platform_domain: ""
+dhparam: ""
+# limits_cpu: "100m"
+# limits_memory: "50Mi"
