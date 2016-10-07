@@ -173,5 +173,53 @@ func TestBuildBuilderConfig(t *testing.T) {
 		t.Errorf("Actual:\n")
 		t.Errorf("%+v\n", actualConfig)
 	}
+}
 
+func TestBuildCertificate(t *testing.T) {
+	// Ensure a valid Cert Secret returns the expected certificate.
+	validCertSecret := v1.Secret{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      platformCertName,
+			Namespace: routerNamespace,
+		},
+		Type: v1.SecretTypeOpaque,
+		Data: map[string][]byte{
+			"tls.crt": []byte("foo"),
+			"tls.key": []byte("bar"),
+		},
+	}
+	expectedCert := newCertificate("foo", "bar")
+	actualCert, err := buildCertificate(&validCertSecret, "test-valid")
+	if err != nil {
+		t.Error(err)
+	}
+	if !reflect.DeepEqual(expectedCert, actualCert) {
+		t.Errorf("Expected certificate does not match actual.")
+
+		t.Errorf("Expected:\n")
+		t.Errorf("%+v\n", expectedCert)
+		t.Errorf("Actual:\n")
+		t.Errorf("%+v\n", actualCert)
+	}
+
+	// Ensure an invalid Cert Secret returns nil.
+	invalidCertSecret := v1.Secret{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      platformCertName,
+			Namespace: routerNamespace,
+		},
+		Type: v1.SecretTypeOpaque,
+		Data: map[string][]byte{
+			"a": []byte("foo"),
+			"b": []byte("bar"),
+		},
+	}
+
+	invalidCert, err := buildCertificate(&invalidCertSecret, "test-invalid")
+	if err != nil {
+		t.Error(err)
+	}
+	if invalidCert != nil {
+		t.Errorf("Expected invalid cert secret to return nil.")
+	}
 }
