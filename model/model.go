@@ -369,17 +369,19 @@ func buildAppConfig(kubeClient *kubernetes.Clientset, service v1.Service, router
 	for _, domain := range appConfig.Domains {
 		if strings.Contains(domain, ".") {
 			// Look for a cert-bearing secret for this domain.
-			secretName := fmt.Sprintf("%s-cert", appConfig.CertMappings[domain])
-			certSecret, err := getSecret(kubeClient, secretName, service.Namespace)
-			if err != nil {
-				return nil, err
-			}
-			if certSecret != nil {
-				certificate, err := buildCertificate(certSecret, domain)
+			if certMapping, ok := appConfig.CertMappings[domain]; ok {
+				secretName := fmt.Sprintf("%s-cert", certMapping)
+				certSecret, err := getSecret(kubeClient, secretName, service.Namespace)
 				if err != nil {
 					return nil, err
 				}
-				appConfig.Certificates[domain] = certificate
+				if certSecret != nil {
+					certificate, err := buildCertificate(certSecret, domain)
+					if err != nil {
+						return nil, err
+					}
+					appConfig.Certificates[domain] = certificate
+				}
 			}
 		} else {
 			appConfig.Certificates[domain] = routerConfig.PlatformCertificate
