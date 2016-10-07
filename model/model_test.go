@@ -223,3 +223,43 @@ func TestBuildCertificate(t *testing.T) {
 		t.Errorf("Expected invalid cert secret to return nil.")
 	}
 }
+
+func TestBuildDHParam(t *testing.T) {
+	expectedDHParam := "bizbaz"
+	dhParamSecret := v1.Secret{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      dhParamName,
+			Namespace: routerNamespace,
+		},
+		Type: v1.SecretTypeOpaque,
+		Data: map[string][]byte{
+			"dhparam": []byte(expectedDHParam),
+		},
+	}
+
+	actualDHParam, err := buildDHParam(&dhParamSecret)
+	if err != nil {
+		t.Error(err)
+	}
+	if !reflect.DeepEqual(expectedDHParam, actualDHParam) {
+		t.Errorf("Expected DHParam %s does not match actual %s.", expectedDHParam, actualDHParam)
+	}
+
+	invalidDHParamSecret := v1.Secret{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      dhParamName,
+			Namespace: routerNamespace,
+		},
+		Type: v1.SecretTypeOpaque,
+		Data: map[string][]byte{
+			"foo": []byte("bar"),
+		},
+	}
+	actualInvalid, err := buildDHParam(&invalidDHParamSecret)
+	if err != nil {
+		t.Error(err)
+	}
+	if !reflect.DeepEqual("", actualInvalid) {
+		t.Errorf("Invalid DHParam Secret should have returned empty string.")
+	}
+}
