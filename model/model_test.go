@@ -6,6 +6,7 @@ import (
 
 	"k8s.io/client-go/1.4/pkg/api/v1"
 	"k8s.io/client-go/1.4/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/1.4/pkg/util/intstr"
 )
 
 const (
@@ -106,7 +107,6 @@ func TestBuildRouterConfig(t *testing.T) {
 	expectedConfig.PlatformCertificate = platformCert
 
 	actualConfig, err := buildRouterConfig(&routerDeployment, &platformCertSecret, &dhParamSecret)
-
 	if err != nil {
 		t.Error(err)
 	}
@@ -119,4 +119,59 @@ func TestBuildRouterConfig(t *testing.T) {
 		t.Errorf("Actual:\n")
 		t.Errorf("%+v\n", actualConfig)
 	}
+}
+
+func TestBuildBuilderConfig(t *testing.T) {
+	builderService := v1.Service{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "deis-builder",
+			Namespace: routerNamespace,
+			Labels: map[string]string{
+				"heritage": "deis",
+			},
+			Annotations: map[string]string{
+				"router.deis.io/nginx.connectTimeout": "20s",
+			},
+		},
+		Spec: v1.ServiceSpec{
+			Ports: []v1.ServicePort{
+				v1.ServicePort{
+					Name: "ssh",
+					Port: int32(2222),
+					TargetPort: intstr.IntOrString{
+						Type:   intstr.Int,
+						IntVal: 2223,
+					},
+				},
+			},
+			Selector: map[string]string{
+				"app": "deis-builder",
+			},
+			ClusterIP: "1.2.3.4",
+		},
+	}
+
+	expectedConfig := BuilderConfig{
+		// A value  set in the service annotations.
+		ConnectTimeout: "20s",
+		// A value not set in the service annotations (should be default value).
+		TCPTimeout: "1200s",
+		// A value determined by the service.spec.ClusterIP
+		ServiceIP: "1.2.3.4",
+	}
+
+	actualConfig, err := buildBuilderConfig(&builderService)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !reflect.DeepEqual(&expectedConfig, actualConfig) {
+		t.Errorf("Expected builderConfig does not match actual.")
+
+		t.Errorf("Expected:\n")
+		t.Errorf("%+v\n", &expectedConfig)
+		t.Errorf("Actual:\n")
+		t.Errorf("%+v\n", actualConfig)
+	}
+
 }
