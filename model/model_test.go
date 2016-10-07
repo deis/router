@@ -11,17 +11,19 @@ import (
 
 const (
 	routerName       = "deis-router"
-	routerNamespace  = "deis"
+	builderName      = "deis-builder"
+	deisNamespace    = "deis"
 	dhParamName      = "deis-router-dhparam"
 	platformCertName = "deis-router-platform-cert"
 )
 
 func TestBuildRouterConfig(t *testing.T) {
+	// Ensure a valid Router Deployment, Platform Cert, and DHParam result in the expected RouterConfig.
 	replicas := int32(1)
 	routerDeployment := v1beta1.Deployment{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      routerName,
-			Namespace: routerNamespace,
+			Namespace: deisNamespace,
 			Annotations: map[string]string{
 				"router.deis.io/nginx.defaultTimeout":             "1500s",
 				"router.deis.io/nginx.ssl.bufferSize":             "6k",
@@ -59,7 +61,7 @@ func TestBuildRouterConfig(t *testing.T) {
 	platformCertSecret := v1.Secret{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      platformCertName,
-			Namespace: routerNamespace,
+			Namespace: deisNamespace,
 		},
 		Type: v1.SecretTypeOpaque,
 		Data: map[string][]byte{
@@ -71,7 +73,7 @@ func TestBuildRouterConfig(t *testing.T) {
 	dhParamSecret := v1.Secret{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      dhParamName,
-			Namespace: routerNamespace,
+			Namespace: deisNamespace,
 			Labels: map[string]string{
 				"heritage": "deis",
 			},
@@ -122,10 +124,11 @@ func TestBuildRouterConfig(t *testing.T) {
 }
 
 func TestBuildBuilderConfig(t *testing.T) {
+	// Ensure a Builder Service with annotations returns the expected BuilderConfig.
 	builderService := v1.Service{
 		ObjectMeta: v1.ObjectMeta{
-			Name:      "deis-builder",
-			Namespace: routerNamespace,
+			Name:      builderName,
+			Namespace: deisNamespace,
 			Labels: map[string]string{
 				"heritage": "deis",
 			},
@@ -145,7 +148,7 @@ func TestBuildBuilderConfig(t *testing.T) {
 				},
 			},
 			Selector: map[string]string{
-				"app": "deis-builder",
+				"app": builderName,
 			},
 			ClusterIP: "1.2.3.4",
 		},
@@ -180,7 +183,7 @@ func TestBuildCertificate(t *testing.T) {
 	validCertSecret := v1.Secret{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      platformCertName,
-			Namespace: routerNamespace,
+			Namespace: deisNamespace,
 		},
 		Type: v1.SecretTypeOpaque,
 		Data: map[string][]byte{
@@ -206,7 +209,7 @@ func TestBuildCertificate(t *testing.T) {
 	invalidCertSecret := v1.Secret{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      platformCertName,
-			Namespace: routerNamespace,
+			Namespace: deisNamespace,
 		},
 		Type: v1.SecretTypeOpaque,
 		Data: map[string][]byte{
@@ -225,11 +228,12 @@ func TestBuildCertificate(t *testing.T) {
 }
 
 func TestBuildDHParam(t *testing.T) {
+	// Ensure a valid DHParam Secret returns the expected DHParam string.
 	expectedDHParam := "bizbaz"
 	dhParamSecret := v1.Secret{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      dhParamName,
-			Namespace: routerNamespace,
+			Namespace: deisNamespace,
 		},
 		Type: v1.SecretTypeOpaque,
 		Data: map[string][]byte{
@@ -245,10 +249,11 @@ func TestBuildDHParam(t *testing.T) {
 		t.Errorf("Expected DHParam %s does not match actual %s.", expectedDHParam, actualDHParam)
 	}
 
+	// Ensure an invalid DHParam Secret returns an empty string.
 	invalidDHParamSecret := v1.Secret{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      dhParamName,
-			Namespace: routerNamespace,
+			Namespace: deisNamespace,
 		},
 		Type: v1.SecretTypeOpaque,
 		Data: map[string][]byte{
