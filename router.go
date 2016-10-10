@@ -50,7 +50,11 @@ func main() {
 			log.Printf("Failed to write new nginx configuration; continuing with existing configuration: %v", err)
 			continue
 		}
-		nginx.Reload()
+		err = nginx.Reload()
+		if err != nil {
+			log.Printf("Failed to reload nginx; continuing with existing configuration: %v", err)
+			continue
+		}
 		known = routerConfig
 	}
 }
