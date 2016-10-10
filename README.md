@@ -68,26 +68,7 @@ Although the router is written in Go, you do _not_ need Go or any other developm
 
 ### Registry
 
-If your Kubernetes cluster is running locally on one or more virtual machines, it's advisable to also run your own local Docker registry.  This provides a place where router images built from source-- possibly containing your own experimental hacks-- can be pushed relatively quickly and can be accessed readily by your Kubernetes cluster.
-
-Fortunately, this is very easy to set up as long as you have Docker already functioning properly:
-
-```
-$ make dev-registry
-```
-
-This will produce output containing further instructions such as:
-
-```
-59ba57a3628fe04016634760e039a3202036d5db984f6de96ea8876a7ba8a945
-
-To use a local registry for Deis Router development:
-    export DEIS_REGISTRY=192.168.99.102:5000/
-```
-
-Following those instructions will make your local registry usable by the various `make` targets mentioned in following sections.
-
-If you do not want to run your own local registry or if the Kubernetes cluster you will be deploying to is remote, then you can easily make use of a public registry such as [hub.docker.com](http://hub.docker.com), provided you have an account.  To do so:
+The following sections setup, build, deploy, and test the Deis Router. You'll need a configured Docker registry to push changed images to so that they can be deployed to your Kubernetes cluster. You can easily make use of a public registry such as [hub.docker.com](http://hub.docker.com), provided you have an account. To do so:
 
 ```
 $ export DEIS_REGISTRY=registry.hub.docker.com/
