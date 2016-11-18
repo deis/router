@@ -56,7 +56,8 @@ type RouterConfig struct {
 	AppConfigs               []*AppConfig
 	BuilderConfig            *BuilderConfig
 	PlatformCertificate      *Certificate
-	HTTP2Enabled             bool `key:"http2Enabled" constraint:"(?i)^(true|false)$"`
+	HTTP2Enabled             bool   `key:"http2Enabled" constraint:"(?i)^(true|false)$"`
+	LogFormat                string `key:"logFormat"`
 }
 
 func newRouterConfig() *RouterConfig {
@@ -77,6 +78,7 @@ func newRouterConfig() *RouterConfig {
 		RequestIDs:               false,
 		SSLConfig:                newSSLConfig(),
 		HTTP2Enabled:             true,
+		LogFormat:                `[$time_iso8601] - $app_name - $remote_addr - $remote_user - $status - "$request" - $bytes_sent - "$http_referer" - "$http_user_agent" - "$server_name" - $upstream_addr - $http_host - $upstream_response_time - $request_time`,
 	}
 }
 
