@@ -58,7 +58,7 @@ http {
 	real_ip_header X-Forwarded-For;
 	{{- end }}
 
-	log_format upstreaminfo '[$time_iso8601] - $app_name - $remote_addr - $remote_user - $status - "$request" - $bytes_sent - "$http_referer" - "$http_user_agent" - "$server_name" - $upstream_addr - $http_host - $upstream_response_time - $request_time';
+	log_format upstreaminfo '{{ $routerConfig.LogFormat }}';
 
 	access_log /tmp/logpipe upstreaminfo;
 	error_log  /tmp/logpipe {{ $routerConfig.ErrorLogLevel }};
