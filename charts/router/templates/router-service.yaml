@@ -11,7 +11,7 @@ metadata:
   labels:
     heritage: deis
 spec:
-  type: LoadBalancer
+  type: {{ default "LoadBalancer" .Values.service_type}}
   selector:
     app: deis-router
   ports:

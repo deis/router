@@ -19,3 +19,6 @@ service_annotations:
 # Enable to pin router pod hostPort when using minikube or vagrant
 host_port:
   enabled: false
+
+# Service type default to LoadBalancer 
+service_type: NodePort
