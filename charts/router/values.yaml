@@ -21,4 +21,4 @@ host_port:
   enabled: false
 
 # Service type default to LoadBalancer 
-service_type: NodePort
+# service_type: LoadBalancer
