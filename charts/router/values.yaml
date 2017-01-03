@@ -15,3 +15,10 @@ deployment_annotations:
 # which need to be applied can be specified as key-value pairs under "service_annotations"
 service_annotations:
   #<example-key>: <example-value>
+
+# Enable to pin router pod hostPort when using minikube or vagrant
+host_port:
+  enabled: false
+
+# Service type default to LoadBalancer 
+# service_type: LoadBalancer
