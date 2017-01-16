@@ -48,6 +48,9 @@ http {
 
 	client_max_body_size {{ $routerConfig.BodySize }};
 
+	{{ if $routerConfig.DisableServerTokens -}}
+	server_tokens off;
+	{{- end}}
 	{{ range $realIPCIDR := $routerConfig.ProxyRealIPCIDRs -}}
 	set_real_ip_from {{ $realIPCIDR }};
 	{{ end -}}

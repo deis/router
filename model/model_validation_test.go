@@ -103,6 +103,14 @@ func TestValidUseProxyProtocol(t *testing.T) {
 	testValidValues(t, newTestRouterConfig, "UseProxyProtocol", "useProxyProtocol", []string{"true", "false", "TRUE", "FALSE"})
 }
 
+func TestValidServerTokens(t *testing.T) {
+	testValidValues(t, newTestRouterConfig, "DisableServerTokens", "disableServerTokens", []string{"true", "false", "TRUE", "FALSE"})
+}
+
+func TestInvalidServerTokens(t *testing.T) {
+	testInvalidValues(t, newTestRouterConfig, "DisableServerTokens", "disableServerTokens", []string{"0", "-1", "foobar"})
+}
+
 func TestInvalidEnforceWhitelists(t *testing.T) {
 	testInvalidValues(t, newTestRouterConfig, "EnforceWhitelists", "enforceWhitelists", []string{"0", "-1", "foobar"})
 }
