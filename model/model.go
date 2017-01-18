@@ -52,6 +52,9 @@ type RouterConfig struct {
 	EnforceWhitelists        bool        `key:"enforceWhitelists" constraint:"(?i)^(true|false)$"`
 	DefaultWhitelist         []string    `key:"defaultWhitelist" constraint:"^((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))?(\\s*,\\s*)?)+$"`
 	WhitelistMode            string      `key:"whitelistMode" constraint:"^(extend|override)$"`
+	DefaultServiceIP         string      `key:"defaultServiceIP"`
+	DefaultAppName           string      `key:"defaultAppName"`
+	DefaultServiceEnabled    bool        `key:"defaultServiceEnabled" constraint:"(?i)^(true|false)$"`
 	RequestIDs               bool        `key:"requestIDs" constraint:"(?i)^(true|false)$"`
 	SSLConfig                *SSLConfig  `key:"ssl"`
 	AppConfigs               []*AppConfig
@@ -79,6 +82,9 @@ func newRouterConfig() *RouterConfig {
 		WhitelistMode:            "extend",
 		RequestIDs:               false,
 		SSLConfig:                newSSLConfig(),
+		DefaultServiceEnabled:    false,
+		DefaultAppName:           "",
+		DefaultServiceIP:         "",
 		HTTP2Enabled:             true,
 		LogFormat:                `[$time_iso8601] - $app_name - $remote_addr - $remote_user - $status - "$request" - $bytes_sent - "$http_referer" - "$http_user_agent" - "$server_name" - $upstream_addr - $http_host - $upstream_response_time - $request_time`,
 	}

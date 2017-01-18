@@ -131,6 +131,35 @@ http {
 	{{/* This means we force HTTPS if HSTS is enabled. */}}
 	{{ $enforceSecure := or $sslConfig.Enforce $hstsConfig.Enabled }}
 
+	{{ if $routerConfig.DefaultServiceEnabled }}
+	server {
+		listen 8080 default_server{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
+		server_name _;
+		server_name_in_redirect off;
+		port_in_redirect off;
+		set $app_name "{{ $routerConfig.DefaultAppName }}";
+		vhost_traffic_status_filter_by_set_key {{ $routerConfig.DefaultAppName }} application::*;
+		location ~ ^/healthz/?$ {
+			access_log off;
+			default_type 'text/plain';
+			return 200;
+		}
+
+		location / {
+			proxy_buffering off;
+			proxy_set_header Host $host;
+			proxy_set_header X-Forwarded-For $remote_addr;
+			proxy_set_header X-Forwarded-Proto $access_scheme;
+			proxy_set_header X-Forwarded-Port $forwarded_port;
+			proxy_redirect off;
+			proxy_http_version 1.1;
+			proxy_set_header Upgrade $http_upgrade;
+			proxy_set_header Connection $connection_upgrade;
+			proxy_pass http://{{$routerConfig.DefaultServiceIP}}:80;
+		}
+	}
+	{{ else }}
+
 	# Default server handles requests for unmapped hostnames, including healthchecks
 	server {
 		listen 8080 default_server reuseport{{ if $routerConfig.UseProxyProtocol }} proxy_protocol{{ end }};
@@ -155,6 +184,7 @@ http {
 			return 404;
 		}
 	}
+	{{ end }}
 
 	# Healthcheck on 9090 -- never uses proxy_protocol
 	server {
