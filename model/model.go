@@ -48,6 +48,7 @@ type RouterConfig struct {
 	ErrorLogLevel            string      `key:"errorLogLevel" constraint:"^(debug|info|notice|warn|error|crit|alert|emerg)$"`
 	PlatformDomain           string      `key:"platformDomain" constraint:"(?i)^([a-z0-9]+(-[a-z0-9]+)*\\.)+[a-z0-9]+(-*[a-z0-9]+)+$"`
 	UseProxyProtocol         bool        `key:"useProxyProtocol" constraint:"(?i)^(true|false)$"`
+	DisableServerTokens      bool        `key:"disableServerTokens" constraint:"(?i)^(true|false)$"`
 	EnforceWhitelists        bool        `key:"enforceWhitelists" constraint:"(?i)^(true|false)$"`
 	DefaultWhitelist         []string    `key:"defaultWhitelist" constraint:"^((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))?(\\s*,\\s*)?)+$"`
 	WhitelistMode            string      `key:"whitelistMode" constraint:"^(extend|override)$"`
@@ -71,6 +72,7 @@ func newRouterConfig() *RouterConfig {
 		GzipConfig:               newGzipConfig(),
 		BodySize:                 "1m",
 		ProxyRealIPCIDRs:         []string{"10.0.0.0/8"},
+		DisableServerTokens:      false,
 		ErrorLogLevel:            "error",
 		UseProxyProtocol:         false,
 		EnforceWhitelists:        false,
