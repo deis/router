@@ -5,6 +5,8 @@ platform_domain: ""
 dhparam: ""
 # limits_cpu: "100m"
 # limits_memory: "50Mi"
+# requests_cpu: "100m"
+# requests_memory: "50Mi"
 
 # Any custom router annotations(https://github.com/deis/router#annotations)
 # which need to be applied can be specified as key-value pairs under "deployment_annotations"

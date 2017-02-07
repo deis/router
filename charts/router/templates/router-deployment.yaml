@@ -32,8 +32,9 @@ spec:
       - name: deis-router
         image: quay.io/{{.Values.org}}/router:{{.Values.docker_tag}}
         imagePullPolicy: {{.Values.pull_policy}}
-{{- if or (.Values.limits_cpu) (.Values.limits_memory)}}
+{{- if or (.Values.limits_cpu) (.Values.limits_memory) (.Values.requests_cpu) (.Values.requests_memory)}}
         resources:
+{{- if or (.Values.limits_cpu) (.Values.limits_memory)}}
           limits:
 {{- if (.Values.limits_cpu) }}
             cpu: {{.Values.limits_cpu}}
@@ -41,7 +42,18 @@ spec:
 {{- if (.Values.limits_memory) }}
             memory: {{.Values.limits_memory}}
 {{- end}}
+{{- end}} {{/* end limits section */}}
+{{- if or (.Values.requests_cpu) (.Values.requests_memory)}}
+          requests:
+{{- if (.Values.requests_cpu) }}
+            cpu: {{.Values.requests_cpu}}
 {{- end}}
+{{- if (.Values.requests_memory) }}
+            memory: {{.Values.requests_memory}}
+{{- end}}
+{{- end}} {{/* end requests section */}}
+{{- end}} {{/* end resources section */}}
+
         env:
         - name: POD_NAMESPACE
           valueFrom:
