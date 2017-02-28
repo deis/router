@@ -138,7 +138,7 @@ func TestBuildBuilderConfig(t *testing.T) {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name: "ssh",
 					Port: int32(2222),
 					TargetPort: intstr.IntOrString{

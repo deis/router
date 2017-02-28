@@ -44,9 +44,9 @@ func TestWriteCerts(t *testing.T) {
 			Key:  expectedPlatformKey,
 		},
 		AppConfigs: []*model.AppConfig{
-			&model.AppConfig{
+			{
 				Certificates: map[string]*model.Certificate{
-					"example.com": &model.Certificate{
+					"example.com": {
 						Cert: expectedExampleCrt,
 						Key:  expectedExampleKey,
 					},
