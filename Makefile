@@ -62,21 +62,14 @@ clean: check-docker
 full-clean: check-docker
 	docker images -q ${DEIS_REGISTRY}/${IMAGE_PREFIX}/${SHORT_NAME} | xargs docker rmi -f
 
-dev-release: docker-build docker-push set-image
-
-set-image:
-	sed "s#\(image:\) .*#\1 ${IMAGE}#" manifests/deis-${SHORT_NAME}-deployment.yaml > manifests/deis-${SHORT_NAME}-deployment.tmp.yaml
-
-deploy: check-kubectl dev-release
-	@kubectl describe deployment deis-${SHORT_NAME} --namespace=deis >/dev/null 2>&1; \
-	if [ $$? -eq 0 ]; then \
-		kubectl apply -f manifests/deis-${SHORT_NAME}-deployment.tmp.yaml; \
-	else \
-		kubectl create -f manifests/deis-${SHORT_NAME}-deployment.tmp.yaml; \
-	fi
-
-examples:
-	kubectl create -f manifests/examples.yaml
+deploy: check-kubectl docker-build docker-push
+	kubectl --namespace=deis patch deployment deis-${SHORT_NAME} \
+		--type='json' \
+		-p='[ \
+			{"op": "replace", "path": "/spec/strategy", "value":{"type":"Recreate"}}, \
+			{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value":"$(IMAGE)"}, \
+			{"op": "replace", "path": "/spec/template/spec/containers/0/imagePullPolicy", "value":"Always"} \
+		]'
 
 test: test-style test-unit test-functional
 

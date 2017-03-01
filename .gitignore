@@ -1,5 +1,3 @@
-manifests/deis-router-rc.tmp.yaml
-manifests/deis-router-deployment.tmp.yaml
 rootfs/opt/router/sbin/router
 rootfs/opt/router/sbin/router.*
 vendor/

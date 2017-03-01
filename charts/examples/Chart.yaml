@@ -1,0 +1,7 @@
+name: examples
+home: https://github.com/deis/router
+version: <Will be populated by the ci before publishing the chart>
+description: Standalone examples for Deis Router.
+maintainers:
+  - name: Deis Team
+    email: engineering@deis.com

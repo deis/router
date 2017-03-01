@@ -29,28 +29,25 @@ This section documents simple procedures for installing the Deis Router for eval
 
 Deis Router can be installed with or without the rest of the Deis Workflow platform.  In either case, begin with a healthy Kubernetes cluster.  Kubernetes getting started documentation is available [here](http://kubernetes.io/gettingstarted/).
 
-Next, install the [Helm Classic](http://helm.sh) package manager, then use the commands below to initialize that tool and load the [deis/charts](https://github.com/deis/charts) repository.
+Next, install the [Helm](http://helm.sh) package manager, then use the commands below to initialize that tool and install all of Deis Workflow or the Deis Router by itself.
 
 ```
-$ helmc update
-$ helmc repo add deis https://github.com/deis/charts
+$ helm init
 ```
 
-To install the router:
+To install all of Deis Workflow:
 
 ```
-$ helmc fetch deis/<chart>
-$ helmc generate -x manifests <chart>
-$ helmc install <chart>
+$ helm repo add workflow https://charts.deis.com/workflow
+$ helm install workflow/workflow --namespace deis
 ```
-Where `<chart>` is selected from the options below:
 
-| Chart | Description |
-|-------|-------------|
-| workflow-rc2 | Install the router along with the rest of the latest stable Deis Workflow release. |
-| workflow-dev | Install the router from master with the rest of the edge Deis Workflow platform. |
-| router-dev | Install the router from master with its minimal set of dependencies. |
+Or to install the Deis Router by itself:
 
+```
+$ helm repo add router https://charts.deis.com/router
+$ helm install router/router --namespace deis
+```
 
 For next steps, skip ahead to the [How it Works](#how-it-works) and [Configuration Guide](#configuration) sections.
 
@@ -98,15 +95,13 @@ $ make build
 
 Make sure to have defined the variable `DEIS_REGISTRY` previous to this step, as your image tags will be prefixed according to this.
 
-Built images will be tagged with the sha of the latest git commit.  __This means that for a new image to have its own unique tag, experimental changes should be committed _before_ building.  Do this in a branch.  Commits can be squashed later when you are done hacking.__
-
 #### To deploy:
 
 ```
 $ make deploy
 ```
 
-The deploy target will implicitly build first, then push the built image (which has its own unique tags) to your development registry (i.e. that specified by `DEIS_REGISTRY`).  A Kubernetes manifest is prepared, referencing the uniquely tagged image, and that manifest is submitted to your Kubernetes cluster.  If a router component is already running in your Kubernetes cluster, it will be deleted and replaced with your build.
+The deploy target will implicitly build first, then push the built image to your development registry (i.e. that specified by `DEIS_REGISTRY`).  The router's _existing_ Kubernetes `Deployment` (installed via Helm) will be updated to use the newly built image.
 
 To see that the router is running, you can look for its pod(s):
 
@@ -119,7 +114,7 @@ $ kubectl get pods --namespace=deis
 To deploy some sample routable applications:
 
 ```
-$ make examples
+$ helm install charts/examples --namespace router-examples
 ```
 
 This will deploy Nginx and Apache to your Kubernetes cluster as if they were user applications.
@@ -152,7 +147,7 @@ metadata:
   name: foo
   labels:
   	router.deis.io/routable: "true"
-  namespace: examples
+  namespace: router-examples
   annotations:
     router.deis.io/domains: www.foobar.com
   spec:
@@ -318,7 +313,7 @@ metadata:
   name: foo
   labels:
   	router.deis.io/routable: "true"
-  namespace: examples
+  namespace: router-examples
   # ...
   annotations:
     router.deis.io/domains: foo,bar,www.foobar.com
