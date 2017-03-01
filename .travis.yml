@@ -13,6 +13,6 @@ env:
 install:
 - make bootstrap
 script:
-  - make build test-cover
+- make build test-style test-cover
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
+- bash <(curl -s https://codecov.io/bash)
