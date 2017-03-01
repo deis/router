@@ -242,7 +242,11 @@ http {
 			add_header X-Correlation-Id $correlation_id always;
 			{{end}}
 
-			{{ if $appConfig.Maintenance }}return 503;{{ else if $appConfig.Available }}proxy_buffering off;
+			{{ if $appConfig.Maintenance }}return 503;{{ else if $appConfig.Available }}
+			proxy_buffering {{ if $appConfig.Nginx.ProxyBuffersConfig.Enabled }}on{{ else }}off{{ end }};
+			proxy_buffer_size {{ $appConfig.Nginx.ProxyBuffersConfig.Size }};
+			proxy_buffers {{ $appConfig.Nginx.ProxyBuffersConfig.Number }} {{ $appConfig.Nginx.ProxyBuffersConfig.Size }};
+			proxy_busy_buffers_size {{ $appConfig.Nginx.ProxyBuffersConfig.BusySize }};
 			proxy_set_header Host $host;
 			proxy_set_header X-Forwarded-For $remote_addr;
 			proxy_set_header X-Forwarded-Proto $access_scheme;

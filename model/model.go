@@ -126,8 +126,9 @@ type AppConfig struct {
 	CertMappings   map[string]string `key:"certificates" constraint:"(?i)^((([a-z0-9]+(-*[a-z0-9]+)*)|((\\*\\.)?[a-z0-9]+(-*[a-z0-9]+)*\\.)+[a-z0-9]+(-*[a-z0-9]+)+):([a-z0-9]+(-*[a-z0-9]+)*)(\\s*,\\s*)?)+$"`
 	Certificates   map[string]*Certificate
 	Available      bool
-	Maintenance    bool       `key:"maintenance" constraint:"(?i)^(true|false)$"`
-	SSLConfig      *SSLConfig `key:"ssl"`
+	Maintenance    bool            `key:"maintenance" constraint:"(?i)^(true|false)$"`
+	SSLConfig      *SSLConfig      `key:"ssl"`
+	Nginx          *NginxAppConfig `key:"nginx"`
 }
 
 func newAppConfig(routerConfig *RouterConfig) *AppConfig {
@@ -136,6 +137,7 @@ func newAppConfig(routerConfig *RouterConfig) *AppConfig {
 		TCPTimeout:     routerConfig.DefaultTimeout,
 		Certificates:   make(map[string]*Certificate, 0),
 		SSLConfig:      newSSLConfig(),
+		Nginx:          newNginxAppConfig(),
 	}
 }
 
@@ -212,6 +214,36 @@ func newHSTSConfig() *HSTSConfig {
 		MaxAge:            15552000, // 180 days
 		IncludeSubDomains: false,
 		Preload:           false,
+	}
+}
+
+// NginxAppConfig is a wrapper for all Nginx-specific app configurations. These
+// options shouldn't be expected to be universally supported by alternative
+// router implementations.
+type NginxAppConfig struct {
+	ProxyBuffersConfig *ProxyBuffersConfig `key:"proxyBuffers"`
+}
+
+func newNginxAppConfig() *NginxAppConfig {
+	return &NginxAppConfig{
+		ProxyBuffersConfig: newProxyBuffersConfig(),
+	}
+}
+
+// ProxyBuffersConfig represents configuration options having to do with Nginx
+// proxy buffers.
+type ProxyBuffersConfig struct {
+	Enabled  bool   `key:"enabled" constraint:"(?i)^(true|false)$"`
+	Number   int    `key:"number" constraint:"^[1-9]\\d*$"`
+	Size     string `key:"size" constraint:"^[1-9]\\d*[kKmM]?$"`
+	BusySize string `key:"busySize" constraint:"^[1-9]\\d*[kKmM]?$"`
+}
+
+func newProxyBuffersConfig() *ProxyBuffersConfig {
+	return &ProxyBuffersConfig{
+		Number:   8,
+		Size:     "4k",
+		BusySize: "8k",
 	}
 }
 

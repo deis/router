@@ -271,6 +271,10 @@ _Note that Kubernetes annotation maps are all of Go type `map[string]string`.  A
 | <a name="app-tcp-timeout"></a>routable application | service | [router.deis.io/tcpTimeout](#app-tcp-timeout) | router's `defaultTimeout` | nginx `proxy_send_timeout` and `proxy_read_timeout` settings expressed in units `ms`, `s`, `m`, `h`, `d`, `w`, `M`, or `y`. |
 | <a name="app-maintenance"></a>routable application | service | [router.deis.io/maintenance](#app-maintenance) | `"false"` | Whether the app is under maintenance so that all traffic for this app is redirected to a static maintenance page with an error code of `503`. |
 | <a name="ssl-enforce"></a>routable application | service | [router.deis.io/ssl.enforce](#ssl-enforce) | `"false"` | Whether to respond with a 301 for all HTTP requests with a permanent redirect to the HTTPS equivalent address. |
+| <a name="app-nginx-proxy-buffers-enabled"></a>routable application | service | [router.deis.io/nginx.proxyBuffers.enabled](#app-nginx-proxy-buffers-enabled) | `"false"` | Whether to enabled proxy buffering. |
+| <a name="app-nginx-proxy-buffers-number"></a>routable application | service | [router.deis.io/nginx.proxyBuffers.number](#app-nginx-proxy-buffers-number) | `"8"` | `number` argument to the nginx `proxy_buffers` directive. |
+| <a name="app-nginx-proxy-buffers-size"></a>routable application | service | [router.deis.io/nginx.proxyBuffers.size](#app-nginx-proxy-buffers-size) | `"4k"` | `size` argument to the nginx `proxy_buffers` directive expressed in bytes (no suffix), kilobytes (suffixes `k` and `K`), or megabytes (suffixes `m` and `M`). |
+| <a name="app-nginx-proxy-buffers-busy-size"></a>routable application | service | [router.deis.io/nginx.proxyBuffers.busySize](#app-nginx-proxy-buffers-busy-size) | `"8k"` | nginx `proxy_busy_buffers_size` expressed in bytes (no suffix), kilobytes (suffixes `k` and `K`), or megabytes (suffixes `m` and `M`). |
 
 #### Annotations by example
 

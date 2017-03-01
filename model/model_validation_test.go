@@ -343,6 +343,38 @@ func TestValidHSTSPreload(t *testing.T) {
 	testValidValues(t, newTestHSTSConfig, "Preload", "preload", []string{"true", "false", "TRUE", "FALSE"})
 }
 
+func TestInvalidAppProxyBuffersEnabled(t *testing.T) {
+	testInvalidValues(t, newTestProxyBuffersConfig, "Enabled", "enabled", []string{"0", "-1", "foobar"})
+}
+
+func TestValidAppProxyBuffersEnabled(t *testing.T) {
+	testValidValues(t, newTestProxyBuffersConfig, "Enabled", "enabled", []string{"true", "false", "TRUE", "FALSE"})
+}
+
+func TestInvalidAppProxyBuffersNumber(t *testing.T) {
+	testInvalidValues(t, newTestProxyBuffersConfig, "Number", "number", []string{"0", "-1", "foobar"})
+}
+
+func TestValidAppProxyBuffersNumber(t *testing.T) {
+	testValidValues(t, newTestProxyBuffersConfig, "Number", "number", []string{"1", "2", "10"})
+}
+
+func TestInvalidAppProxyBuffersSize(t *testing.T) {
+	testInvalidValues(t, newTestProxyBuffersConfig, "Size", "size", []string{"0", "-1", "foobar"})
+}
+
+func TestValidAppProxyBuffersSize(t *testing.T) {
+	testValidValues(t, newTestProxyBuffersConfig, "Size", "size", []string{"1", "2", "20", "1k", "2k", "10m", "10M"})
+}
+
+func TestInvalidAppProxyBuffersBusySize(t *testing.T) {
+	testInvalidValues(t, newTestProxyBuffersConfig, "BusySize", "busySize", []string{"0", "-1", "foobar"})
+}
+
+func TestValidAppProxyBusyBuffersBusySize(t *testing.T) {
+	testValidValues(t, newTestProxyBuffersConfig, "BusySize", "busySize", []string{"1", "2", "20", "1k", "2k", "10m", "10M"})
+}
+
 func testInvalidValues(t *testing.T, builder func() interface{}, fieldName string, key string, badValues []string) {
 	badMap := make(map[string]string, 1)
 	for _, badValue := range badValues {
@@ -388,6 +420,10 @@ func newTestSSLConfig() interface{} {
 
 func newTestHSTSConfig() interface{} {
 	return newHSTSConfig()
+}
+
+func newTestProxyBuffersConfig() interface{} {
+	return newProxyBuffersConfig()
 }
 
 func checkError(t *testing.T, value string, err error) {
