@@ -56,12 +56,6 @@ binary-build:
 	$(call check-static-binary,$(BINDIR)/${SHORT_NAME})
 	${UPX} ${BINDIR}/${SHORT_NAME}
 
-clean: check-docker
-	docker rmi ${IMAGE}
-
-full-clean: check-docker
-	docker images -q ${DEIS_REGISTRY}/${IMAGE_PREFIX}/${SHORT_NAME} | xargs docker rmi -f
-
 deploy: check-kubectl docker-build docker-push
 	kubectl --namespace=deis patch deployment deis-${SHORT_NAME} \
 		--type='json' \
