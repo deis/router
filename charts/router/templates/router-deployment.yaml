@@ -7,7 +7,7 @@ metadata:
   annotations:
     component.deis.io/version: {{ .Values.docker_tag }}
 {{- range $key, $value := .Values.deployment_annotations }}
-    {{ $key }}: {{ $value }}
+    {{ $key }}: {{ quote $value }}
 {{- end }}
 {{- if not (empty .Values.platform_domain) }}
     router.deis.io/nginx.platformDomain: {{ .Values.platform_domain }}

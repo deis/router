@@ -5,7 +5,7 @@ metadata:
 {{- if .Values.service_annotations }}
   annotations:
 {{- range $key, $value := .Values.service_annotations }}
-    {{ $key }}: {{ $value }}
+    {{ $key }}: {{ quote $value }}
 {{- end }}
 {{- end }}
   labels:
