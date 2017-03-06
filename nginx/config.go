@@ -146,7 +146,10 @@ http {
 		}
 
 		location / {
-			proxy_buffering off;
+			proxy_buffering {{ if $routerConfig.ProxyBuffersConfig.Enabled }}on{{ else }}off{{ end }};
+			proxy_buffer_size {{ $routerConfig.ProxyBuffersConfig.Size }};
+			proxy_buffers {{ $routerConfig.ProxyBuffersConfig.Number }} {{ $routerConfig.ProxyBuffersConfig.Size }};
+			proxy_busy_buffers_size {{ $routerConfig.ProxyBuffersConfig.BusySize }};
 			proxy_set_header Host $host;
 			proxy_set_header X-Forwarded-For $remote_addr;
 			proxy_set_header X-Forwarded-Proto $access_scheme;

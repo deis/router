@@ -84,7 +84,10 @@ func TestBuildRouterConfig(t *testing.T) {
 		},
 	}
 
-	expectedConfig := newRouterConfig()
+	expectedConfig, err := newRouterConfig()
+	if err != nil {
+		t.Error(err)
+	}
 	sslConfig := newSSLConfig()
 	hstsConfig := newHSTSConfig()
 	platformCert := newCertificate("foo", "bar")
