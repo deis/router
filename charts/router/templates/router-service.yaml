@@ -28,4 +28,4 @@ spec:
     - name: healthz
       port: 9090
       targetPort: 9090
-{{ end }}
+{{ end }}{{/* if not .Values.global.experimental_native_ingress */}}
