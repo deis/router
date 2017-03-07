@@ -343,22 +343,74 @@ func TestValidHSTSPreload(t *testing.T) {
 	testValidValues(t, newTestHSTSConfig, "Preload", "preload", []string{"true", "false", "TRUE", "FALSE"})
 }
 
-func testInvalidValues(t *testing.T, builder func() interface{}, fieldName string, key string, badValues []string) {
+func TestInvalidProxyBuffersEnabled(t *testing.T) {
+	testInvalidValues(t, newTestProxyBuffersConfig, "Enabled", "enabled", []string{"0", "-1", "foobar"})
+}
+
+func TestValidProxyBuffersEnabled(t *testing.T) {
+	testValidValues(t, newTestProxyBuffersConfig, "Enabled", "enabled", []string{"true", "false", "TRUE", "FALSE"})
+}
+
+func TestInvalidProxyBuffersNumber(t *testing.T) {
+	testInvalidValues(t, newTestProxyBuffersConfig, "Number", "number", []string{"0", "-1", "foobar"})
+}
+
+func TestValidProxyBuffersNumber(t *testing.T) {
+	testValidValues(t, newTestProxyBuffersConfig, "Number", "number", []string{"1", "2", "10"})
+}
+
+func TestInvalidProxyBuffersSize(t *testing.T) {
+	testInvalidValues(t, newTestProxyBuffersConfig, "Size", "size", []string{"0", "-1", "foobar"})
+}
+
+func TestValidProxyBuffersSize(t *testing.T) {
+	testValidValues(t, newTestProxyBuffersConfig, "Size", "size", []string{"1", "2", "20", "1k", "2k", "10m", "10M"})
+}
+
+func TestInvalidProxyBuffersBusySize(t *testing.T) {
+	testInvalidValues(t, newTestProxyBuffersConfig, "BusySize", "busySize", []string{"0", "-1", "foobar"})
+}
+
+func TestValidProxyBusyBuffersBusySize(t *testing.T) {
+	testValidValues(t, newTestProxyBuffersConfig, "BusySize", "busySize", []string{"1", "2", "20", "1k", "2k", "10m", "10M"})
+}
+
+func testInvalidValues(
+	t *testing.T,
+	builder func() (interface{}, error),
+	fieldName string,
+	key string,
+	badValues []string,
+) {
 	badMap := make(map[string]string, 1)
 	for _, badValue := range badValues {
 		badMap[key] = badValue
-		model := builder()
-		err := testModeler.MapToModel(badMap, "", model)
+		model, err := builder()
+		if err != nil {
+			t.Errorf("Unexpected error: %s", err)
+			t.FailNow()
+		}
+		err = testModeler.MapToModel(badMap, "", model)
 		checkError(t, badValue, err)
 	}
 }
 
-func testValidValues(t *testing.T, builder func() interface{}, fieldName string, key string, goodValues []string) {
+func testValidValues(
+	t *testing.T,
+	builder func() (interface{}, error),
+	fieldName string,
+	key string,
+	goodValues []string,
+) {
 	goodMap := make(map[string]string, 1)
 	for _, goodValue := range goodValues {
 		goodMap[key] = goodValue
-		model := builder()
-		err := testModeler.MapToModel(goodMap, "", model)
+		model, err := builder()
+		if err != nil {
+			t.Errorf("Unexpected error: %s", err)
+			t.FailNow()
+		}
+		err = testModeler.MapToModel(goodMap, "", model)
 		if err != nil {
 			t.Errorf("Using value \"%s\", received an unexpected error: %s", goodValue, err)
 			t.FailNow()
@@ -366,28 +418,36 @@ func testValidValues(t *testing.T, builder func() interface{}, fieldName string,
 	}
 }
 
-func newTestRouterConfig() interface{} {
+func newTestRouterConfig() (interface{}, error) {
 	return newRouterConfig()
 }
 
-func newTestGzipConfig() interface{} {
-	return newGzipConfig()
+func newTestGzipConfig() (interface{}, error) {
+	return newGzipConfig(), nil
 }
 
-func newTestAppConfig() interface{} {
-	return newAppConfig(newRouterConfig())
+func newTestAppConfig() (interface{}, error) {
+	routerConfig, err := newRouterConfig()
+	if err != nil {
+		return nil, err
+	}
+	return newAppConfig(routerConfig)
 }
 
-func newTestBuilderConfig() interface{} {
-	return newBuilderConfig()
+func newTestBuilderConfig() (interface{}, error) {
+	return newBuilderConfig(), nil
 }
 
-func newTestSSLConfig() interface{} {
-	return newSSLConfig()
+func newTestSSLConfig() (interface{}, error) {
+	return newSSLConfig(), nil
 }
 
-func newTestHSTSConfig() interface{} {
-	return newHSTSConfig()
+func newTestHSTSConfig() (interface{}, error) {
+	return newHSTSConfig(), nil
+}
+
+func newTestProxyBuffersConfig() (interface{}, error) {
+	return newProxyBuffersConfig(nil)
 }
 
 func checkError(t *testing.T, value string, err error) {

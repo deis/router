@@ -1,6 +1,8 @@
 package model
 
 import (
+	"bytes"
+	"encoding/gob"
 	"fmt"
 	"log"
 	"strings"
@@ -60,11 +62,16 @@ type RouterConfig struct {
 	AppConfigs               []*AppConfig
 	BuilderConfig            *BuilderConfig
 	PlatformCertificate      *Certificate
-	HTTP2Enabled             bool   `key:"http2Enabled" constraint:"(?i)^(true|false)$"`
-	LogFormat                string `key:"logFormat"`
+	HTTP2Enabled             bool                `key:"http2Enabled" constraint:"(?i)^(true|false)$"`
+	LogFormat                string              `key:"logFormat"`
+	ProxyBuffersConfig       *ProxyBuffersConfig `key:"proxyBuffers"`
 }
 
-func newRouterConfig() *RouterConfig {
+func newRouterConfig() (*RouterConfig, error) {
+	proxyBuffersConfig, err := newProxyBuffersConfig(nil)
+	if err != nil {
+		return nil, err
+	}
 	return &RouterConfig{
 		WorkerProcesses:          "auto",
 		MaxWorkerConnections:     "768",
@@ -87,7 +94,8 @@ func newRouterConfig() *RouterConfig {
 		DefaultServiceIP:         "",
 		HTTP2Enabled:             true,
 		LogFormat:                `[$time_iso8601] - $app_name - $remote_addr - $remote_user - $status - "$request" - $bytes_sent - "$http_referer" - "$http_user_agent" - "$server_name" - $upstream_addr - $http_host - $upstream_response_time - $request_time`,
-	}
+		ProxyBuffersConfig:       proxyBuffersConfig,
+	}, nil
 }
 
 // GzipConfig encapsulates gzip configuration.
@@ -126,17 +134,23 @@ type AppConfig struct {
 	CertMappings   map[string]string `key:"certificates" constraint:"(?i)^((([a-z0-9]+(-*[a-z0-9]+)*)|((\\*\\.)?[a-z0-9]+(-*[a-z0-9]+)*\\.)+[a-z0-9]+(-*[a-z0-9]+)+):([a-z0-9]+(-*[a-z0-9]+)*)(\\s*,\\s*)?)+$"`
 	Certificates   map[string]*Certificate
 	Available      bool
-	Maintenance    bool       `key:"maintenance" constraint:"(?i)^(true|false)$"`
-	SSLConfig      *SSLConfig `key:"ssl"`
+	Maintenance    bool            `key:"maintenance" constraint:"(?i)^(true|false)$"`
+	SSLConfig      *SSLConfig      `key:"ssl"`
+	Nginx          *NginxAppConfig `key:"nginx"`
 }
 
-func newAppConfig(routerConfig *RouterConfig) *AppConfig {
+func newAppConfig(routerConfig *RouterConfig) (*AppConfig, error) {
+	nginxConfig, err := newNginxAppConfig(routerConfig)
+	if err != nil {
+		return nil, err
+	}
 	return &AppConfig{
 		ConnectTimeout: "30s",
 		TCPTimeout:     routerConfig.DefaultTimeout,
 		Certificates:   make(map[string]*Certificate, 0),
 		SSLConfig:      newSSLConfig(),
-	}
+		Nginx:          nginxConfig,
+	}, nil
 }
 
 // BuilderConfig encapsulates the configuration of the deis-builder-- if it's in use.
@@ -213,6 +227,55 @@ func newHSTSConfig() *HSTSConfig {
 		IncludeSubDomains: false,
 		Preload:           false,
 	}
+}
+
+// NginxAppConfig is a wrapper for all Nginx-specific app configurations. These
+// options shouldn't be expected to be universally supported by alternative
+// router implementations.
+type NginxAppConfig struct {
+	ProxyBuffersConfig *ProxyBuffersConfig `key:"proxyBuffers"`
+}
+
+func newNginxAppConfig(routerConfig *RouterConfig) (*NginxAppConfig, error) {
+	proxyBuffersConfig, err := newProxyBuffersConfig(routerConfig.ProxyBuffersConfig)
+	if err != nil {
+		return nil, err
+	}
+	return &NginxAppConfig{
+		ProxyBuffersConfig: proxyBuffersConfig,
+	}, nil
+}
+
+// ProxyBuffersConfig represents configuration options having to do with Nginx
+// proxy buffers.
+type ProxyBuffersConfig struct {
+	Enabled  bool   `key:"enabled" constraint:"(?i)^(true|false)$"`
+	Number   int    `key:"number" constraint:"^[1-9]\\d*$"`
+	Size     string `key:"size" constraint:"^[1-9]\\d*[kKmM]?$"`
+	BusySize string `key:"busySize" constraint:"^[1-9]\\d*[kKmM]?$"`
+}
+
+func newProxyBuffersConfig(proxyBuffersConfig *ProxyBuffersConfig) (*ProxyBuffersConfig, error) {
+	if proxyBuffersConfig != nil {
+		var buf bytes.Buffer
+		enc := gob.NewEncoder(&buf)
+		dec := gob.NewDecoder(&buf)
+		err := enc.Encode(proxyBuffersConfig)
+		if err != nil {
+			return nil, err
+		}
+		var copy *ProxyBuffersConfig
+		err = dec.Decode(&copy)
+		if err != nil {
+			return nil, err
+		}
+		return copy, nil
+	}
+	return &ProxyBuffersConfig{
+		Number:   8,
+		Size:     "4k",
+		BusySize: "8k",
+	}, nil
 }
 
 // Build creates a RouterConfig configuration object by querying the k8s API for
@@ -328,8 +391,11 @@ func build(kubeClient *kubernetes.Clientset, routerDeployment *v1beta1ext.Deploy
 }
 
 func buildRouterConfig(routerDeployment *v1beta1.Deployment, platformCertSecret *v1.Secret, dhParamSecret *v1.Secret) (*RouterConfig, error) {
-	routerConfig := newRouterConfig()
-	err := modeler.MapToModel(routerDeployment.Annotations, "nginx", routerConfig)
+	routerConfig, err := newRouterConfig()
+	if err != nil {
+		return nil, err
+	}
+	err = modeler.MapToModel(routerDeployment.Annotations, "nginx", routerConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -351,7 +417,10 @@ func buildRouterConfig(routerDeployment *v1beta1.Deployment, platformCertSecret 
 }
 
 func buildAppConfig(kubeClient *kubernetes.Clientset, service v1.Service, routerConfig *RouterConfig) (*AppConfig, error) {
-	appConfig := newAppConfig(routerConfig)
+	appConfig, err := newAppConfig(routerConfig)
+	if err != nil {
+		return nil, err
+	}
 	appConfig.Name = service.Labels["app"]
 	// If we didn't get the app name from the app label, fall back to inferring the app name from
 	// the service's own name.
@@ -363,7 +432,7 @@ func buildAppConfig(kubeClient *kubernetes.Clientset, service v1.Service, router
 	if appConfig.Name != service.Namespace {
 		appConfig.Name = service.Namespace + "/" + appConfig.Name
 	}
-	err := modeler.MapToModel(service.Annotations, "", appConfig)
+	err = modeler.MapToModel(service.Annotations, "", appConfig)
 	if err != nil {
 		return nil, err
 	}
