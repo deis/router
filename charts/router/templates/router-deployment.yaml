@@ -1,3 +1,4 @@
+{{- if not .Values.global.experimental_native_ingress }}
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -88,3 +89,4 @@ spec:
             port: 9090
           initialDelaySeconds: 1
           timeoutSeconds: 1
+{{ end }}{{/* if not .Values.global.experimental_native_ingress */}}
