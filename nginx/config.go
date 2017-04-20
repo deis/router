@@ -205,6 +205,11 @@ http {
 			allow 127.0.0.1;
 			deny all;
 		}
+	 	location /nginx_status {
+      			stub_status on;
+		      	allow 127.0.0.1;
+		      	deny all;
+		}
 		location / {
 			return 404;
 		}
