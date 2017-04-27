@@ -14,7 +14,7 @@ RUN buildDeps='gcc make libgeoip-dev libssl-dev libpcre3-dev'; \
     apt-get install -y --no-install-recommends \
         $buildDeps \
         libgeoip1 && \
-    export NGINX_VERSION=1.12.0 SIGNING_KEY=A1C052F8 VTS_VERSION=0.1.10 BUILD_PATH=/tmp/build PREFIX=/opt/router && \
+    export NGINX_VERSION=1.13.0 SIGNING_KEY=A1C052F8 VTS_VERSION=0.1.10 BUILD_PATH=/tmp/build PREFIX=/opt/router && \
     rm -rf "$PREFIX" && \
     mkdir "$PREFIX" && \
     mkdir "$BUILD_PATH" && \
