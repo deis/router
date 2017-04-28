@@ -6,7 +6,7 @@ IMAGE_PREFIX ?= deis
 
 include versioning.mk
 
-SHELL_SCRIPTS = $(wildcard _scripts/*.sh) $(wildcard rootfs/bin/*) rootfs/opt/router/sbin/boot
+SHELL_SCRIPTS = $(wildcard rootfs/bin/*) rootfs/opt/router/sbin/boot
 
 REPO_PATH := github.com/deis/${SHORT_NAME}
 
