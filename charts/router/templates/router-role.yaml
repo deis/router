@@ -1,0 +1,15 @@
+{{- if (.Values.global.use_rbac) -}}
+{{- if (.Capabilities.APIVersions.Has (include "rbacAPIVersion" .)) -}}
+apiVersion: {{ template "rbacAPIVersion" . }}
+kind: Role
+metadata:
+  labels:
+    app: deis-router
+    heritage: deis
+  name: deis-router
+rules:
+- apiGroups: ["extensions", "apps"]
+  resources: ["deployments"]
+  verbs: ["get"]
+{{- end -}}
+{{- end -}}

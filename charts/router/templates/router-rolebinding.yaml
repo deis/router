@@ -1,0 +1,16 @@
+{{- if (.Values.global.use_rbac) -}}
+{{- if (.Capabilities.APIVersions.Has (include "rbacAPIVersion" .)) -}}
+kind: RoleBinding
+apiVersion: {{ template "rbacAPIVersion" . }}
+metadata:
+  name: deis-router
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: deis-router
+subjects:
+- kind: ServiceAccount
+  name: deis-router
+  namespace: {{ .Release.Namespace }}
+{{- end -}}
+{{- end -}}
