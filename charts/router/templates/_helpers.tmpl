@@ -1,0 +1,10 @@
+{{/*
+Set apiVersion based on Kubernetes version
+*/}}
+{{- define "rbacAPIVersion" -}}
+{{- if ge .Capabilities.KubeVersion.Minor "6" -}}
+rbac.authorization.k8s.io/v1beta1
+{{- else -}}
+rbac.authorization.k8s.io/v1alpha1
+{{- end -}}
+{{- end -}}
