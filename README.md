@@ -529,14 +529,6 @@ The Helm [chart][] available for installing router (either with or without the r
 
 * __Do you need to scale the router?__ For greater availability, it's desirable to run more than one instance of the router.  _How many_ can only be informed by stress/performance testing the applications in your cluster.  To increase the number of router instances from the default of one, increase the number of replicas specified by the `deis-router` deployment object.  Do not specify a number of replicas greater than the number of worker nodes in your Kubernetes cluster.
 
-## License
-
-Copyright 2013, 2014, 2015, 2016 Engine Yard, Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at <http://www.apache.org/licenses/LICENSE-2.0>
-
-Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
-
 [issues]: https://github.com/deis/router/issues
 [prs]: https://github.com/deis/router/pulls
 [chart]: https://github.com/deis/router/tree/master/charts/router
